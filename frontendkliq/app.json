@@ -4,6 +4,7 @@
     "scheme": "KliqThesis",
     "slug": "frontendkliq",
     "version": "1.0.0",
+    "devClient": true,
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,19 +14,33 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+    "NSBluetoothAlwaysUsageDescription": "We need Bluetooth access to connect to BLE devices.",
+    "NSLocationWhenInUseUsageDescription": "We need location access to scan for BLE devices."
+  }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.kliqApp",
+      "permissions": ["BLUETOOTH", "BLUETOOTH_ADMIN", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "f096e32f-ba16-4255-a1cb-0483b11baf51"
+      }
+    }
   }
 }

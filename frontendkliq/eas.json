@@ -1,0 +1,35 @@
+{
+  "cli": {
+    "version": ">= 13.1.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "android": {
+      "distribution": "internal",
+      "developmentClient": true
+    },
+    "ios": {
+      "distribution": "internal",
+      "developmentClient": true
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true
+    },
+    "development": {      // Add this section
+      "android": {
+        "distribution": "internal",
+        "developmentClient": true
+      },
+      "ios": {
+        "distribution": "internal",
+        "developmentClient": true
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
