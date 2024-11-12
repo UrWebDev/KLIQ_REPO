@@ -145,12 +145,32 @@ const Contactss = () => {
 
   const disconnectDevice = async () => {
     if (device) {
-      await device.cancelConnection();
-      setConnected(false);
-      setDevice(null);
-      Alert.alert("Disconnected", "Device has been disconnected.");
+      try {
+        // Check if the device is actually connected
+        const isConnected = await device.isConnected();
+        if (isConnected) {
+          // Attempt to cancel the connection if still connected
+          await device.cancelConnection();
+          console.log("Device disconnected successfully.");
+        } else {
+          console.log("Device was already disconnected.");
+        }
+  
+        // Update the states regardless to ensure UI reflects the status correctly
+        setConnected(false);
+        setDevice(null);
+        Alert.alert("Disconnected", "Device has been disconnected.");
+        
+      } catch (error) {
+        console.error('Failed to disconnect:', error);
+        Alert.alert('Error', 'Failed to disconnect the device.');
+      }
+    } else {
+      Alert.alert('Error', 'No device to disconnect.');
     }
   };
+  
+  
 
   return (
     <View style={styles.container}>
@@ -180,10 +200,11 @@ const Contactss = () => {
       <TouchableOpacity
         style={styles.button}
         onPress={disconnectDevice}
-        disabled={!connected}
+        disabled={!connected} // Disable when not connected
       >
-        <Text style={styles.buttonText}>Disconnect</Text>
-      </TouchableOpacity>
+  <Text style={styles.buttonText}>Disconnect</Text>
+</TouchableOpacity>
+
       <Text style={styles.status}>
         Status: {connected ? "Connected" : "Not Connected"}
       </Text>
