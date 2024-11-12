@@ -170,7 +170,6 @@ const Contactss = () => {
     }
   };
   
-  
 
   return (
     <View style={styles.container}>
