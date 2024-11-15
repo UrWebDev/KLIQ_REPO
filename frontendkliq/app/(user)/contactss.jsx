@@ -10,6 +10,7 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
+import { AppState } from 'react-native';
 
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
@@ -20,6 +21,8 @@ const Contactss = () => {
   const [connected, setConnected] = useState(false);
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
+
+  
 
   useEffect(() => {
     const subscription = manager.onStateChange((state) => {
@@ -33,6 +36,38 @@ const Contactss = () => {
       manager.destroy();
     };
   }, [manager]);
+
+
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState) => {
+      if (nextAppState === 'background' && connected && device) {
+        try {
+          await device.cancelConnection();
+          console.log('Explicit disconnect in background');
+          setConnected(false);
+          Alert.alert("Disconnected", "Device has been disconnected.");
+        } catch (error) {
+          console.error('Failed to disconnect on background:', error);
+        }
+      }
+    };
+  
+    // Add event listener
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+  
+    return () => {
+      // Remove the event listener when the component unmounts
+      subscription.remove();
+    };
+  }, [connected, device]);
+
+useEffect(() => {
+  return () => {
+    if (connected && device) {
+      disconnectDevice();
+    }
+  };
+}, [device, connected]);
 
   const scanAndConnect = () => {
     manager.startDeviceScan(null, null, async (error, scannedDevice) => {
@@ -146,28 +181,42 @@ const Contactss = () => {
   const disconnectDevice = async () => {
     if (device) {
         try {
-            // Check if the device is actually connected
+            // Check the device's connection status before attempting to disconnect
             const isConnected = await device.isConnected();
             if (isConnected) {
-                // Attempt to cancel the connection if still connected
+                // Explicitly send a disconnect signal to the ESP32, if connected
+                const disconnectSignal = Buffer.from("DISCONNECT").toString('base64');
+                await device.writeCharacteristicWithoutResponseForService(
+                    SERVICE_UUID,
+                    CHARACTERISTIC_UUID,
+                    disconnectSignal
+                );
+                console.log("Sent disconnect signal to ESP32.");
+
+                // Cancel the connection if still connected
                 await device.cancelConnection();
                 console.log("Device disconnected successfully.");
             } else {
                 console.log("Device was already disconnected.");
             }
 
-            // Update the states regardless to ensure UI reflects the status correctly
+            // Update React Native state to reflect disconnection
             setConnected(false);
             setDevice(null);
+
+            // Provide feedback to the user
             Alert.alert("Disconnected", "Device has been disconnected.");
         } catch (error) {
-            console.error('Failed to disconnect:', error);
-            Alert.alert('Error', 'Failed to disconnect the device.');
+            console.error("Failed to disconnect:", error);
+            Alert.alert("Error", "Failed to disconnect the device.");
         }
     } else {
-        Alert.alert('Error', 'No device to disconnect.');
+        Alert.alert("Error", "No device to disconnect.");
     }
 };
+
+
+
 
   return (
     <View style={styles.container}>

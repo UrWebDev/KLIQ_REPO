@@ -1,34 +1,13 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import {Stack} from 'expo-router'
+// app/_layout.jsx
+import { Stack } from 'expo-router';
 
-const RootLayout = () => {
+export default function RootLayout() {
   return (
-    <>
     <Stack>
-    <Stack.Screen name='index' options={{headerShown:false}} />
+      <Stack.Screen name="index" options={{ title: 'Welcome' }} />
+      <Stack.Screen name="auth" options={{ title: 'Authentication' }} />
+      <Stack.Screen name="recipients" options={{ title: 'Recipient' }} />
+      <Stack.Screen name="user" options={{ title: 'User' }} />
     </Stack>
-
-    </>
-  )
+  );
 }
-
-export default RootLayout
-
-
-
-// import { StyleSheet, Text, View } from 'react-native'
-// import React from 'react'
-// import {Slot} from 'expo-router'
-
-// const RootLayout = () => {
-//   return (
-//     <>
-//     <Text>HEAHER</Text>
-//     <Slot />
-//     <Text>FOOTER</Text>
-//     </>
-//   )
-// }
-
-// export default RootLayout

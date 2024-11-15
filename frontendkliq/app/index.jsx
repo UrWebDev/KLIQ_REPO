@@ -1,33 +1,20 @@
-import { StatusBar, Text, View } from 'react-native'
-import React from 'react'
-import {Link} from 'expo-router'
-// App.js
+// app/index.jsx
+import React from 'react';
+import { View, Button, Text } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import { NativeWindStyleSheet } from "nativewind";
+export default function LandingPage() {
+  const router = useRouter();
 
-
-const Index = () => {
   return (
-    <View className='bg-black flex-1 items-center justify-center'>
-      <Text className="text-3xl text-white">KLIQ</Text>
-      <StatusBar style="auto"/>
-      <Link href={"/home"} className='text-yellow-700'>As Recipients</Link>
-      <Link href={"/contactss"} className='text-yellow-700'>As Kliq Device User</Link>
-      {/* <Link href={"/sosMsg"} className='text-yellow-700'>Contacts</Link>
-      <Link href={"/SMS"} className='text-yellow-700'>Contacts</Link>
-      <Link href={"/location"}className='text-yellow-700'>Contacts</Link> */}
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Welcome to KLIQ</Text>
+      {/* <Button title="Get Started" onPress={() => router.push('/chooseRole')} /> */}
+      <Button title="Get Started" onPress={() => router.push('/authScreen')} />
     </View>
-  )
+  );
 }
 
-export default Index
+// import {Link} from 'expo-router'
+// <Link href={"/contactss"} className='text-yellow-700'>As Kliq Device User</Link>
 
-NativeWindStyleSheet.setOutput({
-  default: "native",
-});
-
-// import { NativeWindStyleSheet } from "nativewind";
-
-// NativeWindStyleSheet.setOutput({
-//   default: "native",
-// });

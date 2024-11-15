@@ -36,6 +36,7 @@ const SOSMessage = () => {
           <Text className="text-gray-500 mt-2">User's Location:</Text>
         </View>
       </View>
+
     </View>
   );
 };

@@ -76,9 +76,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const cors = require("cors");
+
 require('dotenv').config();
 
 const app = express();
+app.use(cors({origin: '*'}));
 app.use(bodyParser.json());
 
 // Connect to MongoDB
@@ -116,12 +119,35 @@ app.post('/webhook/sms', async (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`Server is running on port ${process.env.PORT}`);
 });
 
 app.get('/', (req, res) => {
     res.status(200).send("running on port 3k")
 })
+const authRoutes = require("./authRoutes/authRoutes");
+app.use("/api/auth", authRoutes);
+
 // push
+// const User = require('./UserDetails')
+// // Register route
+// app.post('/register', async (req, res) => {
+//   const { name, mobilePhone, password } = req.body; // Correct key names here
+
+//   // Check if the user already exists by mobilePhone
+//   const oldUser = await User.findOne({ mobilePhone });
+//   if (oldUser) {
+//     return res.status(400).send({ data: "User already exists" });
+//   }
+
+//   try {
+//     // Create and save the new user
+//     const newUser = new User({ name, mobilePhone, password });
+//     await newUser.save();
+
+//     res.status(201).send({ status: "success", data: "User created successfully" });
+//   } catch (err) {
+//     res.status(500).send({ status: "error", data: err.message });
+//   }
+// });
