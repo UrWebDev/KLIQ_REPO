@@ -24,7 +24,7 @@ const AuthScreen = () => {
             }
             
             if(response.data.role === 'user'){
-                router.push("/contactManagement")
+                router.push("/userSOSreports")
             }else if(response.data.role === 'recipient'){
                 router.push("/SOSsmsg")
             }

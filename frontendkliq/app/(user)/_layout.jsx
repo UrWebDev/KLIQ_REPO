@@ -33,7 +33,7 @@ const TabIconTwo = () => {
         
         
         <Tabs.Screen 
-            name='contactss'
+            name='addDeviceContact'
             options={{
                 title: 'Contacts',
                 headerShown: false,
@@ -47,7 +47,7 @@ const TabIconTwo = () => {
             }}
         />
         <Tabs.Screen 
-            name='sosreports'
+            name='userSOSreports'
             options={{
                 title: 'SOS Reports',
                 headerShown: false,
@@ -55,48 +55,6 @@ const TabIconTwo = () => {
                     <TabIcon 
                         color={color}
                         name= "SOS Reports"
-                        focused={focused}
-                    />
-                )
-            }}
-        />
-        <Tabs.Screen 
-            name='smsedit'
-            options={{
-                title: 'SMS',
-                headerShown: false,
-                tabBarIcon: ({color,focused}) => (
-                    <TabIcon 
-                        color={color}
-                        name= "SMS"
-                        focused={focused}
-                    />
-                )
-            }}
-        />
-        <Tabs.Screen 
-            name='contacts'
-            options={{
-                title: 'Contacts',
-                headerShown: false,
-                tabBarIcon: ({color,focused}) => (
-                    <TabIcon 
-                        color={color}
-                        name= "Contacts"
-                        focused={focused}
-                    />
-                )
-            }}
-        />
-        <Tabs.Screen 
-            name='SMS'
-            options={{
-                title: 'SMS',
-                headerShown: false,
-                tabBarIcon: ({color,focused}) => (
-                    <TabIcon 
-                        color={color}
-                        name= "SMS"
                         focused={focused}
                     />
                 )

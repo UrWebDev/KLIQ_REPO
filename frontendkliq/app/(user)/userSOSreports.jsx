@@ -44,7 +44,7 @@ const SOSReports = () => {
 
   return (
     <View className={`flex p-4`}>
-      <Text className={`text-2xl font-bold mb-4`}>SOS Reports</Text>
+      <Text className={`text-2xl font-bold mb-4`}>SOS Reportszzz</Text>
       {reports.map((report, index) => (
         <View key={index} className={`border border-gray-300 rounded-lg p-4 mb-4`}>
           <Text className={`text-sm text-gray-500 mb-2`}>{report.timestamp}</Text>
