@@ -73,13 +73,13 @@
 // });
 
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-const cors = require("cors");
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors'
+import dotenv from 'dotenv';
+import bodyParser from 'body-parser';
 
-require('dotenv').config();
-
+dotenv.config()
 const app = express();
 app.use(cors({origin: '*'}));
 app.use(bodyParser.json());
@@ -126,7 +126,7 @@ app.listen(process.env.PORT, () => {
 app.get('/', (req, res) => {
     res.status(200).send("running on port 3k")
 })
-const authRoutes = require("./authRoutes/authRoutes");
+import authRoutes from './authRoutes/authRoutes.js';
 app.use("/api/auth", authRoutes);
 
 // push
@@ -151,3 +151,12 @@ app.use("/api/auth", authRoutes);
 //     res.status(500).send({ status: "error", data: err.message });
 //   }
 // });
+
+//emergency contacts API
+import { getContacts, addContact, updateContact, deleteContact } from './appRoutes/recipientsContactRoutes.js';
+
+app.get('/recipients/getAllContacts', getContacts);
+app.post('/recipients/addContact', addContact);
+app.put('/recipients/updateContact/:id', updateContact);
+app.delete('/recipients/deleteContact/:id', deleteContact);
+
