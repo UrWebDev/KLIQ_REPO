@@ -159,4 +159,3 @@ app.get('/recipients/getAllEmergencyContacts', getContacts);
 app.post('/recipients/addEmergencyContact', addContact);
 app.put('/recipients/updateEmergencyContact/:id', updateContact);
 app.delete('/recipients/deleteEmergencyContact/:id', deleteContact);
-
