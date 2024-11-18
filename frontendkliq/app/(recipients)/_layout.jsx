@@ -25,7 +25,7 @@ const TabsLayout = () => {
     } else {
       setIsAuthenticated(false);
       // Redirect to login if not authenticated
-      router.push('/login');
+      router.push('/authScreen');
     }
   }, [router]);
 
@@ -38,7 +38,7 @@ const TabsLayout = () => {
     // Clear authentication data (e.g., token)
     localStorage.removeItem('authToken');
     // Redirect to login screen
-    router.push('/login');
+    router.push('/authScreen');
   };
   return (
     <>  <Button title="Logout" onPress={handleLogout} />
@@ -55,33 +55,14 @@ const TabsLayout = () => {
         tabBarInactiveTintColor: '#FFA001',
       }}
     >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Home',
-          headerShown: false,
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} name="Home" focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="location"
-        options={{
-          title: 'Location',
-          headerShown: false,
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} name="Location" focused={focused} />
-          ),
-        }}
-      />
+
       <Tabs.Screen
         name="sosMsg"
         options={{
-          title: 'SOS',
+          title: 'SOS TRY FETCH',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} name="SOS" focused={focused} />
+            <TabIcon color={color} name="SOS TRY FETCH" focused={focused} />
           ),
         }}
       />
@@ -95,16 +76,7 @@ const TabsLayout = () => {
           ),
         }}
       />
-      <Tabs.Screen
-        name="SMS"
-        options={{
-          title: 'SMS',
-          headerShown: false,
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} name="SMS" focused={focused} />
-          ),
-        }}
-      />
+
       <Tabs.Screen
         name="SOSsmsg"
         options={{
@@ -112,6 +84,16 @@ const TabsLayout = () => {
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
             <TabIcon color={color} name="SOSsmsg" focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="recipientSOSreport"
+        options={{
+          title: 'SOS reports',
+          headerShown: false,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon color={color} name="Sos Reports" focused={focused} />
           ),
         }}
       />
