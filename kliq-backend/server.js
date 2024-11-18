@@ -83,7 +83,7 @@ dotenv.config()
 const app = express();
 app.use(cors({origin: '*'}));
 app.use(bodyParser.json());
-
+app.use(express.json());
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB connected"))
@@ -155,8 +155,8 @@ app.use("/api/auth", authRoutes);
 //emergency contacts API
 import { getContacts, addContact, updateContact, deleteContact } from './appRoutes/recipientsContactRoutes.js';
 
-app.get('/recipients/getAllContacts', getContacts);
-app.post('/recipients/addContact', addContact);
-app.put('/recipients/updateContact/:id', updateContact);
-app.delete('/recipients/deleteContact/:id', deleteContact);
+app.get('/recipients/getAllEmergencyContacts', getContacts);
+app.post('/recipients/addEmergencyContact', addContact);
+app.put('/recipients/updateEmergencyContact/:id', updateContact);
+app.delete('/recipients/deleteEmergencyContact/:id', deleteContact);
 
