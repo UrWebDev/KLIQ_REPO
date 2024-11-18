@@ -37,6 +37,8 @@ const TabsLayout = () => {
   const handleLogout = () => {
     // Clear authentication data (e.g., token)
     localStorage.removeItem('authToken');
+    const checkTokenLogout = localStorage.getItem('authToken')
+    console.log(checkTokenLogout)
     // Redirect to login screen
     router.push('/authScreen');
   };

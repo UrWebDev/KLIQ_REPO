@@ -1,11 +1,13 @@
-import { View, Text, Image } from 'react-native'
-import React from 'react'
-import {Tabs, Redirect} from 'expo-router'
+import { View, Text, Image, Button } from 'react-native'
+import React, { useEffect, useState } from 'react';
+import {Tabs, useRouter} from 'expo-router'
 import { NativeWindStyleSheet } from "nativewind";
 
 
 
 const TabIcon =({ color, name, focused}) => {
+    
+
     return(
         <View clasName='item-center'>
             <Text clasName={`${focused? 'text-red-600' : 'text-black'} text-xs`} style={{color: color}}>
@@ -16,8 +18,37 @@ const TabIcon =({ color, name, focused}) => {
 }
 
 const TabIconTwo = () => {
+    const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication status
+  useEffect(() => {
+    const token = localStorage.getItem('authToken'); // or use AsyncStorage if needed
+    if (token) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+      // Redirect to login if not authenticated
+      router.push('/authScreen');
+    }
+  }, [router]);
+
+  // Render the tabs only if the user is authenticated
+  if (!isAuthenticated) {
+    return null; // You can show a loading screen or return null until authentication is checked
+  }
+
+  const handleLogout = () => {
+    // Clear authentication data (e.g., token)
+    localStorage.removeItem('authToken');
+    const checkTokenLogout = localStorage.getItem('authToken')
+    console.log(checkTokenLogout)
+    // Redirect to login screen
+    router.push('/authScreen');
+  };
   return (
     <>
+    <Button title="Logout" onPress={handleLogout} />
     <Tabs
         screenOptions={{tabBarShowLabel: false,
             tabBarStyle:{
