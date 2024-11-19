@@ -1,14 +1,21 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Alert, Picker, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, Alert, TouchableOpacity, StyleSheet } from "react-native";
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Import the icon library
 import { register, login } from "./api";
 import { useRouter } from "expo-router";
+
+const roles = [
+    { label: "KLIQ User", value: "user" },
+    { label: "Recipient", value: "recipient" },
+];
 
 const AuthScreen = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState(""); // New state for confirm password
-    const [role, setRole] = useState("user");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [role, setRole] = useState(""); // Start with an empty role
+    const [dropdownVisible, setDropdownVisible] = useState(false);
     const router = useRouter();
 
     const handleAuth = async () => {
@@ -61,6 +68,31 @@ const AuthScreen = () => {
             />
             {!isLogin && (
                 <>
+                    <TouchableOpacity 
+                        style={styles.dropdown} 
+                        onPress={() => setDropdownVisible(!dropdownVisible)}
+                    >
+                        <Text style={styles.dropdownText}>
+                            {role ? roles.find(r => r.value === role)?.label : "Select Role"} {/* Tooltip text */}
+                        </Text>
+                        <Icon name="arrow-drop-down" size={24} color="#333" />
+                    </TouchableOpacity>
+                    {dropdownVisible && (
+                        <View style={styles.dropdownOptions}>
+                            {roles.map((item) => (
+                                <TouchableOpacity
+                                    key={item.value}
+                                    style={styles.dropdownOption}
+                                    onPress={() => {
+                                        setRole(item.value);
+                                        setDropdownVisible(false);
+                                    }}
+                                >
+                                    <Text style={styles.dropdownOptionText}>{item.label}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
                     <TextInput
                         placeholder="Confirm Password"
                         value={confirmPassword}
@@ -69,14 +101,6 @@ const AuthScreen = () => {
                         style={styles.input}
                         placeholderTextColor="rgba(0, 0, 0, 0.3)"
                     />
-                    <Picker
-                        selectedValue={role}
-                        onValueChange={(value) => setRole(value)}
-                        style={styles.picker}
-                    >
-                        <Picker.Item label="KLIQ User" value="user" />
-                        <Picker.Item label="Recipient" value="recipient" />
-                    </Picker>
                 </>
             )}
             <TouchableOpacity style={styles.button} onPress={handleAuth}>
@@ -112,8 +136,34 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontStyle: 'italic',
     },
-    picker: {
-        marginBottom: 20,
+    dropdown: {
+        flexDirection: 'row', // Align items horizontally
+        justifyContent: 'space-between', // Space between text and icon
+        alignItems: 'center', // Center vertically
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        paddingVertical: 15,
+        paddingHorizontal: 10,
+        marginBottom: 15,
+    },
+    dropdownText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    dropdownOptions: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        marginBottom: 15,
+        backgroundColor: '#fff',
+    },
+    dropdownOption: {
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+    },
+    dropdownOptionText: {
+        fontSize: 16,
     },
     button: {
         backgroundColor: '#007BFF',
