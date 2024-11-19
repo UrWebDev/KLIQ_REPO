@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
+import { tw } from 'nativewind'; // Importing NativeWind for styling
 
 export default function Signup() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function Signup() {
   function handleSubmit() {
     const userData = {
       name: name,
-      mobilePhone: mobilePhone, // Fix variable here
+      mobilePhone: mobilePhone,
       password: password,
     };
 
@@ -65,12 +66,12 @@ export default function Signup() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Signup PAGE</Text>
+    <View style={tw`flex-1 justify-center items-center p-4 bg-gray-100`}>
+      <Text style={tw`text-2xl font-bold mb-6`}>Sign Up</Text>
 
       {/* Name Input */}
       <TextInput
-        style={styles.input}
+        style={tw`w-full p-3 mb-4 border border-gray-300 rounded-md`}
         placeholder="Name"
         keyboardType="default"
         onChange={handleName}
@@ -78,7 +79,7 @@ export default function Signup() {
 
       {/* Mobile Number Input */}
       <TextInput
-        style={styles.input}
+        style={tw`w-full p-3 mb-4 border border-gray-300 rounded-md`}
         placeholder="Mobile Number"
         keyboardType="phone-pad"
         maxLength={10} // Limit to 10 digits for mobile number
@@ -87,50 +88,19 @@ export default function Signup() {
 
       {/* Password Input */}
       <TextInput
-        style={styles.input}
+        style={tw`w-full p-3 mb-4 border border-gray-300 rounded-md`}
         placeholder="Password"
         secureTextEntry
         onChange={handlePassword}
       />
 
       {/* Submit Button */}
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Sign up</Text>
+      <TouchableOpacity 
+        style={tw`w-full bg-blue-600 p-3 rounded-md mt-4`}
+        onPress={handleSubmit}
+      >
+        <Text style={tw`text-white text-center text-lg font-semibold`}>Sign Up</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  input: {
-    width: '100%',
-    padding: 10,
-    marginVertical: 10,
-    borderWidth: 1,
-    borderRadius: 5,
-    borderColor: '#ccc',
-  },
-  button: {
-    marginTop: 20,
-    backgroundColor: '#007bff',
-    paddingVertical: 10,
-    paddingHorizontal: 40,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    textAlign: 'center',
-  },
-});

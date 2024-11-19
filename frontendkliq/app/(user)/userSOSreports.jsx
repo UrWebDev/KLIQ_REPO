@@ -1,16 +1,14 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faExclamationTriangle, faComment, faMapMarker } from '@fortawesome/free-solid-svg-icons';
-
 import { NativeWindStyleSheet } from "nativewind";
 
 NativeWindStyleSheet.setOutput({
   default: "native",
 });
 
-const userSOSReports = () => {
+const UserSOSReports = () => {
   const reports = [
     {
       timestamp: '7/17/24 2:11 PM',
@@ -43,19 +41,21 @@ const userSOSReports = () => {
   ];
 
   return (
-    <View className={`flex p-4`}>
-      <Text className={`text-2xl font-bold mb-4`}>SOS Reportszzz</Text>
-      {reports.map((report, index) => (
-        <View key={index} className={`border border-gray-300 rounded-lg p-4 mb-4`}>
-          <Text className={`text-sm text-gray-500 mb-2`}>{report.timestamp}</Text>
-          <View className={`flex flex-row items-center`}>
-            <FontAwesomeIcon icon={report.icon} size={16} color="red" />
-            <Text className={`ml-2`}>{report.timestamp}</Text>
+    <View className="flex-1 p-4 bg-gray-100">
+      <Text className="text-3xl font-bold mb-6 text-left text-black">SOS Reports:</Text>
+      <View className="space-y-4">
+        {reports.map((report, index) => (
+          <View key={index} className="bg-white shadow-lg rounded-lg p-4 border border-gray-300 flex-row items-center">
+            <FontAwesomeIcon icon={report.icon} size={24} color="red" />
+            <View className="ml-4 flex-1">
+              <Text className="text-lg font-semibold text-gray-800">{report.timestamp}</Text>
+              <Text className="text-sm text-gray-600">Details about the report...</Text> {/* Placeholder for additional details */}
+            </View>
           </View>
-        </View>
-      ))}
+        ))}
+      </View>
     </View>
   );
 };
 
-export default userSOSReports;
+export default UserSOSReports;
