@@ -227,9 +227,9 @@ const styles = StyleSheet.create({
   
    submitButton: {
      paddingVertical: 12,
-     borderRadius: 8,
+     borderRadius: 16,
      alignItems: 'center',
-     marginVertical: 8,
+     marginVertical: 12,
    },
    addButton: {
      backgroundColor: '#007BFF',
@@ -251,17 +251,17 @@ const styles = StyleSheet.create({
      flexDirection: 'row',
      justifyContent: 'space-between',
      alignItems: 'center',
-     backgroundColor: '#D9D9D9', // Updated color for each contact card
-     paddingVertical:12 ,
+     backgroundColor: '#F2F2F2',
+     paddingVertical:16 ,
      paddingHorizontal :16 ,
      borderRadius :25 ,
      marginBottom :10 ,
-     borderWidth :1 , // Added border width
-     borderColor :'#ccc', // Added border color
+     borderWidth : 2,
+     borderColor :'#ccc',
      shadowColor:'#000', // Optional shadow for elevation effect
      shadowOffset:{width :0 , height :2}, 
-     shadowOpacity :0.1 ,
-     shadowRadius :4 ,
+     shadowOpacity :0.3 ,
+     shadowRadius :2 ,
      elevation :2 , // For Android shadow effect 
    },
    contactName: {

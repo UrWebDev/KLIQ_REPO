@@ -85,7 +85,7 @@ const TabsLayout = () => {
           title: 'SOSsmsg',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} name="SOSsmsg" focused={focused} />
+            <TabIcon color={color} name="SOSmsg" focused={focused} />
           ),
         }}
       />
@@ -95,7 +95,7 @@ const TabsLayout = () => {
           title: 'SOS reports',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} name="Sos Reports" focused={focused} />
+            <TabIcon color={color} name="SOSReports" focused={focused} />
           ),
         }}
       />
