@@ -74,14 +74,16 @@
 
 
 import express from 'express';
-import mongoose from 'mongoose';
+import mongoose, { get } from 'mongoose';
 import cors from 'cors'
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 
 dotenv.config()
 const app = express();
-app.use(cors({origin: '*'}));
+// Middleware to parse application/x-www-form-urlencoded data
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 // Connect to MongoDB
@@ -89,34 +91,34 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB connection error:", err));
 
-// Define SMS schema
-const smsSchema = new mongoose.Schema({
-  sentAt: { type: Date, default: Date.now },
-  to: String,
-  message: String,
-});
+// // Define SMS schema
+// const smsSchema = new mongoose.Schema({
+//   sentAt: { type: Date, default: Date.now },
+//   to: String,
+//   message: String,
+// });
 
-const SMS = mongoose.model('SMS', smsSchema); // Mongoose model
+// const SMS = mongoose.model('SMS', smsSchema); // Mongoose model
 
-// Endpoint to receive SMS data from ESP32
-app.post('/webhook/sms', async (req, res) => {
-  const { to, message } = req.body;
+// // Endpoint to receive SMS data from ESP32
+// app.post('/webhook/sms', async (req, res) => {
+//   const { to, message } = req.body;
 
-  const sms = {
-    sentAt: new Date(),
-    to: to,
-    message: message,
-  };
+//   const sms = {
+//     sentAt: new Date(),
+//     to: to,
+//     message: message,
+//   };
 
-  try {
-    await SMS.create(sms);
-    console.log("SMS data saved to MongoDB:", sms);
-    res.status(200).send("SMS data received");
-  } catch (err) {
-    console.error("Error saving SMS data to MongoDB:", err);
-    res.status(500).send("Error saving SMS data");
-  }
-});
+//   try {
+//     await SMS.create(sms);
+//     console.log("SMS data saved to MongoDB:", sms);
+//     res.status(200).send("SMS data received");
+//   } catch (err) {
+//     console.error("Error saving SMS data to MongoDB:", err);
+//     res.status(500).send("Error saving SMS data");
+//   }
+// });
 
 // Start the server
 app.listen(process.env.PORT, () => {
@@ -126,6 +128,8 @@ app.listen(process.env.PORT, () => {
 app.get('/', (req, res) => {
     res.status(200).send("running on port 3k")
 })
+
+//for authentication role based
 import authRoutes from './authRoutes/authRoutes.js';
 app.use("/api/auth", authRoutes);
 
@@ -159,3 +163,7 @@ app.get('/recipients/getAllEmergencyContacts', getContacts);
 app.post('/recipients/addEmergencyContact', addContact);
 app.put('/recipients/updateEmergencyContact/:id', updateContact);
 app.delete('/recipients/deleteEmergencyContact/:id', deleteContact);
+
+import {receiveRecipientSOSMessage, getAllReceivedSOSMessage} from './appRoutes/recipientSOSMessageRoutes.js'
+app.post("/recipients/receive-sosMessage", receiveRecipientSOSMessage)
+app.get("/recipients/get-received-sosMessage", getAllReceivedSOSMessage)

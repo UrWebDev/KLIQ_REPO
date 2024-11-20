@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import React from 'react';
 import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Importing Material Icons for the call icon
@@ -35,10 +36,71 @@ const SOSMessage = () => {
           <Text style={styles.locationLabel}>User's Location:</Text>
         </View>
       </View>
+=======
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, ActivityIndicator, Linking, TouchableOpacity } from 'react-native';
+import axios from 'axios';
+
+const SOSMessage = () => {
+  const [sosMessages, setSOSMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch SOS messages from the backend
+    const fetchSOSMessages = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/recipients/get-received-sosMessage');
+        setSOSMessages(response.data);
+      } catch (error) {
+        console.error('Error fetching SOS messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSOSMessages();
+  }, []);
+
+  return (
+    <View className="flex-1 bg-white">
+      {loading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text className="text-gray-500 mt-4">Loading SOS Messages...</Text>
+        </View>
+      ) : (
+        <ScrollView className="flex-1 p-4">
+          {sosMessages.length > 0 ? (
+            sosMessages.map((sos, index) => (
+              <View key={index} className="bg-gray-100 rounded-lg mb-4 p-4">
+                <Text className="text-gray-500 text-sm">
+                  {new Date(sos.createdAt).toLocaleString()} {/* Format the date */}
+                </Text>
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-lg font-semibold">{sos.message}</Text>
+                </View>
+                <Text className="text-gray-700 mt-2">
+                  Location: Lat {sos.latitude}, Lng {sos.longitude}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(`http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`)}
+                  className="mt-2"
+                >
+                  <Text className="text-blue-500 underline">View on Google Maps</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          ) : (
+            <Text className="text-center text-gray-500">No SOS messages found.</Text>
+          )}
+        </ScrollView>
+      )}
+>>>>>>> Stashed changes
     </View>
   );
 };
 
+<<<<<<< Updated upstream
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -95,3 +157,6 @@ const styles = StyleSheet.create({
 });
 
 export default SOSMessage;
+=======
+export default SOSMessage;
+>>>>>>> Stashed changes
