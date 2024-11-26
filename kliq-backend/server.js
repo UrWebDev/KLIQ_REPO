@@ -73,24 +73,7 @@
 // });
 
 
-import express from 'express';
-import mongoose, { get } from 'mongoose';
-import cors from 'cors'
-import dotenv from 'dotenv';
-import bodyParser from 'body-parser';
-
-dotenv.config()
-const app = express();
-// Middleware to parse application/x-www-form-urlencoded data
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.json());
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URL)
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.error("MongoDB connection error:", err));
-
+//with ngrok, webhook/sms
 // // Define SMS schema
 // const smsSchema = new mongoose.Schema({
 //   sentAt: { type: Date, default: Date.now },
@@ -120,19 +103,6 @@ mongoose.connect(process.env.MONGO_URL)
 //   }
 // });
 
-// Start the server
-app.listen(process.env.PORT, () => {
-  console.log(`Server is running on port ${process.env.PORT}`);
-});
-
-app.get('/', (req, res) => {
-    res.status(200).send("running on port 3k")
-})
-
-//for authentication role based
-import authRoutes from './authRoutes/authRoutes.js';
-app.use("/api/auth", authRoutes);
-
 // push
 // const User = require('./UserDetails')
 // // Register route
@@ -155,6 +125,39 @@ app.use("/api/auth", authRoutes);
 //     res.status(500).send({ status: "error", data: err.message });
 //   }
 // });
+
+import express from 'express';
+import mongoose, { get } from 'mongoose';
+import cors from 'cors'
+import dotenv from 'dotenv';
+import bodyParser from 'body-parser';
+
+dotenv.config()
+const app = express();
+// Middleware to parse application/x-www-form-urlencoded data
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.json());
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URL)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("MongoDB connection error:", err));
+
+
+// Start the server
+app.listen(process.env.PORT, () => {
+  console.log(`Server is running on port ${process.env.PORT}`);
+});
+
+app.get('/', (req, res) => {
+    res.status(200).send("running on port 3k")
+})
+
+//for authentication role based
+import authRoutes from './authRoutes/authRoutes.js';
+app.use("/api/auth", authRoutes);
+
 
 //emergency contacts API
 import { getContacts, addContact, updateContact, deleteContact } from './appRoutes/recipientsContactRoutes.js';
