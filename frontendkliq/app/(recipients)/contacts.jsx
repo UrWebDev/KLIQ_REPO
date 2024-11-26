@@ -36,22 +36,25 @@ const Contacts = () => {
   };
 
   const handleAddContact = async () => {
-    if (!name || !phoneNumber) {
-      Alert.alert("Validation", "Please fill out all fields.");
+    if (!name.trim() || !phoneNumber.trim()) {
+      Alert.alert("Validation", "Name and phone number are required.");
       return;
     }
+  
     try {
-      const response = await axios.post(`${BASE_URL}/addEmergencyContact`, {
-        name,
-        phoneNumber,
-      });
+      const payload = { name: name.trim(), phoneNumber: phoneNumber.trim() };
+      console.log("Sending payload:", payload); // Debugging payload
+      const response = await axios.post(`${BASE_URL}/addEmergencyContact`, payload);
+      console.log("Server response:", response.data); // Debugging response
       setContacts([...contacts, response.data]);
       resetForm();
       Alert.alert("Success", "Contact added successfully!");
     } catch (error) {
-      console.error("Error adding contact:", error);
+      console.error("Error adding contact:", error.response?.data || error.message);
+      Alert.alert("Error", "Failed to add contact. Please try again.");
     }
   };
+  
 
   const handleUpdateContact = async () => {
     if (!name || !phoneNumber) {
