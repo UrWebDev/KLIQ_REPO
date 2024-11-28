@@ -100,6 +100,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Linking, TouchableOpacity } from 'react-native';
 import axios from 'axios';
+import { API_URL } from "@env";
 
 const SOSMessage = () => {
   const [sosMessages, setSOSMessages] = useState([]);
@@ -109,7 +110,7 @@ const SOSMessage = () => {
     // Fetch SOS messages from the backend
     const fetchSOSMessages = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/recipients/get-received-sosMessage');
+        const response = await axios.get(`http://${API_URL}/recipients/get-received-sosMessage`);
         setSOSMessages(response.data);
       } catch (error) {
         console.error('Error fetching SOS messages:', error);
