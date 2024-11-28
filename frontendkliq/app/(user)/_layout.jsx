@@ -21,31 +21,56 @@ const TabIconTwo = () => {
     const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check authentication status
-  useEffect(() => {
-    const token = localStorage.getItem('authToken'); // or use AsyncStorage if needed
-    if (token) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-      // Redirect to login if not authenticated
-      router.push('/authScreen');
-    }
-  }, [router]);
+//   // Check authentication status
+//   useEffect(() => {
+//     const token = localStorage.getItem('authToken'); // or use AsyncStorage if needed
+//     if (token) {
+//       setIsAuthenticated(true);
+//     } else {
+//       setIsAuthenticated(false);
+//       // Redirect to login if not authenticated
+//       router.push('/authScreen');
+//     }
+//   }, [router]);
 
-  // Render the tabs only if the user is authenticated
-  if (!isAuthenticated) {
-    return null; // You can show a loading screen or return null until authentication is checked
-  }
+//   // Render the tabs only if the user is authenticated
+//   const handleLogout = () => {
+//       // Clear authentication data (e.g., token)
+//       localStorage.removeItem('authToken');
+//       const checkTokenLogout = localStorage.getItem('authToken')
+//       console.log(checkTokenLogout)
+//       // Redirect to login screen
+//       router.push('/authScreen');
+//     };
+    // Check authentication status
+useEffect(() => {
+    const checkAuthStatus = async () => {
+        const token = await AsyncStorage.getItem('authToken'); // Use AsyncStorage
+        if (token) {
+            setIsAuthenticated(true);
+        } else {
+            setIsAuthenticated(false);
+            // Redirect to login if not authenticated
+            router.push('/authScreen');
+        }
+    };
 
-  const handleLogout = () => {
+    checkAuthStatus();
+}, [router]);
+
+// Handle logout
+const handleLogout = async () => {
     // Clear authentication data (e.g., token)
-    localStorage.removeItem('authToken');
-    const checkTokenLogout = localStorage.getItem('authToken')
-    console.log(checkTokenLogout)
+    await AsyncStorage.removeItem('authToken');
+    const checkTokenLogout = await AsyncStorage.getItem('authToken');
+    console.log(checkTokenLogout); // Should be null after removal
     // Redirect to login screen
     router.push('/authScreen');
-  };
+};
+
+    if (!isAuthenticated) {
+        return null; // You can show a loading screen or return null until authentication is checked
+    }
   return (
     <>
     <Button title="Logout" onPress={handleLogout} />
