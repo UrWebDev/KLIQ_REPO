@@ -2,7 +2,7 @@ import axios from "axios";
 import { API_URL } from "@env";
 
 
-const API = axios.create({ baseURL: `http://${API_URL}/api`,  headers: {
+const API = axios.create({ baseURL: `${API_URL}/api`,  headers: {
     "Content-Type": "application/json", // This is important
   }, });
 

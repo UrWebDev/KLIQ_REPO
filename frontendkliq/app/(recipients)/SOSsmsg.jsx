@@ -110,7 +110,7 @@ const SOSMessage = () => {
     // Fetch SOS messages from the backend
     const fetchSOSMessages = async () => {
       try {
-        const response = await axios.get(`http://${API_URL}/recipients/get-received-sosMessage`);
+        const response = await axios.get(`${API_URL}/recipients/get-received-sosMessage`);
         setSOSMessages(response.data);
       } catch (error) {
         console.error('Error fetching SOS messages:', error);

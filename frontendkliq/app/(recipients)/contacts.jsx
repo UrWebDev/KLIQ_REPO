@@ -13,7 +13,7 @@ import axios from "axios";
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Importing Material Icons
 import { API_URL } from "@env";
 
-const BASE_URL = `http://${API_URL}/recipients`;
+const BASE_URL = `${API_URL}/recipients`;
 
 const Contacts = () => {
   const [contacts, setContacts] = useState([]);
