@@ -68,9 +68,9 @@ const handleLogout = async () => {
     router.push('/authScreen');
 };
 
-    if (!isAuthenticated) {
-        return null; // You can show a loading screen or return null until authentication is checked
-    }
+    // if (!isAuthenticated) {
+    //     return null; // You can show a loading screen or return null until authentication is checked
+    // }
   return (
     <>
     <Button title="Logout" onPress={handleLogout} />

@@ -58,7 +58,7 @@ export default function LandingPage() {
   const router = useRouter();
 
   const handleButtonClick = () => {
-    router.push('/authScreen');
+    router.push('/addDeviceContact');
   };
 
   return (
