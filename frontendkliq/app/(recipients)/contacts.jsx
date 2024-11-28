@@ -12,7 +12,7 @@ import {
 import axios from "axios";
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Importing Material Icons
 
-const BASE_URL = "http://192.168.254.106:3000/recipients";
+const BASE_URL = "http://localhost:3000/recipients";
 
 const Contacts = () => {
   const [contacts, setContacts] = useState([]);

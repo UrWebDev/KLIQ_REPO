@@ -22,16 +22,16 @@ const TabIconTwo = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check authentication status
-//   useEffect(() => {
-//     const token = localStorage.getItem('authToken'); // or use AsyncStorage if needed
-//     if (token) {
-//       setIsAuthenticated(true);
-//     } else {
-//       setIsAuthenticated(false);
-//       // Redirect to login if not authenticated
-//       router.push('/authScreen');
-//     }
-//   }, [router]);
+  useEffect(() => {
+    const token = localStorage.getItem('authToken'); // or use AsyncStorage if needed
+    if (token) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+      // Redirect to login if not authenticated
+      router.push('/authScreen');
+    }
+  }, [router]);
 
   // Render the tabs only if the user is authenticated
   if (!isAuthenticated) {

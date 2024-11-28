@@ -31,9 +31,8 @@ const AuthScreen = () => {
             Alert.alert("Success", response.data.message || "Login Successful");
             
             if (response.data.token) {
-                // console.log("Storing token in localStorage:", response.data.token); 
-                // localStorage.setItem("authToken", response.data.token); 
-                console.log('response 200')
+                console.log("Storing token in localStorage:", response.data.token); 
+                localStorage.setItem("authToken", response.data.token); 
             } else {
                 console.log("No token received in response.");
             }
