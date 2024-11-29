@@ -10,10 +10,11 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
-import { AppState } from 'react-native';
+
 
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+
 
 const Contactss = () => {
   const [manager] = useState(new BleManager());
@@ -22,7 +23,6 @@ const Contactss = () => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
-  
 
   useEffect(() => {
     const subscription = manager.onStateChange((state) => {
@@ -32,42 +32,12 @@ const Contactss = () => {
       }
     }, true);
 
+
     return () => {
       manager.destroy();
     };
   }, [manager]);
 
-
-  useEffect(() => {
-    const handleAppStateChange = async (nextAppState) => {
-      if (nextAppState === 'background' && connected && device) {
-        try {
-          await device.cancelConnection();
-          console.log('Explicit disconnect in background');
-          setConnected(false);
-          Alert.alert("Disconnected", "Device has been disconnected.");
-        } catch (error) {
-          console.error('Failed to disconnect on background:', error);
-        }
-      }
-    };
-  
-    // Add event listener
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-  
-    return () => {
-      // Remove the event listener when the component unmounts
-      subscription.remove();
-    };
-  }, [connected, device]);
-
-useEffect(() => {
-  return () => {
-    if (connected && device) {
-      disconnectDevice();
-    }
-  };
-}, [device, connected]);
 
   const scanAndConnect = () => {
     manager.startDeviceScan(null, null, async (error, scannedDevice) => {
@@ -75,6 +45,7 @@ useEffect(() => {
         console.error("Scan error:", error);
         return;
       }
+
 
       // Look for the specific device by name
       if (scannedDevice && scannedDevice.name === 'ESP32-ContactDevice') {
@@ -91,11 +62,13 @@ useEffect(() => {
     });
   };
 
+
   const connectToDevice = async (scannedDevice) => {
     try {
       // Attempt to connect to the device
       const connectedDevice = await scannedDevice.connect();
       await connectedDevice.discoverAllServicesAndCharacteristics();
+
 
       // Introduce a short delay after connection to stabilize
       setTimeout(async () => {
@@ -110,11 +83,13 @@ useEffect(() => {
         }
       }, 1000);  // Wait for 1 second before verifying the connection
 
+
     } catch (error) {
       console.error("Connection error:", error);
       Alert.alert("Error", "Failed to connect to device. Please try again.");
     }
   };
+
 
   const sendContactData = async (contactData) => {
     if (!device || !connected) {
@@ -123,10 +98,12 @@ useEffect(() => {
       return;
     }
 
+
     try {
       // Ensure the device is connected before proceeding
       const isConnected = await device.isConnected();
       console.log("Device connection status:", isConnected); // Log connection status
+
 
       // If not connected, attempt reconnection
       if (!isConnected) {
@@ -140,19 +117,20 @@ useEffect(() => {
         }
       }
 
+
       // Convert contact data to Base64 before sending
       const base64Data = Buffer.from(contactData).toString('base64'); // Convert to Base64 string
-  
+ 
       // Discover services and characteristics
       await device.discoverAllServicesAndCharacteristics();
-  
+ 
       // Write the Base64 encoded data to the ESP32 device
       await device.writeCharacteristicWithoutResponseForService(
         SERVICE_UUID,          // The service UUID
         CHARACTERISTIC_UUID,   // The characteristic UUID
         base64Data             // The Base64 encoded data
       );
-      
+     
       console.log('Contact data sent successfully!');
       Alert.alert("Success", "Contact sent successfully!");
     } catch (error) {
@@ -161,61 +139,55 @@ useEffect(() => {
     }
   };
 
+
   const sendContact = async () => {
     if (!connected || !device) {
       Alert.alert("Error", "Not connected to a device.");
       return;
     }
 
+
     if (!name || !number) {
       Alert.alert("Error", "Please enter both name and number.");
       return;
     }
 
+
     const contactData = `${name},${number}`;
-    
+   
     // Use sendContactData function
     await sendContactData(contactData);
   };
 
+
   const disconnectDevice = async () => {
     if (device) {
-        try {
-            // Check the device's connection status before attempting to disconnect
-            const isConnected = await device.isConnected();
-            if (isConnected) {
-                // Explicitly send a disconnect signal to the ESP32, if connected
-                const disconnectSignal = Buffer.from("DISCONNECT").toString('base64');
-                await device.writeCharacteristicWithoutResponseForService(
-                    SERVICE_UUID,
-                    CHARACTERISTIC_UUID,
-                    disconnectSignal
-                );
-                console.log("Sent disconnect signal to ESP32.");
-
-                // Cancel the connection if still connected
-                await device.cancelConnection();
-                console.log("Device disconnected successfully.");
-            } else {
-                console.log("Device was already disconnected.");
-            }
-
-            // Update React Native state to reflect disconnection
-            setConnected(false);
-            setDevice(null);
-
-            // Provide feedback to the user
-            Alert.alert("Disconnected", "Device has been disconnected.");
-        } catch (error) {
-            console.error("Failed to disconnect:", error);
-            Alert.alert("Error", "Failed to disconnect the device.");
+      try {
+        // Check if the device is actually connected
+        const isConnected = await device.isConnected();
+        if (isConnected) {
+          // Attempt to cancel the connection if still connected
+          await device.cancelConnection();
+          console.log("Device disconnected successfully.");
+        } else {
+          console.log("Device was already disconnected.");
         }
+ 
+        // Update the states regardless to ensure UI reflects the status correctly
+        setConnected(false);
+        setDevice(null);
+        Alert.alert("Disconnected", "Device has been disconnected.");
+       
+      } catch (error) {
+        console.error('Failed to disconnect:', error);
+        Alert.alert('Error', 'Failed to disconnect the device.');
+      }
     } else {
-        Alert.alert("Error", "No device to disconnect.");
+      Alert.alert('Error', 'No device to disconnect.');
     }
-};
-
-
+  };
+ 
+ 
 
 
   return (
@@ -251,12 +223,14 @@ useEffect(() => {
   <Text style={styles.buttonText}>Disconnect</Text>
 </TouchableOpacity>
 
+
       <Text style={styles.status}>
         Status: {connected ? "Connected" : "Not Connected"}
       </Text>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -299,5 +273,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+
 
 export default Contactss;

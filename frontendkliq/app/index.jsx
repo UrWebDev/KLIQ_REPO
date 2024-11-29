@@ -58,7 +58,8 @@ export default function LandingPage() {
   const router = useRouter();
 
   const handleButtonClick = () => {
-    router.push('/addDeviceContact');
+    // router.push('/addDeviceContact');
+    router.push('/sosMsg');
   };
 
   return (
