@@ -59,8 +59,8 @@ export default function LandingPage() {
 
   const handleButtonClick = () => {
     // router.push('/addDeviceContact');
-    // router.push('/SOSsmsg');
-    router.push('/contacts')
+    router.push('/SOSsmsg');
+    // router.push('/userSOSreports')
   };
 
   return (

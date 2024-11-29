@@ -6,36 +6,35 @@ import axios from 'axios';
 import { API_URL } from "@env";
 
 const RecipientSOSReports = () => {
-  const [sosMessages, setSOSMessages] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [expandedDates, setExpandedDates] = useState({})
+  const [sosMessages, setSOSMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedDates, setExpandedDates] = useState({});
 
   useEffect(() => {
     const fetchSOSMessages = async () => {
       try {
-        const response = await axios.get(`${API_URL}/recipients/get-received-sosMessage`)
-        setSOSMessages(response.data)
+        const response = await axios.get(`${API_URL}/recipients/get-received-sosMessage`);
+        setSOSMessages(response.data);
       } catch (error) {
-        console.error('Error fetching SOS messages:', error)
+        console.error('Error fetching SOS messages:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchSOSMessages()
-  }, [])
+    fetchSOSMessages();
+  }, []);
 
-  // Group SOS messages by date
   const groupMessagesByDate = (messages) => {
     return messages.reduce((acc, message) => {
-      const date = new Date(message.receivedAt).toLocaleDateString()
+      const date = new Date(message.receivedAt).toLocaleDateString();
       if (!acc[date]) {
-        acc[date] = []
+        acc[date] = [];
       }
-      acc[date].push(message)
-      return acc
-    }, {})
-  }
+      acc[date].push(message);
+      return acc;
+    }, {});
+  };
 
   const groupedMessages = groupMessagesByDate(sosMessages);
 
@@ -43,8 +42,8 @@ const RecipientSOSReports = () => {
     setExpandedDates((prev) => ({
       ...prev,
       [date]: !prev[date],
-    }))
-  }
+    }));
+  };
 
   return (
     <View className="flex-1 bg-gray-100 p-4">
@@ -60,12 +59,11 @@ const RecipientSOSReports = () => {
                 className="bg-blue-500 rounded-lg p-4 flex-row justify-between items-center"
               >
                 <Text className="text-white font-bold">{date}</Text>
-  <View>
-    <FontAwesomeIcon icon={faExclamationTriangle} size={20} color="white" />
-  </View>
+                <View>
+                  <FontAwesomeIcon icon={faExclamationTriangle} size={20} color="white" />
+                </View>
               </TouchableOpacity>
-
-              {expandedDates[date] &&
+              {expandedDates[date] ? (
                 groupedMessages[date].map((message, index) => (
                   <View key={index} className="bg-white p-4 border border-gray-300 mt-2 rounded-lg">
                     <Text className="text-gray-500 text-sm">
@@ -84,13 +82,14 @@ const RecipientSOSReports = () => {
                       <Text className="text-blue-500 underline">View on Google Maps</Text>
                     </TouchableOpacity>
                   </View>
-                ))}
+                ))
+              ) : null}
             </View>
           ))}
         </ScrollView>
       )}
     </View>
-  )
-}
+  );
+};
 
 export default RecipientSOSReports;

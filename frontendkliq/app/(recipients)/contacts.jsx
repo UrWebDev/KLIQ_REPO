@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  Alert,
-  Modal,
-  StyleSheet,
-} from "react-native";
+import {View, Text, TextInput, TouchableOpacity, FlatList, Alert, Modal} from "react-native";
 import axios from "axios";
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Importing Material Icons
+import Icon from "react-native-vector-icons/MaterialIcons";
 import { API_URL } from "@env";
+import { NativeWindStyleSheet } from "nativewind";
 
 const BASE_URL = `${API_URL}/recipients`;
 
@@ -22,7 +14,6 @@ const Contacts = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
 
-  // Fetch all contacts
   useEffect(() => {
     fetchContacts();
   }, []);
@@ -41,12 +32,9 @@ const Contacts = () => {
       Alert.alert("Validation", "Name and phone number are required.");
       return;
     }
-  
     try {
       const payload = { name: name.trim(), phoneNumber: phoneNumber.trim() };
-      console.log("Sending payload:", payload); // Debugging payload
       const response = await axios.post(`${BASE_URL}/addEmergencyContact`, payload);
-      console.log("Server response:", response.data); // Debugging response
       setContacts([...contacts, response.data]);
       resetForm();
       Alert.alert("Success", "Contact added successfully!");
@@ -55,7 +43,6 @@ const Contacts = () => {
       Alert.alert("Error", "Failed to add contact. Please try again.");
     }
   };
-  
 
   const handleUpdateContact = async () => {
     if (!name || !phoneNumber) {
@@ -104,21 +91,21 @@ const Contacts = () => {
   };
 
   const renderContact = ({ item }) => (
-    <View style={styles.contactCard}>
+    <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-lg border border-gray-300">
       <View>
-        <Text style={styles.contactName}>{item.name}</Text>
-        <Text style={styles.contactPhone}>{item.phoneNumber}</Text>
+        <Text className="text-lg font-bold">{item.name}</Text>
+        <Text className="text-gray-600">{item.phoneNumber}</Text>
       </View>
-      <View style={styles.actionButtons}>
+      <View className="flex-row space-x-2">
         <TouchableOpacity
           onPress={() => openUpdateModal(item)}
-          style={styles.editButton}
+          className="bg-green-500 p-2 rounded"
         >
           <Icon name="edit" size={20} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleDeleteContact(item._id)}
-          style={styles.deleteButton}
+          className="bg-red-500 p-2 rounded"
         >
           <Icon name="delete" size={20} color="#fff" />
         </TouchableOpacity>
@@ -127,77 +114,72 @@ const Contacts = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.title, { fontStyle: 'italic' }]}>Emergency Hotlines</Text>
-
-      {/* Add Contact */}
+    <View className="flex-1 p-4 bg-gray-100">
+      <Text className="text-3xl font-bold italic text-center mb-4">Emergency Hotlines</Text>
       <TextInput
         placeholder="Emergency Name"
         value={name}
         onChangeText={setName}
-        style={styles.input}
-        placeholderTextColor="rgba(0, 0, 0, 0.5)" // Lower opacity for placeholder
+        className="border border-gray-400 rounded-full p-3 mb-3 bg-white italic"
+        placeholderTextColor="rgba(0,0,0,0.5)"
       />
       <TextInput
         placeholder="Contact Number"
         value={phoneNumber}
         onChangeText={setPhoneNumber}
-        style={styles.input}
+        className="border border-gray-400 rounded-full p-3 mb-3 bg-white italic"
         keyboardType="phone-pad"
-        placeholderTextColor="rgba(0, 0, 0, 0.5)" // Lower opacity for placeholder
+        placeholderTextColor="rgba(0,0,0,0.5)"
       />
-      
       <TouchableOpacity
         onPress={selectedContact ? handleUpdateContact : handleAddContact}
-        style={[styles.submitButton, selectedContact ? styles.updateButton : styles.addButton]}
+        className={`p-4 rounded-lg ${
+          selectedContact ? "bg-green-500" : "bg-blue-500"
+        }`}
       >
-        <Text style={styles.submitButtonText}>
+        <Text className="text-white text-center font-bold">
           {selectedContact ? "Update Contact" : "Add Contact"}
         </Text>
       </TouchableOpacity>
-
-      {/* Contact List */}
       <FlatList
         data={contacts}
         renderItem={renderContact}
         keyExtractor={(item) => item._id}
-        contentContainerStyle={{ paddingBottom: 100 }} // To avoid cut-off at bottom
+        contentContainerStyle={{ paddingBottom: 100 }}
       />
-
-      {/* Update Modal */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Update Contact</Text>
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white w-4/5 rounded-lg p-4">
+            <Text className="text-xl font-bold mb-3">Update Contact</Text>
             <TextInput
               placeholder="Name"
               value={name}
               onChangeText={setName}
-              style={styles.input}
+              className="border border-gray-400 rounded-full p-3 mb-3 bg-white italic"
             />
             <TextInput
               placeholder="Phone Number"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
-              style={styles.input}
+              className="border border-gray-400 rounded-full p-3 mb-3 bg-white italic"
               keyboardType="phone-pad"
             />
             <TouchableOpacity
               onPress={handleUpdateContact}
-              style={[styles.submitButton, styles.updateButton]}
+              className="p-4 bg-green-500 rounded-lg mb-2"
             >
-              <Text style={styles.submitButtonText}>Save Changes</Text>
+              <Text className="text-white text-center font-bold">Save Changes</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
-              style={[styles.submitButton, styles.cancelButton]}
+              className="p-4 bg-red-500 rounded-lg"
             >
-              <Text style={styles.submitButtonText}>Cancel</Text>
+              <Text className="text-white text-center font-bold">Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -206,108 +188,9 @@ const Contacts = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  
-   input: {
-     borderWidth: 2,
-     borderColor: '#ccc',
-     borderRadius: 25,
-     padding: 12,
-     marginBottom: 12,
-     backgroundColor: '#fff',
-     fontStyle: 'italic', // Italic text for input
-   },
-  
-   submitButton: {
-     paddingVertical: 12,
-     borderRadius: 16,
-     alignItems: 'center',
-     marginVertical: 12,
-   },
-   addButton: {
-     backgroundColor: '#007BFF',
-   },
-   updateButton: {
-     backgroundColor: '#28a745',
-   },
-   cancelButton: {
-     backgroundColor: '#dc3545',
-   },
-   submitButtonText: {
-     color: '#fff',
-     fontSize: 16,
-     fontWeight: 'bold',
-   },
-  
-   // Updated contactCard to include a border and shadow for better visibility
-   contactCard: {
-     flexDirection: 'row',
-     justifyContent: 'space-between',
-     alignItems: 'center',
-     backgroundColor: '#F2F2F2',
-     paddingVertical:16 ,
-     paddingHorizontal :16 ,
-     borderRadius :25 ,
-     marginBottom :10 ,
-     borderWidth : 2,
-     borderColor :'#ccc',
-     shadowColor:'#000', // Optional shadow for elevation effect
-     shadowOffset:{width :0 , height :2}, 
-     shadowOpacity :0.3 ,
-     shadowRadius :2 ,
-     elevation :2 , // For Android shadow effect 
-   },
-   contactName: {
-     color: '#333', // Changed to dark color for better readability
-     fontWeight: 'bold',
-   },
-   contactPhone:{
-     color:'#666', // Lighter color for phone number for distinction
-   },
-   actionButtons:{
-     flexDirection:'row'
-   },
-   editButton:{
-     backgroundColor:'#28a745',
-     paddingHorizontal :10,
-     paddingVertical :6,
-     borderRadius :5,
-     marginRight :5
-   },
-   deleteButton:{
-     backgroundColor:'#dc3545',
-     paddingHorizontal :10,
-     paddingVertical :6,
-     borderRadius :5
-   },
-   modalOverlay:{
-     flex :1,
-     justifyContent:'center',
-     alignItems:'center',
-     backgroundColor:'rgba(0,0,0,0.5)'
-   },
-   modalContent:{
-     width:'80%',
-     backgroundColor:'#fff',
-     borderRadius :10 ,
-     padding :20
-   },
-   modalTitle:{
-     fontSize :20 ,
-     fontWeight:'bold' ,
-     marginBottom :10 
-   }
-});
 
 export default Contacts;
+
+NativeWindStyleSheet.setOutput({
+  default: 'native',
+});
