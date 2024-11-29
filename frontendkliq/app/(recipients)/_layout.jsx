@@ -7,8 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const TabIcon = ({ color, name, focused }) => (
   <View className="items-center">
     <Text className={`${focused ? 'text-red-600' : 'text-black'} text-xs`} style={{ color: color }}>
-      {name}
-    </Text>
+  {name}
+</Text>
+
   </View>
 );
 
