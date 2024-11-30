@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 
 const styles = StyleSheet.create({
   container: {
+    display: 'flex',
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -21,6 +22,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
+    justifyContent: 'center', // Added to ensure content is centered
+    alignItems: 'center', // Added to ensure content is centered
   },
   innerButton: {
     position: 'absolute',
@@ -40,27 +43,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     zIndex: 1,
+    justifyContent: 'center', // Added to ensure content is centered inside inner button
+    alignItems: 'center', // Added to ensure content is centered inside inner button
   },
   text: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    // transform: [{ translateX: '50' }, { translateY: '-50' }],
     color: '#fff',
     fontSize: 32,
     fontWeight: 'bold',
     fontStyle: 'italic',
     textShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-  },
+  }
 });
+
 
 export default function LandingPage() {
   const router = useRouter();
 
   const handleButtonClick = () => {
     // router.push('/addDeviceContact');
-    router.push('/SOSsmsg');
-    // // // // router.push('/userSOSreports')
+    // router.push('/SOSsmsg');
+    // router.push('/userSOSreports')
+    router.push('/authScreen')
   };
 
   return (
