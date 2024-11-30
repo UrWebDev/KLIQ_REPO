@@ -288,7 +288,7 @@ const Contacts = () => {
   };
 
   const renderContact = ({ item }) => (
-    <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-lg border border-gray-300">
+    <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-lg border border-gray-300 shadow-md">
       <View>
         <Text className="text-lg font-bold">{item.name}</Text>
         <Text className="text-gray-600">{item.phoneNumber}</Text>
@@ -313,12 +313,11 @@ const Contacts = () => {
   return (
     <View className="flex-1 p-4 bg-gray-100">
       {/* Hardcoded Emergency Hotline */}
-      <View className="bg-gray-100 p-4 mb-4 rounded-lg border border-gray-300">
-        <Text className="text-lg font-bold">User's Primary Number</Text>
+      <View className="bg-gray-100 p-4 mb-7 rounded-lg border border-gray-300 shadow-md">
+        <Text className="text-lg font-bold">KLIQ User's Primary Number</Text>
         <Text className="text-gray-600">+6397 6578 6665</Text>
       </View>
-      <Text className="text-3xl font-bold italic text-center mb-4">Emergency Hotlines</Text>
-
+      <Text className="text-3xl font-extrabold italic text-center mb-4">Emergency Hotlines</Text>
 
       <TextInput
         placeholder="Emergency Name"
@@ -337,7 +336,7 @@ const Contacts = () => {
       />
       <TouchableOpacity
         onPress={selectedContact ? handleUpdateContact : handleAddContact}
-        className={`p-4 rounded-lg ${selectedContact ? "bg-green-500" : "bg-blue-500"}`}
+        className={`p-4 rounded-lg ${selectedContact ? "bg-green-500" : "bg-blue-500"} mb-6`}
       >
         <Text className="text-white text-center font-bold">
           {selectedContact ? "Update Contact" : "Add Contact"}
@@ -356,7 +355,7 @@ const Contacts = () => {
         onRequestClose={() => setModalVisible(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white w-4/5 rounded-lg p-4">
+          <View className="bg-white w-4/5 rounded-lg p-4 shadow-md">
             <Text className="text-xl font-bold mb-3">Update Contact</Text>
             <TextInput
               placeholder="Name"

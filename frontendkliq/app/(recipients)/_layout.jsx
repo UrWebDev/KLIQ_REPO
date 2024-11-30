@@ -78,29 +78,29 @@ const handleLogout = async () => {
           borderTopColor: '#232533',
           height: 84,
         },
-        tabBarActiveTintColor: '#CDCDE0',
-        tabBarInactiveTintColor: '#FFA001',
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: '#778899',
       }}
     >
 
       <Tabs.Screen
-        name="contacts"
+        name="Hotlines"
         options={{
-          title: 'Contacts',
+          title: 'Hotlines',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} name="Contacts" focused={focused} />
+            <TabIcon color={color} name="Hotlines" focused={focused} />
           ),
         }}
       />
 
       <Tabs.Screen
-        name="SOSsmsg"
+        name="SOSInbox"
         options={{
-          title: 'SOSsmsg',
+          title: 'SOSInbox',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon color={color} name="SOSmsg" focused={focused} />
+            <TabIcon color={color} name="SOSInbox" focused={focused} />
           ),
         }}
       />

@@ -34,7 +34,7 @@
 //         <ScrollView className="flex-1 p-4">
 //           {sosMessages.length > 0 ? (
 //             sosMessages.map((sos, index) => (
-//               <View key={index} className="bg-gray-100 rounded-lg mb-4 p-4">
+//               <View key={index} className="bg-gray-100 rounded-lg mb-4 p-4 border border-gray-300 shadow-md">
 //                 <Text className="text-gray-500 text-sm">
 //                   {new Date(sos.createdAt).toLocaleString()} {/* Format the date */}
 //                 </Text>
@@ -65,6 +65,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Linking, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { API_URL } from "@env";
 
@@ -99,15 +100,21 @@ const SOSMessage = () => {
         <ScrollView className="flex-1 p-4">
           {sosMessages.length > 0 ? (
             sosMessages.map((sos, index) => (
-              <View key={index} className="bg-gray-100 rounded-lg mb-4 p-4">
+              <View key={index} className="bg-gray-100 rounded-2xl mb-4 p-6 border border-gray-300 shadow-md relative">
+                <Icon
+                  name="exclamation-triangle"
+                  size={20}
+                  color="red"
+                  style={{ position: 'absolute', top: 18, right: 25 }}
+                />
                 <Text className="text-gray-500 text-sm">
                   {/* Use receivedAt from the schema */}
                   {sos.receivedAt
                     ? new Date(sos.receivedAt).toLocaleString() // This will show the date and time
                     : 'Date not available'}
                 </Text>
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-lg font-semibold">{sos.message}</Text>
+                <View className="flex-row justify-between items-center mt-2">
+                  <Text className="text-lg font-extrabold">{sos.message}</Text>
                 </View>
                 <Text className="text-gray-700 mt-2">
                   Location: Lat {sos.latitude}, Lng {sos.longitude}
@@ -130,4 +137,3 @@ const SOSMessage = () => {
 };
 
 export default SOSMessage;
-

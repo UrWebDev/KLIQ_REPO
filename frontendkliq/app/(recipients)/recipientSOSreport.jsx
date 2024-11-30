@@ -52,21 +52,21 @@ const RecipientSOSReports = () => {
       ) : (
         <ScrollView>
           {Object.keys(groupedMessages).map((date) => (
-            <View key={date} className="mb-4">
+            <View key={date} className="mb-2">
               <TouchableOpacity
                 onPress={() => toggleExpand(date)}
-                className="bg-blue-500 rounded-lg p-4 flex-row justify-between items-center"
+                className="bg-gray-100 rounded-2xl mb-2 p-9 border border-gray-300 shadow-md relative flex-row justify-between items-center"
               >
-                <Text className="text-white font-bold">{date}</Text>
-                <Icon name="exclamation-triangle" size={20} color="white" />
+                <Text className="text-gray-900 font-bold">{date}</Text>
+                <Icon name="exclamation-triangle" size={20} color="red" />
               </TouchableOpacity>
               {expandedDates[date] ? (
                 groupedMessages[date].map((message, index) => (
-                  <View key={index} className="bg-white p-4 border border-gray-300 mt-2 rounded-lg">
+                  <View key={index} className="bg-gray-100 p-6 border border-gray-300 mt-2 rounded-lg shadow-md">
                     <Text className="text-gray-500 text-sm">
                       {new Date(message.receivedAt).toLocaleTimeString()}
                     </Text>
-                    <Text className="text-lg font-semibold">{message.message}</Text>
+                    <Text className="text-lg font-extrabold">{message.message}</Text>
                     <Text className="text-gray-700 mt-2">
                       Location: Lat {message.latitude}, Lng {message.longitude}
                     </Text>

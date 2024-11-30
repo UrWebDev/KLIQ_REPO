@@ -70,7 +70,7 @@ const AuthScreen = () => {
             if (response.data.role === 'user') {
                 router.push("/userSOSreports");
             } else if (response.data.role === 'recipient') {
-                router.push("/SOSsmsg");
+                router.push("/SOSInbox");
             }
         } catch (error) {
             console.log(error); // Log the error details
