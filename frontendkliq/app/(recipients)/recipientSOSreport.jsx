@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Linking } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { API_URL } from "@env";
 
@@ -47,7 +46,7 @@ const RecipientSOSReports = () => {
 
   return (
     <View className="flex-1 bg-gray-100 p-4">
-      <Text className="text-3xl font-bold mb-4">SOS Reports</Text>
+      {/* <Text className="text-3xl font-bold mb-4">SOS Reports</Text> */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
@@ -59,9 +58,7 @@ const RecipientSOSReports = () => {
                 className="bg-blue-500 rounded-lg p-4 flex-row justify-between items-center"
               >
                 <Text className="text-white font-bold">{date}</Text>
-                <View>
-                  <FontAwesomeIcon icon={faExclamationTriangle} size={20} color="white" />
-                </View>
+                <Icon name="exclamation-triangle" size={20} color="white" />
               </TouchableOpacity>
               {expandedDates[date] ? (
                 groupedMessages[date].map((message, index) => (
