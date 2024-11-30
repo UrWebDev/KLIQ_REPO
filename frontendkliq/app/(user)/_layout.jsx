@@ -63,8 +63,8 @@ const TabIconTwo = () => {
             borderTopColor: '#232533',
             height: 84,
           },
-          tabBarActiveTintColor: '#CDCDE0',
-          tabBarInactiveTintColor: '#FFA001',
+          tabBarActiveTintColor: '#FFFFFF',
+          tabBarInactiveTintColor: '#778899',
         }}
       >
         <Tabs.Screen

@@ -11,10 +11,8 @@ import {
 } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 
-
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
-
 
 const Contactss = () => {
   const [manager] = useState(new BleManager());
@@ -22,7 +20,6 @@ const Contactss = () => {
   const [connected, setConnected] = useState(false);
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
-
 
   useEffect(() => {
     const subscription = manager.onStateChange((state) => {
@@ -32,12 +29,10 @@ const Contactss = () => {
       }
     }, true);
 
-
     return () => {
       manager.destroy();
     };
   }, [manager]);
-
 
   const scanAndConnect = () => {
     manager.startDeviceScan(null, null, async (error, scannedDevice) => {
@@ -45,7 +40,6 @@ const Contactss = () => {
         console.error("Scan error:", error);
         return;
       }
-
 
       // Look for the specific device by name
       if (scannedDevice && scannedDevice.name === 'ESP32-ContactDevice') {
@@ -62,13 +56,11 @@ const Contactss = () => {
     });
   };
 
-
   const connectToDevice = async (scannedDevice) => {
     try {
       // Attempt to connect to the device
       const connectedDevice = await scannedDevice.connect();
       await connectedDevice.discoverAllServicesAndCharacteristics();
-
 
       // Introduce a short delay after connection to stabilize
       setTimeout(async () => {
@@ -83,13 +75,11 @@ const Contactss = () => {
         }
       }, 1000);  // Wait for 1 second before verifying the connection
 
-
     } catch (error) {
       console.error("Connection error:", error);
       Alert.alert("Error", "Failed to connect to device. Please try again.");
     }
   };
-
 
   const sendContactData = async (contactData) => {
     if (!device || !connected) {
@@ -98,12 +88,10 @@ const Contactss = () => {
       return;
     }
 
-
     try {
       // Ensure the device is connected before proceeding
       const isConnected = await device.isConnected();
       console.log("Device connection status:", isConnected); // Log connection status
-
 
       // If not connected, attempt reconnection
       if (!isConnected) {
@@ -117,20 +105,19 @@ const Contactss = () => {
         }
       }
 
-
       // Convert contact data to Base64 before sending
       const base64Data = Buffer.from(contactData).toString('base64'); // Convert to Base64 string
- 
+
       // Discover services and characteristics
       await device.discoverAllServicesAndCharacteristics();
- 
+
       // Write the Base64 encoded data to the ESP32 device
       await device.writeCharacteristicWithoutResponseForService(
         SERVICE_UUID,          // The service UUID
         CHARACTERISTIC_UUID,   // The characteristic UUID
         base64Data             // The Base64 encoded data
       );
-     
+
       console.log('Contact data sent successfully!');
       Alert.alert("Success", "Contact sent successfully!");
     } catch (error) {
@@ -139,26 +126,22 @@ const Contactss = () => {
     }
   };
 
-
   const sendContact = async () => {
     if (!connected || !device) {
       Alert.alert("Error", "Not connected to a device.");
       return;
     }
 
-
     if (!name || !number) {
       Alert.alert("Error", "Please enter both name and number.");
       return;
     }
-
 
     const contactData = `${name},${number}`;
    
     // Use sendContactData function
     await sendContactData(contactData);
   };
-
 
   const disconnectDevice = async () => {
     if (device) {
@@ -172,7 +155,7 @@ const Contactss = () => {
         } else {
           console.log("Device was already disconnected.");
         }
- 
+
         // Update the states regardless to ensure UI reflects the status correctly
         setConnected(false);
         setDevice(null);
@@ -186,13 +169,10 @@ const Contactss = () => {
       Alert.alert('Error', 'No device to disconnect.');
     }
   };
- 
- 
-
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Emergency Contact App</Text>
+      <Text style={styles.title}>Emergency Contacts</Text>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -220,9 +200,8 @@ const Contactss = () => {
         onPress={disconnectDevice}
         disabled={!connected} // Disable when not connected
       >
-  <Text style={styles.buttonText}>Disconnect</Text>
-</TouchableOpacity>
-
+        <Text style={styles.buttonText}>Disconnect</Text>
+      </TouchableOpacity>
 
       <Text style={styles.status}>
         Status: {connected ? "Connected" : "Not Connected"}
@@ -230,7 +209,6 @@ const Contactss = () => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -240,8 +218,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 25,
+    fontWeight: '800', // Extra bold
     marginBottom: 20,
   },
   inputContainer: {
@@ -253,13 +231,14 @@ const styles = StyleSheet.create({
     borderColor: '#DDD',
     padding: 10,
     marginVertical: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: '#FFF',
+    fontStyle: 'italic',
   },
   button: {
     backgroundColor: '#007BFF',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 25,
     marginVertical: 10,
     width: '80%',
     alignItems: 'center',
@@ -273,6 +252,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
-
 
 export default Contactss;

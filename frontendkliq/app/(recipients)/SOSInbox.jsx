@@ -63,6 +63,7 @@
 
 // export default SOSMessage;
 
+
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Linking, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -78,7 +79,11 @@ const SOSMessage = () => {
     const fetchSOSMessages = async () => {
       try {
         const response = await axios.get(`${API_URL}/recipients/get-received-sosMessage`);
-        setSOSMessages(response.data);
+        const sortedMessages = response.data.sort((a, b) => {
+          // Sort messages by receivedAt date in descending order
+          return new Date(b.receivedAt) - new Date(a.receivedAt);
+        });
+        setSOSMessages(sortedMessages);
       } catch (error) {
         console.error('Error fetching SOS messages:', error);
       } finally {
@@ -98,22 +103,24 @@ const SOSMessage = () => {
         </View>
       ) : (
         <ScrollView className="flex-1 p-4">
+          <Text className="text-3xl font-extrabold text-center mb-4">SOS Messages</Text>
           {sosMessages.length > 0 ? (
             sosMessages.map((sos, index) => (
-              <View key={index} className="bg-gray-100 rounded-2xl mb-4 p-6 border border-gray-300 shadow-md relative">
-                <Icon
-                  name="exclamation-triangle"
-                  size={20}
-                  color="red"
-                  style={{ position: 'absolute', top: 18, right: 25 }}
-                />
-                <Text className="text-gray-500 text-sm">
-                  {/* Use receivedAt from the schema */}
-                  {sos.receivedAt
-                    ? new Date(sos.receivedAt).toLocaleString() // This will show the date and time
-                    : 'Date not available'}
-                </Text>
-                <View className="flex-row justify-between items-center mt-2">
+              <View key={index} className="bg-gray-100 rounded-3xl mb-4 p-6 border-2 border-gray-300 shadow-md relative">
+                <View className="flex-row items-center">
+                  <Text className="text-gray-500 text-sm">
+                    {sos.receivedAt
+                      ? new Date(sos.receivedAt).toLocaleString() // This will show the date and time
+                      : 'Date not available'}
+                  </Text>
+                  <Icon
+                    name="exclamation-triangle"
+                    size={15}
+                    color="red"
+                    style={{ marginLeft: 10 }}
+                  />
+                </View>
+                <View className="flex-row justify-between items-center mt-3">
                   <Text className="text-lg font-extrabold">{sos.message}</Text>
                 </View>
                 <Text className="text-gray-700 mt-2">

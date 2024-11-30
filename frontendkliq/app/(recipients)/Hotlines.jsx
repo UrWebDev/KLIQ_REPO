@@ -288,7 +288,7 @@ const Contacts = () => {
   };
 
   const renderContact = ({ item }) => (
-    <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-lg border border-gray-300 shadow-md">
+    <View className="flex-row justify-between items-center bg-gray-100 p-5 mb-2 rounded-3xl border-2 border-gray-300 shadow-md">
       <View>
         <Text className="text-lg font-bold">{item.name}</Text>
         <Text className="text-gray-600">{item.phoneNumber}</Text>
@@ -313,9 +313,9 @@ const Contacts = () => {
   return (
     <View className="flex-1 p-4 bg-gray-100">
       {/* Hardcoded Emergency Hotline */}
-      <View className="bg-gray-100 p-4 mb-7 rounded-lg border border-gray-300 shadow-md">
+      <View className="bg-gray-100 p-5 mb-7 rounded-3xl border-2 border-gray-300 shadow-md">
         <Text className="text-lg font-bold">KLIQ User's Primary Number</Text>
-        <Text className="text-gray-600">+6397 6578 6665</Text>
+        <Text className="text-gray-500">+6397 6578 6665</Text>
       </View>
       <Text className="text-3xl font-extrabold italic text-center mb-4">Emergency Hotlines</Text>
 
@@ -323,20 +323,20 @@ const Contacts = () => {
         placeholder="Emergency Name"
         value={name}
         onChangeText={setName}
-        className="border border-gray-400 rounded-full p-3 mb-3 bg-white italic"
+        className="border border-gray-400 rounded-2xl p-4 mb-3 bg-white italic"
         placeholderTextColor="rgba(0,0,0,0.5)"
       />
       <TextInput
         placeholder="Contact Number"
         value={phoneNumber}
         onChangeText={setPhoneNumber}
-        className="border border-gray-400 rounded-full p-3 mb-3 bg-white italic"
+        className="border border-gray-400 rounded-2xl p-4 mb-3 bg-white italic"
         keyboardType="phone-pad"
         placeholderTextColor="rgba(0,0,0,0.5)"
       />
       <TouchableOpacity
         onPress={selectedContact ? handleUpdateContact : handleAddContact}
-        className={`p-4 rounded-lg ${selectedContact ? "bg-green-500" : "bg-blue-500"} mb-6`}
+        className={`p-4 rounded-full ${selectedContact ? "bg-green-500" : "bg-blue-500"} mb-6`}
       >
         <Text className="text-white text-center font-bold">
           {selectedContact ? "Update Contact" : "Add Contact"}
@@ -361,13 +361,13 @@ const Contacts = () => {
               placeholder="Name"
               value={name}
               onChangeText={setName}
-              className="border border-gray-400 rounded-full p-3 mb-3 bg-white italic"
+              className="border border-gray-400 rounded-full p-4 mb-3 bg-white italic"
             />
             <TextInput
               placeholder="Phone Number"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
-              className="border border-gray-400 rounded-full p-3 mb-3 bg-white italic"
+              className="border border-gray-400 rounded-full p-4 mb-3 bg-white italic"
               keyboardType="phone-pad"
             />
             <TouchableOpacity

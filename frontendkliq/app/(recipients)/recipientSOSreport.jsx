@@ -13,7 +13,11 @@ const RecipientSOSReports = () => {
     const fetchSOSMessages = async () => {
       try {
         const response = await axios.get(`${API_URL}/recipients/get-received-sosMessage`);
-        setSOSMessages(response.data);
+        // Sort the messages by receivedAt in descending order
+        const sortedMessages = response.data.sort((a, b) => {
+          return new Date(b.receivedAt) - new Date(a.receivedAt);
+        });
+        setSOSMessages(sortedMessages);
       } catch (error) {
         console.error('Error fetching SOS messages:', error);
       } finally {
@@ -46,27 +50,28 @@ const RecipientSOSReports = () => {
 
   return (
     <View className="flex-1 bg-gray-100 p-4">
-      {/* <Text className="text-3xl font-bold mb-4">SOS Reports</Text> */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <ScrollView>
+          <Text className="text-3xl font-extrabold text-center mb-4">SOS Reports</Text>
           {Object.keys(groupedMessages).map((date) => (
             <View key={date} className="mb-2">
               <TouchableOpacity
                 onPress={() => toggleExpand(date)}
-                className="bg-gray-100 rounded-2xl mb-2 p-9 border border-gray-300 shadow-md relative flex-row justify-between items-center"
+                className= "bg-white rounded-3xl mb-2 p-7 border-2 border-blue-500 shadow-lg relative flex-row justify-between items-center" 
+                //"bg-white rounded-3xl mb-2 p-7 border border-gray-300 shadow-md relative flex-row justify-between items-center"
               >
-                <Text className="text-gray-900 font-bold">{date}</Text>
+                <Text className="text-gray-900 font-extrabold">{date}</Text>
                 <Icon name="exclamation-triangle" size={20} color="red" />
               </TouchableOpacity>
               {expandedDates[date] ? (
                 groupedMessages[date].map((message, index) => (
-                  <View key={index} className="bg-gray-100 p-6 border border-gray-300 mt-2 rounded-lg shadow-md">
+                  <View key={index} className="bg-gray-100 p-6 border border-gray-300 mt-2 rounded-3xl shadow-md">
                     <Text className="text-gray-500 text-sm">
                       {new Date(message.receivedAt).toLocaleTimeString()}
                     </Text>
-                    <Text className="text-lg font-extrabold">{message.message}</Text>
+                    <Text className="text-lg font-extrabold mt-2">{message.message}</Text>
                     <Text className="text-gray-700 mt-2">
                       Location: Lat {message.latitude}, Lng {message.longitude}
                     </Text>
