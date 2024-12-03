@@ -63,7 +63,7 @@ export default function LandingPage() {
     // router.push('/addDeviceContact');
     // router.push('/SOSsmsg');
     // router.push('/userSOSreports')
-    router.push('/SOSInbox')
+    router.push('/authScreen')
   };
 
   return (

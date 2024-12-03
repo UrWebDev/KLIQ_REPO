@@ -73,7 +73,7 @@ const TabIconTwo = () => {
             title: 'Contacts',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
-              <TabIcon color={color} name="Contacts" focused={focused} />
+              <TabIcon color={color} name="Contact Management" focused={focused} />
             ),
           }}
         />
