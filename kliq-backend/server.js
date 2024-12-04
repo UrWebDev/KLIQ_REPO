@@ -3,6 +3,8 @@ import mongoose, { get } from 'mongoose';
 import cors from 'cors'
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
+import authenticate from './authenticate/authenticate.js';
+
 
 dotenv.config()
 const app = express();
@@ -35,11 +37,11 @@ app.use("/api/auth", authRoutes);
 //emergency contacts API
 import { getContacts, addContact, updateContact, deleteContact } from './appRoutes/recipientsContactRoutes.js';
 
-app.get('/recipients/getAllEmergencyContacts', getContacts);
-app.post('/recipients/addEmergencyContact', addContact);
+app.get('/recipients/getAllEmergencyContacts', authenticate ,getContacts);
+app.post('/recipients/addEmergencyContact', authenticate ,addContact);
 app.put('/recipients/updateEmergencyContact/:id', updateContact);
 app.delete('/recipients/deleteEmergencyContact/:id', deleteContact);
 
 import {receiveRecipientSOSMessage, getAllReceivedSOSMessage} from './appRoutes/recipientSOSMessageRoutes.js'
-app.post("/recipients/receive-sosMessage", receiveRecipientSOSMessage)
-app.get("/recipients/get-received-sosMessage", getAllReceivedSOSMessage)
+app.post("/recipients/receive-sosMessage", authenticate ,receiveRecipientSOSMessage)
+app.get("/recipients/get-received-sosMessage", authenticate ,getAllReceivedSOSMessage)
