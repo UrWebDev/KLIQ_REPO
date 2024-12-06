@@ -3,12 +3,13 @@ import Contact from '../dbSchemas/recipientsContactSchema.js';  // Importing the
 // Get all contacts
 const getContacts = async (req, res) => {
   try {
-    const contacts = await Contact.find();
+    const contacts = await Contact.find({ userId: req.userId });
     res.json(contacts);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Add a new contact
 const addContact = async (req, res) => {
