@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Linking } 
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { API_URL } from "@env";
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Make sure to import AsyncStorage
 
 const UserSOSReports = () => {
   const [sosMessages, setSOSMessages] = useState([]);
@@ -13,11 +12,7 @@ const UserSOSReports = () => {
   useEffect(() => {
     const fetchSOSMessages = async () => {
       try {
-        const token = AsyncStorage.getItem('authToken')
-        const response = await axios.get(`${API_URL}/recipients/get-received-sosMessage`, {headers: {
-          Authorization: `Bearer ${token}`
-        }
-        });
+        const response = await axios.get(`${API_URL}/recipients/get-received-sosMessage`);
         const sortedMessages = response.data.sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
         setSOSMessages(sortedMessages);
       } catch (error) {
