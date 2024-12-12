@@ -7,6 +7,6 @@ const sosMessageSchema = new mongoose.Schema({
     receivedAt: { type: Date, default: Date.now },
   });
   
-  const SOSModel = mongoose.model("Sos Message", sosMessageSchema);
+  const SOSModel = mongoose.model("Sos Messages", sosMessageSchema);
 
   export default SOSModel;
