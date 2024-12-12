@@ -3,8 +3,8 @@ import Hotlines from '../dbSchemas/recipientsEmergencyHotlinesSchema.js';  // Im
 // Get all contacts
 const getEmergencyHotlines = async (req, res) => {
   try {
-    const contacts = await Contact.find();
-    res.json(contacts);
+    const hotlines = await Hotlines.find();
+    res.json(hotlines);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -13,9 +13,9 @@ const getEmergencyHotlines = async (req, res) => {
 // Add a new contact
 const addEmergencyHotlines = async (req, res) => {
   try {
-    const contact = new Contact(req.body);
-    await contact.save();
-    res.status(201).json(contact);
+    const hotlines = new Hotlines(req.body);
+    await hotlines.save();
+    res.status(201).json(hotlines);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -24,15 +24,15 @@ const addEmergencyHotlines = async (req, res) => {
 // Update a contact
 const updateEmergencyHotlines = async (req, res) => {
   try {
-    const updatedContact = await Contact.findByIdAndUpdate(
+    const updateHotlines = await Hotlines.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     );
-    if (!updatedContact) {
+    if (!updateHotlines) {
       return res.status(404).json({ message: 'Contact not found' });
     }
-    res.json(updatedContact);
+    res.json(updateHotlines);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -41,8 +41,8 @@ const updateEmergencyHotlines = async (req, res) => {
 // Delete a contact
 const deleteEmergencyHotlines = async (req, res) => {
   try {
-    const deletedContact = await Contact.findByIdAndDelete(req.params.id);
-    if (!deletedContact) {
+    const deleteHotlines = await Hotlines.findByIdAndDelete(req.params.id);
+    if (!deleteHotlines) {
       return res.status(404).json({ message: 'Contact not found' });
     }
     res.json({ message: 'Contact deleted' });
