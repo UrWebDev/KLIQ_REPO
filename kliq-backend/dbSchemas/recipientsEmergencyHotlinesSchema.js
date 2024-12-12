@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const EmergencyContacts = new mongoose.Schema(
+const EmergencyHotlines = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -13,7 +13,7 @@ const EmergencyContacts = new mongoose.Schema(
       trim: true,
       match: [/^\+?[0-9]{10,15}$/, 'Please enter a valid phone number'],
     },
-    isEmergencyContact: {
+    isEmergencyHotlines: {
       type: Boolean,
       default: false,
     },
@@ -23,6 +23,6 @@ const EmergencyContacts = new mongoose.Schema(
   }
 );
 
-const Contact = mongoose.model('Contact', EmergencyContacts);
+const Hotlines = mongoose.model('Hotlines', EmergencyHotlines);
 
-export default Contact;
+export default Hotlines;

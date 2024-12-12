@@ -1,7 +1,7 @@
-import Contact from '../dbSchemas/recipientsContactSchema.js';  // Importing the Contact model
+import Hotlines from '../dbSchemas/recipientsEmergencyHotlinesSchema.js';  // Importing the Contact model
 
 // Get all contacts
-const getContacts = async (req, res) => {
+const getEmergencyHotlines = async (req, res) => {
   try {
     const contacts = await Contact.find();
     res.json(contacts);
@@ -11,7 +11,7 @@ const getContacts = async (req, res) => {
 };
 
 // Add a new contact
-const addContact = async (req, res) => {
+const addEmergencyHotlines = async (req, res) => {
   try {
     const contact = new Contact(req.body);
     await contact.save();
@@ -22,7 +22,7 @@ const addContact = async (req, res) => {
 };
 
 // Update a contact
-const updateContact = async (req, res) => {
+const updateEmergencyHotlines = async (req, res) => {
   try {
     const updatedContact = await Contact.findByIdAndUpdate(
       req.params.id,
@@ -39,7 +39,7 @@ const updateContact = async (req, res) => {
 };
 
 // Delete a contact
-const deleteContact = async (req, res) => {
+const deleteEmergencyHotlines = async (req, res) => {
   try {
     const deletedContact = await Contact.findByIdAndDelete(req.params.id);
     if (!deletedContact) {
@@ -51,4 +51,4 @@ const deleteContact = async (req, res) => {
   }
 };
 
-export { getContacts, addContact, updateContact, deleteContact };  // Exporting controller functions
+export { getEmergencyHotlines, addEmergencyHotlines, updateEmergencyHotlines, deleteEmergencyHotlines };  // Exporting controller functions

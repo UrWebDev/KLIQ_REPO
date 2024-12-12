@@ -19,41 +19,12 @@ const AuthScreen = () => {
     const [dropdownVisible, setDropdownVisible] = useState(false);
     const router = useRouter();
 
-    // const handleAuth = async () => {
-    //     if (!isLogin && password !== confirmPassword) {
-    //         Alert.alert("Error", "Passwords do not match.");
-    //         return;
-    //     }
-
-    //     try {
-    //         const data = { username, password, role };
-    //         const response = isLogin ? await login(data) : await register(data);
-    //         console.log(response); 
-    //         Alert.alert("Success", response.data.message || "Login Successful");
-            
-    //         if (response.data.token) {
-    //             console.log("Storing token in localStorage:", response.data.token); 
-    //             localStorage.setItem("authToken", response.data.token); 
-    //         } else {
-    //             console.log("No token received in response.");
-    //         }
-            
-    //         if (response.data.role === 'user') {
-    //             router.push("/userSOSreports");
-    //         } else if (response.data.role === 'recipient') {
-    //             router.push("/SOSsmsg");
-    //         }
-    //     } catch (error) {
-    //         console.log(error); // Log the error details
-    //         Alert.alert("Error", error.response?.data?.error || "Something went wrong");
-    //     }
-    // };
     const handleAuth = async () => {
         if (!isLogin && password !== confirmPassword) {
             Alert.alert("Error", "Passwords do not match.");
             return;
         }
-    
+        
         try {
             const data = { username, password, role };
             const response = isLogin ? await login(data) : await register(data);
@@ -86,7 +57,7 @@ const AuthScreen = () => {
                 onChangeText={setUsername}
                 style={styles.input}
                 placeholderTextColor="rgba(0, 0, 0, 0.3)"
-            />
+                />
             <TextInput
                 placeholder="Password"
                 value={password}
@@ -94,7 +65,7 @@ const AuthScreen = () => {
                 onChangeText={setPassword}
                 style={styles.input}
                 placeholderTextColor="rgba(0, 0, 0, 0.3)"
-            />
+                />
             {!isLogin && (
                 <>
                     <TouchableOpacity 
@@ -129,7 +100,7 @@ const AuthScreen = () => {
                         onChangeText={setConfirmPassword}
                         style={styles.input}
                         placeholderTextColor="rgba(0, 0, 0, 0.3)"
-                    />
+                        />
                 </>
             )}
             <TouchableOpacity style={styles.button} onPress={handleAuth}>
@@ -217,3 +188,32 @@ const styles = StyleSheet.create({
 });
 
 export default AuthScreen;
+// const handleAuth = async () => {
+//     if (!isLogin && password !== confirmPassword) {
+//         Alert.alert("Error", "Passwords do not match.");
+//         return;
+//     }
+
+//     try {
+//         const data = { username, password, role };
+//         const response = isLogin ? await login(data) : await register(data);
+//         console.log(response); 
+//         Alert.alert("Success", response.data.message || "Login Successful");
+        
+//         if (response.data.token) {
+//             console.log("Storing token in localStorage:", response.data.token); 
+//             localStorage.setItem("authToken", response.data.token); 
+//         } else {
+//             console.log("No token received in response.");
+//         }
+        
+//         if (response.data.role === 'user') {
+//             router.push("/userSOSreports");
+//         } else if (response.data.role === 'recipient') {
+//             router.push("/SOSsmsg");
+//         }
+//     } catch (error) {
+//         console.log(error); // Log the error details
+//         Alert.alert("Error", error.response?.data?.error || "Something went wrong");
+//     }
+// };

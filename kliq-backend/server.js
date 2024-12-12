@@ -33,12 +33,12 @@ app.use("/api/auth", authRoutes);
 
 
 //emergency contacts API
-import { getContacts, addContact, updateContact, deleteContact } from './appRoutes/recipientsContactRoutes.js';
+import { getEmergencyHotlines, addEmergencyHotlines, updateEmergencyHotlines, deleteEmergencyHotlines } from './appRoutes/recipientsEmergencyHotlinesRoutes.js';
 
-app.get('/recipients/getAllEmergencyContacts', getContacts);
-app.post('/recipients/addEmergencyContact', addContact);
-app.put('/recipients/updateEmergencyContact/:id', updateContact);
-app.delete('/recipients/deleteEmergencyContact/:id', deleteContact);
+app.get('/recipients/getAllEmergencyContacts', getEmergencyHotlines);
+app.post('/recipients/addEmergencyContact', addEmergencyHotlines);
+app.put('/recipients/updateEmergencyContact/:id', updateEmergencyHotlines);
+app.delete('/recipients/deleteEmergencyContact/:id', deleteEmergencyHotlines);
 
 import {receiveRecipientSOSMessage, getAllReceivedSOSMessage} from './appRoutes/recipientSOSMessageRoutes.js'
 app.post("/recipients/receive-sosMessage", receiveRecipientSOSMessage)
