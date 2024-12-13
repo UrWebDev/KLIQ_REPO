@@ -65,6 +65,7 @@ const AuthScreen = () => {
 
             if (response.data.token) {
                 await AsyncStorage.setItem("authToken", response.data.token);
+                await AsyncStorage.setItem("uniqueId", response.data.uniqueId); // Store uniqueId
             }
 
             // Navigation Based on Role
@@ -78,6 +79,7 @@ const AuthScreen = () => {
             Alert.alert("Error", error.response?.data?.message || "Something went wrong.");
         }
     };
+
 
     return (
         <View style={styles.container}>
