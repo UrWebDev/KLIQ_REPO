@@ -61,6 +61,9 @@ const SOSMessage = () => {
                 <Text className="text-gray-700 mt-2">
                   Location: Lat {sos.latitude}, Lng {sos.longitude}
                 </Text>
+                <Text className="text-gray-700 mt-2">
+                  From: {sos.deviceId || 'Unknown Device'}
+                </Text>
                 <TouchableOpacity onPress={() => Linking.openURL(`http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`)} className="mt-2">
                   <Text className="text-blue-500 underline">View on Google Maps</Text>
                 </TouchableOpacity>
