@@ -21,14 +21,20 @@ const receiveRecipientSOSMessage = async (req, res) => {
 
 
 const getFilteredSOSMessages = async (req, res) => {
-  const { recipientId } = req.params;
-
   try {
+    const { recipientId } = req.params;
+
     const sosMessages = await SOSModel.find({ recipientId });
-    res.json(sosMessages);
+    if (!sosMessages.length) {
+      return res.status(404).json({ error: 'No SOS messages found for this recipient' });
+    }
+
+    res.status(200).json(sosMessages);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
   }
-};
+}
+
 
 export { receiveRecipientSOSMessage, getFilteredSOSMessages };

@@ -43,29 +43,53 @@ router.post('/register', async (req, res) => {
 });
 
 // Login route
+// Login route
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+
+        // Check if username and password are provided
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Username and password are required' });
+        }
+
+        // Find the user in the database
         const user = await User.findOne({ username });
 
-        if (!user) return res.status(400).json({ error: 'User not found' });
+        if (!user) {
+            console.error("User not found: ", username);
+            return res.status(400).json({ error: 'User not found' });
+        }
 
+        // Check if password matches
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
+        if (!isMatch) {
+            console.error("Invalid password for user: ", username);
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
 
+        // Create a JWT token
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
             expiresIn: '1h',
         });
 
+        // Log the successful login
+        console.log(`User logged in: ${username}, Role: ${user.role}`);
+
+        // Send response with token, role info, and appropriate uniqueId (either recipientId or userId)
+        const uniqueId = user.role === 'recipient' ? user.recipientId : user.userId;
+
         res.json({
             token,
             role: user.role,
-            uniqueId: user.role === 'recipient' ? user.recipientId : user.userId,
+            uniqueId: uniqueId,
         });
     } catch (error) {
+        console.error("Error during login: ", error);
         res.status(500).json({ error: error.message });
     }
 });
+
 
 
 export default router;

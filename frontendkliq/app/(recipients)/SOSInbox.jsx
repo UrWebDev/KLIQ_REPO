@@ -9,33 +9,38 @@ const FilteredSOSMessages = ({ recipientId }) => {
   const [filteredSOSMessages, setFilteredSOSMessages] = useState([]);
 
   useEffect(() => {
-    const fetchFilteredSOSMessages = async () => {
+    const fetchSOSMessages = async () => {
+      if (!recipientId) {
+        console.error("Recipient ID is not defined");
+        setLoading(false);  // Set loading to false if no recipientId
+        return;
+      }
       try {
         const response = await axios.get(`${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`);
-        setFilteredSOSMessages(response.data);
+        const sortedMessages = response.data.sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
+        setSOSMessages(sortedMessages);
       } catch (error) {
-        console.error('Error fetching filtered SOS messages:', error);
+        console.error('Error fetching SOS messages:', error.response || error.message);
+      } finally {
+        setLoading(false);  // Set loading to false after fetch
       }
     };
 
-    fetchFilteredSOSMessages();
+    if (recipientId) {
+      fetchSOSMessages();
+    }
   }, [recipientId]);
+
 
   return (
     <View>
-      <Text className="text-2xl font-bold mb-4">Filtered SOS Messages</Text>
       {filteredSOSMessages.length > 0 ? (
         filteredSOSMessages.map((sos, index) => (
           <View key={index} className="bg-gray-100 rounded-3xl mb-4 p-6 border-2 border-gray-300 shadow-md relative">
-            <View className="flex-row items-center">
-              <Text className="text-gray-500 text-sm">
-                {sos.receivedAt ? new Date(sos.receivedAt).toLocaleString() : 'Date not available'}
-              </Text>
-              <Icon name="exclamation-triangle" size={15} color="red" style={{ marginLeft: 10 }} />
-            </View>
-            <View className="flex-row justify-between items-center mt-3">
-              <Text className="text-lg font-extrabold">{sos.message}</Text>
-            </View>
+            <Text className="text-gray-500 text-sm">
+              {sos.receivedAt ? new Date(sos.receivedAt).toLocaleString() : 'Date not available'}
+            </Text>
+            <Text className="text-lg font-extrabold mt-3">{sos.message}</Text>
             <Text className="text-gray-700 mt-2">
               Location: Lat {sos.latitude}, Lng {sos.longitude}
             </Text>
@@ -48,7 +53,7 @@ const FilteredSOSMessages = ({ recipientId }) => {
           </View>
         ))
       ) : (
-        <Text className="text-center text-gray-500">No SOS messages found for this recipient.</Text>
+        <Text className="text-center text-gray-500">No filtered SOS messages found.</Text>
       )}
     </View>
   );
@@ -60,24 +65,27 @@ const SOSMessage = ({ recipientId }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch all SOS messages from the backend
     const fetchSOSMessages = async () => {
+      if (!recipientId) {
+        console.error("Recipient ID is not defined");
+        setLoading(false);  // Set loading to false if no recipientId
+        return;
+      }
       try {
-        const response = await axios.get(`${API_URL}/recipients/get-received-sosMessage`);
-        const sortedMessages = response.data.sort((a, b) => {
-          // Sort messages by receivedAt date in descending order
-          return new Date(b.receivedAt) - new Date(a.receivedAt);
-        });
+        const response = await axios.get(`${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`);
+        const sortedMessages = response.data.sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
         setSOSMessages(sortedMessages);
       } catch (error) {
-        console.error('Error fetching SOS messages:', error);
+        console.error('Error fetching SOS messages:', error.response || error.message);
       } finally {
-        setLoading(false);
+        setLoading(false);  // Set loading to false after fetch
       }
     };
 
-    fetchSOSMessages();
-  }, []);
+    if (recipientId) {
+      fetchSOSMessages();
+    }
+  }, [recipientId]);
 
   return (
     <View className="flex-1 bg-white">

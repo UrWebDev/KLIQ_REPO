@@ -16,29 +16,50 @@ const AuthScreen = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [role, setRole] = useState("");
-    const [uniqueId, setUniqueId] = useState(""); // Added for unique ID
+    const [uniqueId, setUniqueId] = useState(""); // Holds either userId or recipientId
     const [dropdownVisible, setDropdownVisible] = useState(false);
     const router = useRouter();
 
     const handleAuth = async () => {
-        if (!isLogin && password !== confirmPassword) {
-            Alert.alert("Error", "Passwords do not match.");
-            return;
-        }
-
-        if (!isLogin && role === "") {
-            Alert.alert("Error", "Please select a role.");
-            return;
-        }
-
-        if (!isLogin && uniqueId.trim() === "") {
-            Alert.alert("Error", "Unique ID is required.");
-            return;
-        }
-
         try {
-            const data = { username, password, role, uniqueId }; // Include uniqueId
+            // Validation
+            if (!username.trim() || !password.trim()) {
+                Alert.alert("Error", "Username and Password are required.");
+                return;
+            }
+            if (!isLogin) {
+                if (password !== confirmPassword) {
+                    Alert.alert("Error", "Passwords do not match.");
+                    return;
+                }
+                if (!role) {
+                    Alert.alert("Error", "Please select a role.");
+                    return;
+                }
+                if (!uniqueId.trim()) {
+                    Alert.alert("Error", `${role === "recipient" ? "Recipient" : "User"} ID is required.`);
+                    return;
+                }
+            }
+
+            // Prepare Payload
+            let data;
+            if (isLogin) {
+                data = { username, password };
+            } else {
+                // Send either userId or recipientId based on role
+                if (role === "recipient") {
+                    data = { username, password, role, recipientId: uniqueId };
+                } else if (role === "user") {
+                    data = { username, password, role, userId: uniqueId };
+                }
+            }
+
+            console.log("Sending Data:", data); // Debug the payload
+
+            // API Call
             const response = isLogin ? await login(data) : await register(data);
+
             console.log(response);
             Alert.alert("Success", response.data.message || "Login Successful");
 
@@ -46,20 +67,22 @@ const AuthScreen = () => {
                 await AsyncStorage.setItem("authToken", response.data.token);
             }
 
+            // Navigation Based on Role
             if (response.data.role === "user") {
                 router.push("/userSOSreports");
             } else if (response.data.role === "recipient") {
                 router.push("/SOSInbox");
             }
         } catch (error) {
-            console.log(error);
-            Alert.alert("Error", error.response?.data?.error || "Something went wrong");
+            console.error("Auth Error:", error.response?.data || error.message);
+            Alert.alert("Error", error.response?.data?.message || "Something went wrong.");
         }
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{isLogin ? "Login" : "Register"}</Text>
+
             <TextInput
                 placeholder="Enter Username or Phone Number"
                 value={username}
@@ -67,6 +90,7 @@ const AuthScreen = () => {
                 style={styles.input}
                 placeholderTextColor="rgba(0, 0, 0, 0.3)"
             />
+
             <TextInput
                 placeholder="Password"
                 value={password}
@@ -75,8 +99,10 @@ const AuthScreen = () => {
                 style={styles.input}
                 placeholderTextColor="rgba(0, 0, 0, 0.3)"
             />
+
             {!isLogin && (
                 <>
+                    {/* Role Dropdown */}
                     <TouchableOpacity
                         style={styles.dropdown}
                         onPress={() => setDropdownVisible(!dropdownVisible)}
@@ -86,6 +112,7 @@ const AuthScreen = () => {
                         </Text>
                         <Icon name="arrow-drop-down" size={24} color="#333" />
                     </TouchableOpacity>
+
                     {dropdownVisible && (
                         <View style={styles.dropdownOptions}>
                             {roles.map((item) => (
@@ -102,6 +129,8 @@ const AuthScreen = () => {
                             ))}
                         </View>
                     )}
+
+                    {/* Confirm Password */}
                     <TextInput
                         placeholder="Confirm Password"
                         value={confirmPassword}
@@ -110,6 +139,8 @@ const AuthScreen = () => {
                         style={styles.input}
                         placeholderTextColor="rgba(0, 0, 0, 0.3)"
                     />
+
+                    {/* Unique ID */}
                     <TextInput
                         placeholder="Unique ID"
                         value={uniqueId}
@@ -119,9 +150,13 @@ const AuthScreen = () => {
                     />
                 </>
             )}
+
+            {/* Action Button */}
             <TouchableOpacity style={styles.button} onPress={handleAuth}>
                 <Text style={styles.buttonText}>{isLogin ? "Login" : "Register"}</Text>
             </TouchableOpacity>
+
+            {/* Switch Between Login/Register */}
             <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.switchButton}>
                 <Text style={styles.switchButtonText}>
                     Switch to {isLogin ? "Register" : "Login"}
@@ -130,6 +165,7 @@ const AuthScreen = () => {
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {
