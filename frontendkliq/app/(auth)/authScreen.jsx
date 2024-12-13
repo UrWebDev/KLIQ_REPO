@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Alert, TouchableOpacity, StyleSheet } from "react-native";
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Import the icon library
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { register, login } from "./api";
 import { useRouter } from "expo-router";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,7 +15,8 @@ const AuthScreen = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [role, setRole] = useState(""); // Start with an empty role
+    const [role, setRole] = useState("");
+    const [uniqueId, setUniqueId] = useState(""); // Added for unique ID
     const [dropdownVisible, setDropdownVisible] = useState(false);
     const router = useRouter();
 
@@ -24,30 +25,38 @@ const AuthScreen = () => {
             Alert.alert("Error", "Passwords do not match.");
             return;
         }
-        
+
+        if (!isLogin && role === "") {
+            Alert.alert("Error", "Please select a role.");
+            return;
+        }
+
+        if (!isLogin && uniqueId.trim() === "") {
+            Alert.alert("Error", "Unique ID is required.");
+            return;
+        }
+
         try {
-            const data = { username, password, role };
+            const data = { username, password, role, uniqueId }; // Include uniqueId
             const response = isLogin ? await login(data) : await register(data);
-            console.log(response); 
+            console.log(response);
             Alert.alert("Success", response.data.message || "Login Successful");
-            
+
             if (response.data.token) {
-                console.log("Storing token in AsyncStorage:", response.data.token); 
-                await AsyncStorage.setItem("authToken", response.data.token); 
-            } else {
-                console.log("No token received in response.");
+                await AsyncStorage.setItem("authToken", response.data.token);
             }
-            
-            if (response.data.role === 'user') {
+
+            if (response.data.role === "user") {
                 router.push("/userSOSreports");
-            } else if (response.data.role === 'recipient') {
+            } else if (response.data.role === "recipient") {
                 router.push("/SOSInbox");
             }
         } catch (error) {
-            console.log(error); // Log the error details
+            console.log(error);
             Alert.alert("Error", error.response?.data?.error || "Something went wrong");
         }
     };
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{isLogin ? "Login" : "Register"}</Text>
@@ -57,7 +66,7 @@ const AuthScreen = () => {
                 onChangeText={setUsername}
                 style={styles.input}
                 placeholderTextColor="rgba(0, 0, 0, 0.3)"
-                />
+            />
             <TextInput
                 placeholder="Password"
                 value={password}
@@ -65,15 +74,15 @@ const AuthScreen = () => {
                 onChangeText={setPassword}
                 style={styles.input}
                 placeholderTextColor="rgba(0, 0, 0, 0.3)"
-                />
+            />
             {!isLogin && (
                 <>
-                    <TouchableOpacity 
-                        style={styles.dropdown} 
+                    <TouchableOpacity
+                        style={styles.dropdown}
                         onPress={() => setDropdownVisible(!dropdownVisible)}
                     >
                         <Text style={styles.dropdownText}>
-                            {role ? roles.find(r => r.value === role)?.label : "Select Role"} {/* Tooltip text */}
+                            {role ? roles.find(r => r.value === role)?.label : "Select Role"}
                         </Text>
                         <Icon name="arrow-drop-down" size={24} color="#333" />
                     </TouchableOpacity>
@@ -100,7 +109,14 @@ const AuthScreen = () => {
                         onChangeText={setConfirmPassword}
                         style={styles.input}
                         placeholderTextColor="rgba(0, 0, 0, 0.3)"
-                        />
+                    />
+                    <TextInput
+                        placeholder="Unique ID"
+                        value={uniqueId}
+                        onChangeText={setUniqueId}
+                        style={styles.input}
+                        placeholderTextColor="rgba(0, 0, 0, 0.3)"
+                    />
                 </>
             )}
             <TouchableOpacity style={styles.button} onPress={handleAuth}>

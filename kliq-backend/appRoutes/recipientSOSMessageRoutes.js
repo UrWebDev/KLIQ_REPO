@@ -3,26 +3,32 @@ import SOSModel from "../dbSchemas/recipientSOSMessageSchema.js";
 //receive an http request from the device
 //receive sms from device
 const receiveRecipientSOSMessage = async (req, res) => {
-    const { longitude, latitude, message } = req.body;
-  
-    if (!longitude || !latitude || !message) {
-      return res.status(400).send("Incomplete data received.");
-    }
-  
-    const sos = new SOSModel({ longitude, latitude, message });
-    await sos.save();
-  
-    res.status(200).send("SOS message received and saved.");
+  const { longitude, latitude, message, recipientId, deviceId } = req.body;
+
+  if (!longitude || !latitude || !message || !recipientId || !deviceId) {
+    return res.status(400).send("Incomplete data received.");
   }
 
-  
-  const getAllReceivedSOSMessage = async (req,res) => {
-      try {
-          const sosMessages = await SOSModel.find()
-          res.json(sosMessages)
-    } catch (error) {
-        res.status(500).json({message: error.message})
-    }
+  try {
+    const sos = new SOSModel({ longitude, latitude, message, recipientId, deviceId });
+    await sos.save();
 
-}
-export {receiveRecipientSOSMessage, getAllReceivedSOSMessage};
+    res.status(200).send("SOS message received and saved.");
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+const getFilteredSOSMessages = async (req, res) => {
+  const { recipientId } = req.params;
+
+  try {
+    const sosMessages = await SOSModel.find({ recipientId });
+    res.json(sosMessages);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { receiveRecipientSOSMessage, getFilteredSOSMessages };

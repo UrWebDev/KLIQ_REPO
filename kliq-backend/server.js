@@ -24,7 +24,7 @@ app.listen(PORT, () => {
 });
 
 app.get('/', (req, res) => {
-    res.status(200).send("running on port 3000")
+  res.status(200).send("running on port 3000")
 })
 
 //for authentication role based
@@ -40,6 +40,6 @@ app.post('/recipients/addEmergencyContact', addEmergencyHotlines);
 app.put('/recipients/updateEmergencyContact/:id', updateEmergencyHotlines);
 app.delete('/recipients/deleteEmergencyContact/:id', deleteEmergencyHotlines);
 
-import {receiveRecipientSOSMessage, getAllReceivedSOSMessage} from './appRoutes/recipientSOSMessageRoutes.js'
+import { receiveRecipientSOSMessage, getFilteredSOSMessages } from './appRoutes/recipientSOSMessageRoutes.js'
 app.post("/recipients/receive-sosMessage", receiveRecipientSOSMessage)
-app.get("/recipients/get-received-sosMessage", getAllReceivedSOSMessage)
+app.get("/recipients/get-filteredReceived-sosMessage", getFilteredSOSMessages)
