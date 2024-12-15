@@ -63,10 +63,29 @@ const AuthScreen = () => {
             console.log(response);
             Alert.alert("Success", response.data.message || "Login Successful");
 
+            // if (response.data.token) {
+            //     await AsyncStorage.setItem("authToken", response.data.token);
+                
+            //     // Store userId or recipientId based on the role
+            //     const key = response.data.role === "recipient" ? "recipientId" : "userId";
+            //     await AsyncStorage.setItem(key, response.data.uniqueId);
+            // }
             if (response.data.token) {
                 await AsyncStorage.setItem("authToken", response.data.token);
-                await AsyncStorage.setItem("uniqueId", response.data.uniqueId); // Store uniqueId
+                
+                // Store userId or recipientId based on the role
+                const key = response.data.role === "recipient" ? "recipientId" : "userId";
+                await AsyncStorage.setItem(key, response.data.uniqueId);
+                
+                // Log the recipientId if the role is 'recipient'
+                if (response.data.role === "recipient") {
+                    const recipientId = await AsyncStorage.getItem("recipientId");
+                    console.log(`recipientId: ${recipientId}`);
+                } else {
+                    console.log(`userId: ${await AsyncStorage.getItem("userId")}`);
+                }
             }
+            
 
             // Navigation Based on Role
             if (response.data.role === "user") {

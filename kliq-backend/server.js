@@ -40,6 +40,6 @@ app.post('/recipients/addEmergencyContact', addEmergencyHotlines);
 app.put('/recipients/updateEmergencyContact/:id', updateEmergencyHotlines);
 app.delete('/recipients/deleteEmergencyContact/:id', deleteEmergencyHotlines);
 
-import { receiveRecipientSOSMessage, getFilteredSOSMessages } from './appRoutes/recipientSOSMessageRoutes.js'
+import { receiveRecipientSOSMessage, getFilteredSOSMessages} from './appRoutes/recipientSOSMessageRoutes.js'
 app.post("/recipients/receive-sosMessage", receiveRecipientSOSMessage)
 app.get("/recipients/get-filteredReceived-sosMessages/:recipientId", getFilteredSOSMessages)
