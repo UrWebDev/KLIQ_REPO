@@ -14,7 +14,7 @@ const RecipientSOSReports = () => {
   useEffect(() => {
     const fetchRecipientId = async () => {
       try {
-        const storedRecipientId = await AsyncStorage.getItem('recipientId');
+        const storedRecipientId = await AsyncStorage.getItem('uniqueId');
         if (storedRecipientId) {
           setRecipientId(storedRecipientId);
         } else {
