@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, FlatList, Alert, Modal } from "react-native";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { API_URL } from "@env";
 import { NativeWindStyleSheet } from "nativewind";
@@ -13,36 +14,49 @@ const Hotlines = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
+  const [recipientId, setRecipientId] = useState(null);
 
   useEffect(() => {
-    fetchContacts();
+    const fetchRecipientId = async () => {
+      const id = await AsyncStorage.getItem("uniqueId");
+      if (id) setRecipientId(id);
+    };
+    fetchRecipientId();
   }, []);
+
+  useEffect(() => {
+    if (recipientId) fetchContacts();
+  }, [recipientId]);
 
   const fetchContacts = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/getAllEmergencyContacts`);
+      const response = await axios.get(`${BASE_URL}/getAllEmergencyContacts`, {
+        params: { recipientId },
+      });
       setContacts(response.data);
     } catch (error) {
-      console.error("Error fetching contacts:", error);
+      console.error('Error fetching contacts:', error);
     }
   };
+  
 
   const handleAddContact = async () => {
     if (!name.trim() || !phoneNumber.trim()) {
-      Alert.alert("Validation", "Name and phone number are required.");
+      Alert.alert('Validation', 'Name and phone number are required.');
       return;
     }
     try {
-      const payload = { name: name.trim(), phoneNumber: phoneNumber.trim() };
+      const payload = { name: name.trim(), phoneNumber: phoneNumber.trim(), recipientId };
       const response = await axios.post(`${BASE_URL}/addEmergencyContact`, payload);
       setContacts([...contacts, response.data]);
       resetForm();
-      Alert.alert("Success", "Contact added successfully!");
+      Alert.alert('Success', 'Contact added successfully!');
     } catch (error) {
-      console.error("Error adding contact:", error.response?.data || error.message);
-      Alert.alert("Error", "Failed to add contact. Please try again.");
+      console.error('Error adding contact:', error.response?.data || error.message);
+      Alert.alert('Error', 'Failed to add contact. Please try again.');
     }
   };
+  
 
   const handleUpdateContact = async () => {
     if (!name || !phoneNumber) {
@@ -195,5 +209,5 @@ const Hotlines = () => {
 export default Hotlines;
 
 NativeWindStyleSheet.setOutput({
-  default: 'native',
+  default: "native",
 });

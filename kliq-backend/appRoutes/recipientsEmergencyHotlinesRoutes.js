@@ -3,30 +3,38 @@ import Hotlines from '../dbSchemas/recipientsEmergencyHotlinesSchema.js';  // Im
 // Get all contacts
 const getEmergencyHotlines = async (req, res) => {
   try {
-    const hotlines = await Hotlines.find();
+    const { recipientId } = req.query;
+    if (!recipientId) return res.status(400).json({ message: 'Recipient ID is required' });
+
+    const hotlines = await Hotlines.find({ recipientId });
     res.json(hotlines);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
+}
 
 // Add a new contact
 const addEmergencyHotlines = async (req, res) => {
   try {
-    const hotlines = new Hotlines(req.body);
+    const { name, phoneNumber, recipientId } = req.body;
+    if (!recipientId) return res.status(400).json({ message: 'Recipient ID is required' });
+
+    const hotlines = new Hotlines({ name, phoneNumber, recipientId });
     await hotlines.save();
     res.status(201).json(hotlines);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-};
+}
 
 // Update a contact
 const updateEmergencyHotlines = async (req, res) => {
   try {
+    const { name, phoneNumber } = req.body;
+
     const updateHotlines = await Hotlines.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { name, phoneNumber },
       { new: true }
     );
     if (!updateHotlines) {
@@ -36,7 +44,7 @@ const updateEmergencyHotlines = async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-};
+}
 
 // Delete a contact
 const deleteEmergencyHotlines = async (req, res) => {
@@ -49,6 +57,6 @@ const deleteEmergencyHotlines = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
+}
 
 export { getEmergencyHotlines, addEmergencyHotlines, updateEmergencyHotlines, deleteEmergencyHotlines };  // Exporting controller functions
