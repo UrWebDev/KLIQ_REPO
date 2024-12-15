@@ -37,4 +37,4 @@ const getFilteredSOSMessages = async (req, res) => {
 }
 
 
-export { receiveRecipientSOSMessage, getFilteredSOSMessages};
+export { receiveRecipientSOSMessage, getFilteredSOSMessages };
