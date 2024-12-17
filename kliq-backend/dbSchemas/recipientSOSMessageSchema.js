@@ -5,7 +5,7 @@ const sosMessageSchema = new mongoose.Schema({
   latitude: String,
   message: String,
   receivedAt: { type: Date, default: Date.now },
-  recipientId: { type: String, required: true }, // Link SOS messages to recipients
+  recipientId: { type: [String], required: true }, // Link SOS messages to recipients
   deviceId: String,
 });
 
