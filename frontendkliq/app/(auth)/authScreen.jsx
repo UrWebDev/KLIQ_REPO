@@ -73,7 +73,7 @@ const AuthScreen = () => {
 
       // Navigation Based on Role
       if (response.data.role === "user") {
-        router.push("/addDeviceContact");
+        router.push("/userSOSreports");
       } else if (response.data.role === "recipient") {
         router.push("/SOSInbox");
       }

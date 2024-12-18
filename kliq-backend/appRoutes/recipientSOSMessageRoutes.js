@@ -36,5 +36,21 @@ const getFilteredSOSMessages = async (req, res) => {
   }
 }
 
+const getUserFilteredSOSreports = async (req, res) => {
+  try {
+    const { deviceId } = req.params;
 
-export { receiveRecipientSOSMessage, getFilteredSOSMessages};
+    const sosMessages = await SOSModel.find({ deviceId });
+    if (!sosMessages.length) {
+      return res.status(404).json({ error: 'No SOS messages found for this recipient' });
+    }
+
+    res.status(200).json(sosMessages);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
+
+export { receiveRecipientSOSMessage, getFilteredSOSMessages, getUserFilteredSOSreports};
