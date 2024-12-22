@@ -20,6 +20,7 @@ const Contactss = () => {
   const [connected, setConnected] = useState(false);
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {
     const subscription = manager.onStateChange((state) => {
@@ -35,6 +36,7 @@ const Contactss = () => {
   }, [manager]);
 
   const scanAndConnect = () => {
+    setIsScanning(true);
     manager.startDeviceScan(null, null, async (error, scannedDevice) => {
       if (error) {
         console.error("Scan error:", error);
@@ -43,6 +45,7 @@ const Contactss = () => {
 
       // Look for the specific device by name
       if (scannedDevice && scannedDevice.name === 'ESP32-ContactDevice') {
+        setIsScanning(false);
         manager.stopDeviceScan();
         try {
           await connectToDevice(scannedDevice);
@@ -203,6 +206,8 @@ const Contactss = () => {
         <Text style={styles.buttonText}>Disconnect</Text>
       </TouchableOpacity>
 
+      {isScanning && <Text style={styles.status}>Scanning for device...</Text>}
+
       <Text style={styles.status}>
         Status: {connected ? "Connected" : "Not Connected"}
       </Text>
@@ -215,41 +220,37 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    padding: 20,
   },
   title: {
-    fontSize: 25,
-    fontWeight: '800', // Extra bold
+    fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: 20,
   },
   inputContainer: {
-    width: '80%',
     marginBottom: 20,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#DDD',
+    borderColor: '#ccc',
+    borderRadius: 5,
     padding: 10,
-    marginVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#FFF',
-    fontStyle: 'italic',
+    width: 250,
+    marginBottom: 10,
   },
   button: {
-    backgroundColor: '#007BFF',
+    backgroundColor: '#4CAF50',
     padding: 15,
-    borderRadius: 25,
-    marginVertical: 10,
-    width: '80%',
-    alignItems: 'center',
+    borderRadius: 5,
+    marginBottom: 10,
   },
   buttonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
+    color: 'white',
+    fontSize: 16,
   },
   status: {
-    fontSize: 16,
     marginTop: 20,
+    fontSize: 16,
   },
 });
 
