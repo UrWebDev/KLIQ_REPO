@@ -3,8 +3,18 @@ import SOSModel from "../dbSchemas/recipientSOSMessageSchema.js";
 //receive an http request from the device
 //receive sms from device
 const receiveRecipientSOSMessage = async (req, res) => {
-  const { longitude, latitude, message, recipientId, deviceId } = req.body;
+  let { longitude, latitude, message, recipientId, deviceId } = req.body;
 
+  // If recipientId is a string (i.e., JSON format), convert it into an array
+  if (typeof recipientId === 'string') {
+    try {
+      recipientId = JSON.parse(recipientId);  // Parse the stringified JSON array into an actual array
+    } catch (error) {
+      return res.status(400).send("Invalid recipientId format.");
+    }
+  }
+
+  // Validation check for required fields
   if (!longitude || !latitude || !message || !recipientId || !deviceId) {
     return res.status(400).send("Incomplete data received.");
   }
@@ -14,11 +24,11 @@ const receiveRecipientSOSMessage = async (req, res) => {
     await sos.save();
 
     res.status(200).send("SOS message received and saved.");
+    console.log("Received recipientId:", recipientId);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 const getFilteredSOSMessages = async (req, res) => {
   try {
