@@ -68,79 +68,57 @@ const RecipientSOSReports = () => {
     }));
   };
 
+  const containsLastWord = (message) => {
+    if (!message) return false;
+    const words = message.trim().toLowerCase().split(/\s+/);
+    return words.includes('last');
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#f3f4f6', padding: 16 }}>
+    <View className="flex-1 bg-gray-100 p-4">
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <ScrollView>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 }}>
-            SOS Reports
-          </Text>
+          <Text className="text-2xl font-bold text-center mb-4">SOS Reports</Text>
 
           {Object.keys(groupedMessages).map((date) => (
-            <View key={date} style={{ marginBottom: 8 }}>
+            <View key={date} className="mb-2">
               <TouchableOpacity
                 onPress={() => toggleExpand(date)}
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: 16,
-                  marginBottom: 8,
-                  padding: 16,
-                  borderWidth: 2,
-                  borderColor: '#3b82f6',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
+                className="bg-white rounded-xl mb-2 p-4 border-2 border-blue-500 shadow-sm flex-row justify-between items-center"
               >
-                <Text style={{ color: '#1f2937', fontWeight: 'bold' }}>{date}</Text>
+                <Text className="text-gray-800 font-bold">{date}</Text>
                 <Icon name="exclamation-triangle" size={20} color="red" />
               </TouchableOpacity>
 
-              {expandedDates[date] ? (
+              {expandedDates[date] &&
                 groupedMessages[date].map((message, index) => (
                   <View
                     key={index}
-                    style={{
-                      backgroundColor: '#f3f4f6',
-                      padding: 16,
-                      borderWidth: 1,
-                      borderColor: '#d1d5db',
-                      marginTop: 8,
-                      borderRadius: 16,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                    }}
+                    className={`p-4 border mt-2 rounded-xl shadow-sm ${
+                      containsLastWord(message.message)
+                        ? 'bg-red-500'
+                        : 'bg-white border-gray-300'
+                    }`}
                   >
-                    <Text style={{ color: '#6b7280', fontSize: 12 }}>
+                    <Text className="text-gray-500 text-xs">
                       {new Date(message.receivedAt).toLocaleTimeString()}
                     </Text>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 8 }}>
-                      {message.message}
-                    </Text>
-                    <Text style={{ color: '#374151', marginTop: 8 }}>
+                    <Text className="text-lg font-bold mt-2 text-gray-800">{message.message}</Text>
+                    <Text className="text-gray-600 mt-2">
                       Location: Lat {message.latitude}, Lng {message.longitude}
                     </Text>
                     <TouchableOpacity
                       onPress={() =>
                         Linking.openURL(`https://www.google.com/maps?q=${message.latitude},${message.longitude}`)
                       }
-                      style={{ marginTop: 8 }}
+                      className="mt-2"
                     >
-                      <Text style={{ color: '#3b82f6', textDecorationLine: 'underline' }}>
-                        View on Google Maps
-                      </Text>
+                      <Text className="text-blue-500 underline">View on Google Maps</Text>
                     </TouchableOpacity>
                   </View>
-                ))
-              ) : null}
+                ))}
             </View>
           ))}
         </ScrollView>

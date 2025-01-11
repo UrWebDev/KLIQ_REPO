@@ -43,6 +43,12 @@ const SOSMessage = () => {
     fetchSOSMessages();
   }, [recipientId]);
 
+  // Function to check if the message contains the word "last"
+  const containsWordLast = (message) => {
+    if (!message) return false;
+    return message.toLowerCase().includes("last");
+  };
+
   return (
     <View className="flex-1 bg-white">
       {loading ? (
@@ -52,19 +58,31 @@ const SOSMessage = () => {
         </View>
       ) : (
         <ScrollView className="flex-1 p-4">
-          <Text className="text-3xl font-extrabold text-center mb-4">SOS Messages</Text>
+          <Text className="text-2xl font-bold text-center mb-4">SOS Messages</Text>
           {sosMessages.length > 0 ? (
             sosMessages.map((sos, index) => (
-              <View key={index} className="bg-gray-100 rounded-3xl mb-4 p-6 border-2 border-gray-300 shadow-md relative">
-                <Text className="text-gray-500 text-sm">{sos.receivedAt ? new Date(sos.receivedAt).toLocaleString() : 'Date not available'}</Text>
-                <Text className="text-lg font-extrabold mt-3">{sos.message}</Text>
+              <View
+                key={index}
+                className={`p-4 mb-4 rounded-xl shadow-sm border-2 ${
+                  containsWordLast(sos.message)
+                    ? 'bg-red-600 border-red-400'
+                    : 'bg-gray-100 border-gray-300'
+                }`}
+              >
+                <Text className="text-gray-500 text-xs">
+                  {sos.receivedAt ? new Date(sos.receivedAt).toLocaleString() : 'Date not available'}
+                </Text>
+                <Text className="text-lg font-bold mt-2">{sos.message}</Text>
                 <Text className="text-gray-700 mt-2">
                   Location: Lat {sos.latitude}, Lng {sos.longitude}
                 </Text>
                 <Text className="text-gray-700 mt-2">
                   From: {sos.deviceId || 'Unknown Device'}
                 </Text>
-                <TouchableOpacity onPress={() => Linking.openURL(`http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`)} className="mt-2">
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(`http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`)}
+                  className="mt-2"
+                >
                   <Text className="text-blue-500 underline">View on Google Maps</Text>
                 </TouchableOpacity>
               </View>
