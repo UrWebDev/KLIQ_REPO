@@ -73,7 +73,7 @@ const AuthScreen = () => {
 
       // Navigation Based on Role
       if (response.data.role === "user") {
-        router.push("/addDeviceContact");
+        router.push("/userSOSreports");
       } else if (response.data.role === "recipient") {
         router.push("/SOSInbox");
       }
@@ -84,162 +84,108 @@ const AuthScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{isLogin ? "Login" : "Register"}</Text>
+    <View className="flex-1 bg-gray-50 justify-center px-6">
+      {/* Title */}
+      <Text className="text-center text-3xl font-bold mb-6">
+        {isLogin ? "Log in" : "Sign Up"}
+      </Text>
 
+      {/* Username/Phone Number Input */}
       <TextInput
-        placeholder="Enter Username or Phone Number"
+        placeholder="Input"
         value={username}
         onChangeText={setUsername}
-        style={styles.input}
+        className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
         placeholderTextColor="rgba(0, 0, 0, 0.3)"
       />
 
-      <TextInput
-        placeholder="Password"
-        value={password}
-        secureTextEntry
-        onChangeText={setPassword}
-        style={styles.input}
-        placeholderTextColor="rgba(0, 0, 0, 0.3)"
-      />
+      {/* Password Input */}
+      <View className="relative w-full mb-4">
+        <TextInput
+          placeholder="Password"
+          value={password}
+          secureTextEntry
+          onChangeText={setPassword}
+          className="w-full px-4 py-3 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+          placeholderTextColor="rgba(0, 0, 0, 0.3)"
+        />
+        <TouchableOpacity className="absolute top-3 right-4">
+          <Icon name="visibility" size={24} color="gray" />
+        </TouchableOpacity>
+      </View>
 
+      {/* Sign Up Specific Fields */}
       {!isLogin && (
         <>
-          {/* Role Dropdown */}
-          <TouchableOpacity
-            style={styles.dropdown}
-            onPress={() => setDropdownVisible(!dropdownVisible)}
-          >
-            <Text style={styles.dropdownText}>
-              {role ? roles.find((r) => r.value === role)?.label : "Select Role"}
-            </Text>
-            <Icon name="arrow-drop-down" size={24} color="#333" />
-          </TouchableOpacity>
-
-          {dropdownVisible && (
-            <View style={styles.dropdownOptions}>
-              {roles.map((item) => (
-                <TouchableOpacity
-                  key={item.value}
-                  style={styles.dropdownOption}
-                  onPress={() => {
-                    setRole(item.value);
-                    setDropdownVisible(false);
-                  }}
-                >
-                  <Text style={styles.dropdownOptionText}>{item.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
           {/* Confirm Password */}
           <TextInput
             placeholder="Confirm Password"
             value={confirmPassword}
             secureTextEntry
             onChangeText={setConfirmPassword}
-            style={styles.input}
+            className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
             placeholderTextColor="rgba(0, 0, 0, 0.3)"
           />
+
+          {/* Role Dropdown */}
+          <TouchableOpacity
+            className="w-full px-4 py-3 mb-4 flex-row justify-between items-center rounded-full border border-gray-300 bg-gray-100"
+            onPress={() => setDropdownVisible(!dropdownVisible)}
+          >
+            <Text className="text-gray-700">
+              {role ? roles.find((r) => r.value === role)?.label : "Select Role"}
+            </Text>
+            <Icon name="arrow-drop-down" size={24} color="gray" />
+          </TouchableOpacity>
+
+          {/* Dropdown Options */}
+          {dropdownVisible && (
+            <View className="w-full mb-4 border border-gray-300 rounded-lg bg-white">
+              {roles.map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  className="px-4 py-3 border-b border-gray-200 last:border-b-0"
+                  onPress={() => {
+                    setRole(item.value);
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text className="text-gray-700">{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           {/* Unique ID */}
           <TextInput
             placeholder="Unique ID"
             value={uniqueId}
             onChangeText={setUniqueId}
-            style={styles.input}
+            className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
             placeholderTextColor="rgba(0, 0, 0, 0.3)"
           />
         </>
       )}
 
-      {/* Action Button */}
-      <TouchableOpacity style={styles.button} onPress={handleAuth}>
-        <Text style={styles.buttonText}>{isLogin ? "Login" : "Register"}</Text>
+      {/* Submit Button */}
+      <TouchableOpacity
+        className="w-full py-3 mb-4 rounded-full bg-black items-center"
+        onPress={handleAuth}
+      >
+        <Text className="text-white text-lg font-bold">
+          {isLogin ? "Log in" : "Sign in"}
+        </Text>
       </TouchableOpacity>
 
       {/* Switch Between Login/Register */}
-      <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.switchButton}>
-        <Text style={styles.switchButtonText}>
-          Switch to {isLogin ? "Register" : "Login"}
+      <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+        <Text className="text-center text-sm text-gray-500">
+          {isLogin
+            ? "don't have an account? Sign up"
+            : "already have an account? Log in"}
         </Text>
       </TouchableOpacity>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: "#f9f9f9",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  input: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    marginBottom: 15,
-    padding: 10,
-    fontSize: 16,
-    fontStyle: "italic",
-  },
-  dropdown: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  dropdownOptions: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    marginBottom: 15,
-    backgroundColor: "#fff",
-  },
-  dropdownOption: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  dropdownOptionText: {
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 15,
-    borderRadius: 5,
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  switchButton: {
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  switchButtonText: {
-    color: "gray",
-    fontSize: 16,
-  },
-});
-
 export default AuthScreen;
