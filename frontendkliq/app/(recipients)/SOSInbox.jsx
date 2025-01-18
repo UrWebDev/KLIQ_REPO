@@ -40,7 +40,11 @@ const SOSMessage = () => {
       }
     };
 
-    fetchSOSMessages();
+    // Refresh the messages every 1 second
+    const intervalId = setInterval(fetchSOSMessages, 5000);
+
+    // Cleanup the interval on component unmount
+    return () => clearInterval(intervalId);
   }, [recipientId]);
 
   // Function to check if the message contains the word "last"
