@@ -68,6 +68,11 @@ const UserSOSReports = () => {
     }));
   };
 
+  const containsLastWord = (message) => {
+    if (!message) return false;
+    return message.toLowerCase().split(/\s+/).includes("last");
+  };  
+
   return (
     <View style={{ flex: 1, backgroundColor: '#f3f4f6', padding: 16 }}>
       {loading ? (
@@ -103,44 +108,34 @@ const UserSOSReports = () => {
               </TouchableOpacity>
 
               {expandedDates[date] ? (
-                groupedMessages[date].map((message, index) => (
-                  <View
-                    key={index}
-                    style={{
-                      backgroundColor: '#f3f4f6',
-                      padding: 16,
-                      borderWidth: 1,
-                      borderColor: '#d1d5db',
-                      marginTop: 8,
-                      borderRadius: 16,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                    }}
-                  >
-                    <Text style={{ color: '#6b7280', fontSize: 12 }}>
-                      {new Date(message.receivedAt).toLocaleTimeString()}
-                    </Text>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 8 }}>
-                      {message.message}
-                    </Text>
-                    <Text style={{ color: '#374151', marginTop: 8 }}>
-                      Location: Lat {message.latitude}, Lng {message.longitude}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() =>
-                        Linking.openURL(`https://www.google.com/maps?q=${message.latitude},${message.longitude}`)
-                      }
-                      style={{ marginTop: 8 }}
-                    >
-                      <Text style={{ color: '#3b82f6', textDecorationLine: 'underline' }}>
-                        View on Google Maps
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                ))
-              ) : null}
+  groupedMessages[date].map((message, index) => (
+    <View
+      key={index}
+      className={`p-4 border mt-2 rounded-xl shadow-sm ${
+        containsLastWord(message.message)
+          ? 'bg-red-500'
+          : 'bg-gray-100 border-gray-300'
+      }`}
+    >
+      <Text className="text-gray-500 text-xs">
+        {new Date(message.receivedAt).toLocaleTimeString()}
+      </Text>
+      <Text className="text-lg font-bold mt-2 text-gray-800">{message.message}</Text>
+      <Text className="text-gray-600 mt-2">
+        Location: Lat {message.latitude}, Lng {message.longitude}
+      </Text>
+      <TouchableOpacity
+        onPress={() =>
+          Linking.openURL(`https://www.google.com/maps?q=${message.latitude},${message.longitude}`)
+        }
+        className="mt-2"
+      >
+        <Text className="text-blue-500 underline">View on Google Maps</Text>
+      </TouchableOpacity>
+    </View>
+  ))
+) : null}
+
             </View>
           ))}
         </ScrollView>
