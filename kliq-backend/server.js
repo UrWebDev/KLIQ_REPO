@@ -47,20 +47,29 @@ app.post("/recipients/receive-sosMessage", receiveRecipientSOSMessage);
 app.get("/recipients/get-filteredReceived-sosMessages/:recipientId", getFilteredSOSMessages);
 app.get("/users/get-filteredSosMessages/:deviceId", getUserFilteredSOSreports);
 
-// HTTP-to-HTTPS Proxy Endpoint
-app.get("/proxy", async (req, res) => {
-    const url = req.query.url; // Get the target URL from query params
+// ✅ Proxy endpoint for GET and POST
+app.all("/proxy", async (req, res) => {
+  const url = req.query.url; // Get the target URL from query params
 
-    if (!url) {
-        return res.status(400).json({ error: "Missing 'url' parameter" });
-    }
+  if (!url) {
+      return res.status(400).json({ error: "Missing 'url' parameter" });
+  }
 
-    try {
-        const response = await axios.get(url, { timeout: 5000 });
-        res.status(response.status).json(response.data);
-    } catch (error) {
-        res.status(500).json({ error: "Failed to fetch data", details: error.message });
-    }
+  try {
+      let response;
+
+      if (req.method === "POST") {
+          response = await axios.post(url, req.body, { headers: req.headers, timeout: 5000 });
+      } else {
+          response = await axios.get(url, { headers: req.headers, timeout: 5000 });
+      }
+
+      res.status(response.status).json(response.data);
+  } catch (error) {
+      res.status(500).json({ error: "Failed to fetch data", details: error.message });
+  }
 });
 
-console.log("HTTP Proxy Server integrated!");
+app.listen(PORT, () => {
+  console.log(`HTTP Proxy Server running on port ${PORT}`);
+});
