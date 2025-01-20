@@ -6,7 +6,7 @@ const httpProxy = require('http-proxy');
 const proxy = httpProxy.createProxyServer({});
 
 module.exports = (req, res) => {
-  const target = 'https://your-https-server.com'; // Replace with your target server for proxying
+  const target = 'https://kliq-repo-backend.vercel.app'; // Replace with your target server for proxying
 
   // Forward the request to the target HTTPS server
   proxy.web(req, res, { target });
