@@ -124,7 +124,7 @@ const SOSMessage = () => {
                   >
                     <Text className="text-blue-500 underline">
                       {sos.location ||
-                        "map.google.com?q=1200 Kalaw Ave SE, Metro Manila, District of Manila, 1000"}
+                        "View Location"}
                     </Text>
                   </TouchableOpacity>
                 </View>
