@@ -111,7 +111,9 @@ const Hotlines = () => {
   };
 
   const renderContact = ({ item }) => (
-    <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-3xl border border-gray-300 shadow-md">
+    <View
+      className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-2xl shadow-md border border-gray-300"
+    >
       <View>
         <Text className="text-lg font-bold">{item.name}</Text>
         <Text className="text-gray-500">{item.phoneNumber}</Text>
@@ -134,10 +136,12 @@ const Hotlines = () => {
   );
 
   return (
-    <View className="flex-1 bg-gray-50 p-4">
+    <View className="flex-1 p-4" style={{ backgroundColor: "white" }}>
       {/* User's Personal Numbers */}
       <Text className="text-lg font-bold mb-4">User's Personal Numbers:</Text>
-      <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-6 rounded-3xl border border-gray-300 shadow-md">
+      <View
+        className="flex-row justify-between items-center bg-gray-100 p-4 mb-6 rounded-2xl shadow-md border border-gray-300"
+      >
         <View>
           <Text className="text-lg font-bold">+63 9123 1234 123</Text>
           <Text className="text-gray-600">Juan Dela Cruz</Text>
@@ -195,7 +199,9 @@ const Hotlines = () => {
         onRequestClose={() => setModalVisible(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white w-4/5 rounded-lg p-5 shadow-md">
+          <View
+            className="bg-white w-4/5 rounded-lg p-5 shadow-md"
+          >
             <Text className="text-lg font-bold mb-4">Update Contact</Text>
             <TextInput
               placeholder="Name"

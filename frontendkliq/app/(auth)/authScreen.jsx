@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Alert, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, Alert, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { register, login } from "./api";
 import { useRouter } from "expo-router";
@@ -16,13 +16,12 @@ const AuthScreen = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
-  const [uniqueId, setUniqueId] = useState(""); // Holds either userId or recipientId
+  const [uniqueId, setUniqueId] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const router = useRouter();
 
   const handleAuth = async () => {
     try {
-      // Validation
       if (!username.trim() || !password.trim()) {
         Alert.alert("Error", "Username and Password are required.");
         return;
@@ -42,7 +41,6 @@ const AuthScreen = () => {
         }
       }
 
-      // Prepare Payload
       let data;
       if (isLogin) {
         data = { username, password };
@@ -54,24 +52,20 @@ const AuthScreen = () => {
         }
       }
 
-      console.log("Sending Data:", data); // Debug the payload
+      console.log("Sending Data:", data);
 
-      // API Call
       const response = isLogin ? await login(data) : await register(data);
 
       console.log(response);
       Alert.alert("Success", response.data.message || "Login Successful");
 
-      // Safely store token and uniqueId
       if (response.data.token) {
         await AsyncStorage.setItem("authToken", response.data.token);
-
         if (response.data.uniqueId) {
           await AsyncStorage.setItem("uniqueId", response.data.uniqueId);
         }
       }
 
-      // Navigation Based on Role
       if (response.data.role === "user") {
         router.push("/userSOSreports");
       } else if (response.data.role === "recipient") {
@@ -85,12 +79,10 @@ const AuthScreen = () => {
 
   return (
     <View className="flex-1 bg-gray-50 justify-center px-6">
-      {/* Title */}
       <Text className="text-center text-3xl font-bold mb-6">
         {isLogin ? "Log in" : "Sign Up"}
       </Text>
 
-      {/* Username/Phone Number Input */}
       <TextInput
         placeholder="Input"
         value={username}
@@ -99,7 +91,6 @@ const AuthScreen = () => {
         placeholderTextColor="rgba(0, 0, 0, 0.3)"
       />
 
-      {/* Password Input */}
       <View className="relative w-full mb-4">
         <TextInput
           placeholder="Password"
@@ -114,10 +105,8 @@ const AuthScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Sign Up Specific Fields */}
       {!isLogin && (
         <>
-          {/* Confirm Password */}
           <TextInput
             placeholder="Confirm Password"
             value={confirmPassword}
@@ -127,7 +116,6 @@ const AuthScreen = () => {
             placeholderTextColor="rgba(0, 0, 0, 0.3)"
           />
 
-          {/* Role Dropdown */}
           <TouchableOpacity
             className="w-full px-4 py-3 mb-4 flex-row justify-between items-center rounded-full border border-gray-300 bg-gray-100"
             onPress={() => setDropdownVisible(!dropdownVisible)}
@@ -138,7 +126,6 @@ const AuthScreen = () => {
             <Icon name="arrow-drop-down" size={24} color="gray" />
           </TouchableOpacity>
 
-          {/* Dropdown Options */}
           {dropdownVisible && (
             <View className="w-full mb-4 border border-gray-300 rounded-lg bg-white">
               {roles.map((item) => (
@@ -156,7 +143,6 @@ const AuthScreen = () => {
             </View>
           )}
 
-          {/* Unique ID */}
           <TextInput
             placeholder="Unique ID"
             value={uniqueId}
@@ -167,7 +153,6 @@ const AuthScreen = () => {
         </>
       )}
 
-      {/* Submit Button */}
       <TouchableOpacity
         className="w-full py-3 mb-4 rounded-full bg-black items-center"
         onPress={handleAuth}
@@ -177,15 +162,23 @@ const AuthScreen = () => {
         </Text>
       </TouchableOpacity>
 
-      {/* Switch Between Login/Register */}
       <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
         <Text className="text-center text-sm text-gray-500">
-          {isLogin
-            ? "don't have an account? Sign up"
-            : "already have an account? Log in"}
+          {isLogin ? (
+            <>
+              don't have an account?{" "}
+              <Text style={{ fontWeight: "00", fontStyle: "italic" }}>Sign up</Text>
+            </>
+          ) : (
+            <>
+              already have an account?{" "}
+              <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Log in</Text>
+            </>
+          )}
         </Text>
       </TouchableOpacity>
     </View>
   );
 };
+
 export default AuthScreen;

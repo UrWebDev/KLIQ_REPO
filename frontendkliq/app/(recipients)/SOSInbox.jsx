@@ -56,7 +56,7 @@ const SOSMessage = () => {
     };
 
     // Refresh the messages every 5 seconds
-    const intervalId = setInterval(fetchSOSMessages, 5000);
+    const intervalId = setInterval(fetchSOSMessages, 500000);
 
     // Cleanup the interval on component unmount
     return () => clearInterval(intervalId);
