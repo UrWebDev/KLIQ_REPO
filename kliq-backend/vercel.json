@@ -6,18 +6,18 @@
       "use": "@vercel/node"
     },
     {
-      "src": "backend/api/proxy.js",
+      "src": "api/proxy.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/server.js"
+      "src": "/api/proxy",
+      "dest": "/api/proxy.js"
     },
     {
-      "src": "/api/proxy",
-      "dest": "/backend/api/proxy.js"
+      "src": "/(.*)",
+      "dest": "/server.js"
     }
   ]
 }
