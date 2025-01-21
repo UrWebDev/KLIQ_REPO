@@ -64,7 +64,11 @@ const SOSMessage = () => {
           sosMessages.map((sos, index) => (
             <View
               key={index}
-              className="bg-gray-100 p-4 mb-4 rounded-2xl shadow-md border border-gray-300"
+              className={`bg-gray-100 p-4 mb-4 rounded-2xl shadow-md border ${
+                sos.message && sos.message.toLowerCase().includes("last")
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
             >
               {/* Date and Time */}
               <View className="flex-row justify-between items-center mb-2">
