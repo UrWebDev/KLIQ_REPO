@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  ActivityIndicator,
   Linking,
   TouchableOpacity,
 } from "react-native";
@@ -14,7 +13,6 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 
 const SOSMessage = () => {
   const [sosMessages, setSOSMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [recipientId, setRecipientId] = useState(null);
 
   useEffect(() => {
@@ -22,7 +20,7 @@ const SOSMessage = () => {
       try {
         const id = await AsyncStorage.getItem("uniqueId");
         if (id) {
-          setRecipientId(id); // Set recipientId from AsyncStorage
+          setRecipientId(id);
         }
       } catch (error) {
         console.error("Error retrieving uniqueId from AsyncStorage:", error);
@@ -36,7 +34,6 @@ const SOSMessage = () => {
     if (!recipientId) return;
 
     const fetchSOSMessages = async () => {
-      setLoading(true);
       try {
         const response = await axios.get(
           `${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`
@@ -50,105 +47,95 @@ const SOSMessage = () => {
           "Error fetching SOS messages:",
           error.response || error.message
         );
-      } finally {
-        setLoading(false);
       }
     };
 
-    // Refresh the messages every 5 seconds
-    const intervalId = setInterval(fetchSOSMessages, 5000);
+    fetchSOSMessages(); // Initial fetch
+    const intervalId = setInterval(fetchSOSMessages, 5000); // Auto-refresh every 5s
 
-    // Cleanup the interval on component unmount
     return () => clearInterval(intervalId);
   }, [recipientId]);
 
   return (
     <View className="flex-1 bg-white">
-      {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text className="text-gray-500 mt-4">Loading SOS Messages...</Text>
-        </View>
-      ) : (
-        <ScrollView className="flex-1 p-4">
-          <Text className="text-2xl font-bold text-center mb-6">SOS Messages</Text>
-          {sosMessages.length > 0 ? (
-            sosMessages.map((sos, index) => (
-              <View
-                key={index}
-                className="bg-gray-100 p-4 mb-4 rounded-2xl shadow-md border border-gray-300"
-              >
-                {/* Date and Time */}
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-xs text-gray-500">
-                    {sos.receivedAt
-                      ? new Date(sos.receivedAt).toLocaleString()
-                      : "Date not available"}
-                  </Text>
-                  <Icon name="error" size={24} color="red" />
-                </View>
-
-                {/* Sender Info */}
-                <View className="flex-row justify-between items-center">
-                  <View>
-                    <Text className="text-lg font-bold">
-                      {sos.phoneNumber || "+639 765 786 665"}
-                    </Text>
-                    <Text className="text-gray-600">{sos.sender || "Juan Dela Cruz"}</Text>
-                  </View>
-                  <TouchableOpacity
-  onPress={() => {
-    const phoneNumber = sos.phoneNumber || "+639765786665"; // Fallback number
-    const telURL = `tel:${phoneNumber}`;
-
-    Linking.canOpenURL(telURL)
-      .then((supported) => {
-        if (!supported) {
-          console.error("Phone call feature is not supported");
-        } else {
-          return Linking.openURL(telURL);
-        }
-      })
-      .catch((err) => console.error("An error occurred", err));
-  }}
-  className="bg-gray-200 p-3 rounded-full"
->
-  <Icon name="phone" size={20} color="black" />
-</TouchableOpacity>
-
-                </View>
-
-                {/* Message Content */}
-                <Text className="text-base text-gray-800 mt-3">
-                  {sos.message ||
-                    "I need Help! Please send help or call me on my personal phone number."}
+      <ScrollView className="flex-1 p-4">
+        <Text className="text-2xl font-bold text-center mb-6">SOS Messages</Text>
+        {sosMessages.length > 0 ? (
+          sosMessages.map((sos, index) => (
+            <View
+              key={index}
+              className="bg-gray-100 p-4 mb-4 rounded-2xl shadow-md border border-gray-300"
+            >
+              {/* Date and Time */}
+              <View className="flex-row justify-between items-center mb-2">
+                <Text className="text-xs text-gray-500">
+                  {sos.receivedAt
+                    ? new Date(sos.receivedAt).toLocaleString()
+                    : "Date not available"}
                 </Text>
-
-                {/* User Location */}
-                <View className="mt-3">
-                  <Text className="text-sm font-bold text-gray-600">
-                    User's Location:
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() =>
-                      Linking.openURL(
-                        `http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`
-                      )
-                    }
-                  >
-                    <Text className="text-blue-500 underline">
-                      {sos.location ||
-                        "View Location"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                <Icon name="error" size={24} color="red" />
               </View>
-            ))
-          ) : (
-            <Text className="text-center text-gray-500">No SOS messages found.</Text>
-          )}
-        </ScrollView>
-      )}
+
+              {/* Sender Info */}
+              <View className="flex-row justify-between items-center">
+                <View>
+                  <Text className="text-lg font-bold">
+                    {sos.phoneNumber || "+639765786665"}
+                  </Text>
+                  <Text className="text-gray-600">{sos.sender || "Juan Dela Cruz"}</Text>
+                </View>
+
+                {/* Phone Call Button */}
+                <TouchableOpacity
+                  onPress={() => {
+                    const phoneNumber = sos.phoneNumber || "+639765786665";
+                    const telURL = `tel:${phoneNumber}`;
+
+                    Linking.canOpenURL(telURL)
+                      .then((supported) => {
+                        if (!supported) {
+                          console.error("Phone call feature is not supported");
+                        } else {
+                          return Linking.openURL(telURL);
+                        }
+                      })
+                      .catch((err) => console.error("An error occurred", err));
+                  }}
+                  className="bg-gray-200 p-3 rounded-full"
+                >
+                  <Icon name="phone" size={20} color="black" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Message Content */}
+              <Text className="text-base text-gray-800 mt-3">
+                {sos.message ||
+                  "I need Help! Please send help or call me on my personal phone number."}
+              </Text>
+
+              {/* User Location */}
+              <View className="mt-3">
+                <Text className="text-sm font-bold text-gray-600">
+                  User's Location:
+                </Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    Linking.openURL(
+                      `http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`
+                    )
+                  }
+                >
+                  <Text className="text-blue-500 underline">
+                    {sos.location || "View Location"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        ) : (
+          <Text className="text-center text-gray-500">No SOS messages found.</Text>
+        )}
+      </ScrollView>
     </View>
   );
 };
