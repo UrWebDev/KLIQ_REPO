@@ -52,8 +52,19 @@ const Hotlines = () => {
       Alert.alert("Validation", "Name and phone number are required.");
       return;
     }
+  
+    // Allow any length and any numeric input
+    if (!/^\d+$/.test(phoneNumber.trim())) { 
+      Alert.alert("Validation", "Please enter a valid numeric phone number.");
+      return;
+    }
+  
     try {
-      const payload = { name: name.trim(), phoneNumber: phoneNumber.trim(), recipientId };
+      const payload = { 
+        name: name.trim(), 
+        phoneNumber: phoneNumber.trim(), 
+        recipientId 
+      };
       const response = await axios.post(`${BASE_URL}/addEmergencyContact`, payload);
       setContacts([...contacts, response.data]);
       resetForm();
@@ -63,6 +74,7 @@ const Hotlines = () => {
       Alert.alert("Error", "Failed to add contact. Please try again.");
     }
   };
+  
 
   const handleUpdateContact = async () => {
     if (!name || !phoneNumber) {

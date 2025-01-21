@@ -11,7 +11,7 @@ const EmergencyHotlinesSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      match: [/^\+?[0-9]{10,15}$/, 'Please enter a valid phone number'],
+      match: [/^\d+$/, 'Please enter a valid phone number'],
     },
     recipientId: {
       type: String,
