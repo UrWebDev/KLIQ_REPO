@@ -51,7 +51,7 @@ const SOSMessage = () => {
     };
 
     fetchSOSMessages(); // Initial fetch
-    const intervalId = setInterval(fetchSOSMessages, 5000); // Auto-refresh every 5s
+    const intervalId = setInterval(fetchSOSMessages, 1000); // Auto-refresh every 5s
 
     return () => clearInterval(intervalId);
   }, [recipientId]);
