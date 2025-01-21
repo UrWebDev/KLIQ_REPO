@@ -123,29 +123,54 @@ const Hotlines = () => {
   };
 
   const renderContact = ({ item }) => (
-    <View
-      className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-2xl shadow-md border border-gray-300"
-    >
+    <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-2xl shadow-md border border-gray-300">
       <View>
         <Text className="text-lg font-bold">{item.name}</Text>
         <Text className="text-gray-500">{item.phoneNumber}</Text>
       </View>
       <View className="flex-row space-x-2">
+        
+        {/* Call Button */}
+        <TouchableOpacity
+          onPress={() => {
+            const phoneNumber = item.phoneNumber;
+            const telURL = `tel:${phoneNumber}`;
+  
+            Linking.canOpenURL(telURL)
+              .then((supported) => {
+                if (!supported) {
+                  console.error("Phone call feature is not supported");
+                } else {
+                  return Linking.openURL(telURL);
+                }
+              })
+              .catch((err) => console.error("An error occurred", err));
+          }}
+          className="bg-blue-500 p-2 rounded-full"
+        >
+          <Icon name="phone" size={20} color="white" />
+        </TouchableOpacity>
+  
+        {/* Edit Button */}
         <TouchableOpacity
           onPress={() => openUpdateModal(item)}
           className="bg-green-500 p-2 rounded-full"
         >
-          <Icon name="edit" size={20} color="#fff" />
+          <Icon name="edit" size={20} color="white" />
         </TouchableOpacity>
+  
+        {/* Delete Button */}
         <TouchableOpacity
           onPress={() => handleDeleteContact(item._id)}
           className="bg-red-500 p-2 rounded-full"
         >
-          <Icon name="delete" size={20} color="#fff" />
+          <Icon name="delete" size={20} color="white" />
         </TouchableOpacity>
+        
       </View>
     </View>
   );
+  
 
   return (
     <View className="flex-1 p-4" style={{ backgroundColor: "white" }}>
