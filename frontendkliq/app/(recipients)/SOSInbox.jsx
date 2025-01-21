@@ -56,7 +56,7 @@ const SOSMessage = () => {
     };
 
     // Refresh the messages every 5 seconds
-    const intervalId = setInterval(fetchSOSMessages, 500000);
+    const intervalId = setInterval(fetchSOSMessages, 5000);
 
     // Cleanup the interval on component unmount
     return () => clearInterval(intervalId);
@@ -92,16 +92,30 @@ const SOSMessage = () => {
                 <View className="flex-row justify-between items-center">
                   <View>
                     <Text className="text-lg font-bold">
-                      {sos.phoneNumber || "+63 9123 1234 123"}
+                      {sos.phoneNumber || "+639 765 786 665"}
                     </Text>
                     <Text className="text-gray-600">{sos.sender || "Juan Dela Cruz"}</Text>
                   </View>
                   <TouchableOpacity
-                    onPress={() => Linking.openURL(`tel:${sos.phoneNumber}`)}
-                    className="bg-gray-200 p-3 rounded-full"
-                  >
-                    <Icon name="phone" size={20} color="black" />
-                  </TouchableOpacity>
+  onPress={() => {
+    const phoneNumber = sos.phoneNumber || "+639765786665"; // Fallback number
+    const telURL = `tel:${phoneNumber}`;
+
+    Linking.canOpenURL(telURL)
+      .then((supported) => {
+        if (!supported) {
+          console.error("Phone call feature is not supported");
+        } else {
+          return Linking.openURL(telURL);
+        }
+      })
+      .catch((err) => console.error("An error occurred", err));
+  }}
+  className="bg-gray-200 p-3 rounded-full"
+>
+  <Icon name="phone" size={20} color="black" />
+</TouchableOpacity>
+
                 </View>
 
                 {/* Message Content */}
