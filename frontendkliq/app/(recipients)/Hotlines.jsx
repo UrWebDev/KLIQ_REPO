@@ -7,6 +7,7 @@ import {
   FlatList,
   Alert,
   Modal,
+  Linking
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -180,12 +181,27 @@ const Hotlines = () => {
         className="flex-row justify-between items-center bg-gray-100 p-4 mb-6 rounded-2xl shadow-md border border-gray-300"
       >
         <View>
-          <Text className="text-lg font-bold">+63 9123 1234 123</Text>
+          <Text className="text-lg font-bold">+639765786665</Text>
           <Text className="text-gray-600">Juan Dela Cruz</Text>
         </View>
-        <TouchableOpacity className="bg-blue-500 p-2 rounded-full">
-          <Icon name="phone" size={20} color="#fff" />
-        </TouchableOpacity>
+        <TouchableOpacity
+  className="bg-blue-500 p-2 rounded-full"
+  onPress={() => {
+    const phoneNumber = "+639765786665";
+    const telURL = `tel:${phoneNumber}`;
+    Linking.canOpenURL(telURL)
+      .then((supported) => {
+        if (!supported) {
+          Alert.alert("Error", "Phone call feature is not supported on this device.");
+        } else {
+          return Linking.openURL(telURL);
+        }
+      })
+      .catch((err) => console.error("An error occurred", err));
+  }}
+>
+  <Icon name="phone" size={20} color="#fff" />
+</TouchableOpacity>
       </View>
 
       {/* Emergency Hotlines Header */}
