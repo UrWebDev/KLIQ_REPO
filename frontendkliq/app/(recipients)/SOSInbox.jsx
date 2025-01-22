@@ -14,6 +14,8 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 const SOSMessage = () => {
   const [sosMessages, setSOSMessages] = useState([]);
   const [recipientId, setRecipientId] = useState(null);
+  const [selectedDevice, setSelectedDevice] = useState(null); // To track selected device
+  const [deviceList, setDeviceList] = useState([]); // To store unique device IDs
 
   useEffect(() => {
     const getRecipientId = async () => {
@@ -41,7 +43,17 @@ const SOSMessage = () => {
         const sortedMessages = response.data.sort(
           (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
         );
+
         setSOSMessages(sortedMessages);
+
+        // Extract unique device IDs from messages
+        const devices = [...new Set(sortedMessages.map((msg) => msg.deviceId))];
+        setDeviceList(devices);
+
+        // Set the first device as default selected
+        if (devices.length > 0 && !selectedDevice) {
+          setSelectedDevice(devices[0]);
+        }
       } catch (error) {
         console.error(
           "Error fetching SOS messages:",
@@ -51,89 +63,116 @@ const SOSMessage = () => {
     };
 
     fetchSOSMessages(); // Initial fetch
-    const intervalId = setInterval(fetchSOSMessages, 1000); // Auto-refresh every 5s
+    const intervalId = setInterval(fetchSOSMessages, 1000); // Auto-refresh every second
 
     return () => clearInterval(intervalId);
-  }, [recipientId]);
+  }, [recipientId, selectedDevice]);
 
   return (
     <View className="flex-1 bg-white">
+      {/* Device Selector */}
+      <View className="flex-row justify-center p-4 bg-gray-100">
+        {deviceList.map((device) => (
+          <TouchableOpacity
+            key={device}
+            onPress={() => setSelectedDevice(device)}
+            className={`px-4 py-2 mx-2 rounded-full ${
+              selectedDevice === device ? "bg-blue-500" : "bg-gray-300"
+            }`}
+          >
+            <Text
+              className={`text-sm ${
+                selectedDevice === device ? "text-white" : "text-black"
+              }`}
+            >
+              Device {device}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* SOS Messages */}
       <ScrollView className="flex-1 p-4">
         <Text className="text-2xl font-bold text-center mb-6">SOS Messages</Text>
         {sosMessages.length > 0 ? (
-          sosMessages.map((sos, index) => (
-            <View
-              key={index}
-              className={`bg-gray-100 p-4 mb-4 rounded-2xl shadow-md border ${
-                sos.message && sos.message.toLowerCase().includes("last")
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-            >
-              {/* Date and Time */}
-              <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-xs text-gray-500">
-                  {sos.receivedAt
-                    ? new Date(sos.receivedAt).toLocaleString()
-                    : "Date not available"}
-                </Text>
-                <Icon name="error" size={24} color="red" />
-              </View>
-
-              {/* Sender Info */}
-              <View className="flex-row justify-between items-center">
-                <View>
-                  <Text className="text-lg font-bold">
-                    {sos.phoneNumber || "+639765786665"}
+          sosMessages
+            .filter((sos) => sos.deviceId === selectedDevice) // Filter by selected device
+            .map((sos, index) => (
+              <View
+                key={index}
+                className={`bg-gray-100 p-4 mb-4 rounded-2xl shadow-md border ${
+                  sos.message && sos.message.toLowerCase().includes("last")
+                    ? "border-red-500"
+                    : "border-gray-300"
+                }`}
+              >
+                {/* Date and Time */}
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-xs text-gray-500">
+                    {sos.receivedAt
+                      ? new Date(sos.receivedAt).toLocaleString()
+                      : "Date not available"}
                   </Text>
-                  <Text className="text-gray-600">{sos.sender || "Juan Dela Cruz"}</Text>
+                  <Icon name="error" size={24} color="red" />
                 </View>
 
-                {/* Phone Call Button */}
-                <TouchableOpacity
-                  onPress={() => {
-                    const phoneNumber = sos.phoneNumber || "+639765786665";
-                    const telURL = `tel:${phoneNumber}`;
+                {/* Sender Info */}
+                <View className="flex-row justify-between items-center">
+                  <View>
+                    <Text className="text-lg font-bold">
+                      {sos.phoneNumber || "+639765786665"}
+                    </Text>
+                    <Text className="text-gray-600">
+                      {sos.sender || "Juan Dela Cruz"}
+                    </Text>
+                  </View>
 
-                    Linking.canOpenURL(telURL)
-                      .then((supported) => {
-                        if (!supported) {
-                          console.error("Phone call feature is not supported");
-                        } else {
-                          return Linking.openURL(telURL);
-                        }
-                      })
-                      .catch((err) => console.error("An error occurred", err));
-                  }}
-                  className="bg-gray-200 p-3 rounded-full"
-                >
-                  <Icon name="phone" size={20} color="black" />
-                </TouchableOpacity>
-              </View>
+                  {/* Phone Call Button */}
+                  <TouchableOpacity
+                    onPress={() => {
+                      const phoneNumber = sos.phoneNumber || "+639765786665";
+                      const telURL = `tel:${phoneNumber}`;
 
-              {/* Message Content */}
-              <Text className="text-base text-gray-800 mt-3 font-bold	">
-                {sos.message}              </Text>
+                      Linking.canOpenURL(telURL)
+                        .then((supported) => {
+                          if (!supported) {
+                            console.error("Phone call feature is not supported");
+                          } else {
+                            return Linking.openURL(telURL);
+                          }
+                        })
+                        .catch((err) => console.error("An error occurred", err));
+                    }}
+                    className="bg-gray-200 p-3 rounded-full"
+                  >
+                    <Icon name="phone" size={20} color="black" />
+                  </TouchableOpacity>
+                </View>
 
-              {/* User Location */}
-              <View className="mt-3">
-                <Text className="text-sm font-bold text-gray-600">
-                  User's Location:
+                {/* Message Content */}
+                <Text className="text-base text-gray-800 mt-3 font-bold">
+                  {sos.message}
                 </Text>
-                <TouchableOpacity
-                  onPress={() =>
-                    Linking.openURL(
-                      `http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`
-                    )
-                  }
-                >
-                  <Text className="text-blue-500 underline">
-                    {sos.location || "View Location"}
+
+                {/* User Location */}
+                <View className="mt-3">
+                  <Text className="text-sm font-bold text-gray-600">
+                    User's Location:
                   </Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() =>
+                      Linking.openURL(
+                        `http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`
+                      )
+                    }
+                  >
+                    <Text className="text-blue-500 underline">
+                      {sos.location || "View Location"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          ))
+            ))
         ) : (
           <Text className="text-center text-gray-500">No SOS messages found.</Text>
         )}
