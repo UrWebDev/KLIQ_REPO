@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Linking, Picker } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { API_URL } from "@env";
@@ -9,6 +9,8 @@ const RecipientSOSReports = () => {
   const [sosMessages, setSOSMessages] = useState([]);
   const [expandedDates, setExpandedDates] = useState({});
   const [recipientId, setRecipientId] = useState(null);
+  const [deviceList, setDeviceList] = useState([]); // List of unique device IDs
+  const [selectedDevice, setSelectedDevice] = useState(''); // Selected device for filtering
 
   useEffect(() => {
     const fetchRecipientId = async () => {
@@ -36,17 +38,27 @@ const RecipientSOSReports = () => {
         const sortedMessages = response.data.sort((a, b) => {
           return new Date(b.receivedAt) - new Date(a.receivedAt);
         });
+
         setSOSMessages(sortedMessages);
+
+        // Extract unique device IDs
+        const devices = [...new Set(sortedMessages.map((msg) => msg.deviceId))];
+        setDeviceList(devices);
+
+        // Automatically select the first device
+        if (devices.length > 0 && !selectedDevice) {
+          setSelectedDevice(devices[0]);
+        }
       } catch (error) {
         console.error('Error fetching SOS messages:', error);
       }
     };
 
     fetchSOSMessages(); // Initial fetch
-    const intervalId = setInterval(fetchSOSMessages, 1000); // Refresh every 5s
+    const intervalId = setInterval(fetchSOSMessages, 1000); // Refresh every second
 
     return () => clearInterval(intervalId);
-  }, [recipientId]);
+  }, [recipientId, selectedDevice]);
 
   const groupMessagesByDate = (messages) => {
     return messages.reduce((acc, message) => {
@@ -59,7 +71,9 @@ const RecipientSOSReports = () => {
     }, {});
   };
 
-  const groupedMessages = groupMessagesByDate(sosMessages);
+  const groupedMessages = groupMessagesByDate(
+    sosMessages.filter((msg) => msg.deviceId === selectedDevice) // Filter by selected device
+  );
 
   const toggleExpand = (date) => {
     setExpandedDates((prev) => ({
@@ -75,6 +89,24 @@ const RecipientSOSReports = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', padding: 16 }}>
+      {/* Device Selector */}
+      <View style={{ marginBottom: 16 }}>
+        <Picker
+          selectedValue={selectedDevice}
+          onValueChange={(itemValue) => setSelectedDevice(itemValue)}
+          style={{
+            width: '100%',
+            backgroundColor: '#f0f0f0',
+            borderRadius: 8,
+            padding: 10,
+          }}
+        >
+          {deviceList.map((device) => (
+            <Picker.Item key={device} label={`Device: ${device}`} value={device} />
+          ))}
+        </Picker>
+      </View>
+
       <ScrollView>
         <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 }}>
           SOS Reports
