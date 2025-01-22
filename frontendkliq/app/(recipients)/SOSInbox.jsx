@@ -112,10 +112,8 @@ const SOSMessage = () => {
               </View>
 
               {/* Message Content */}
-              <Text className="text-base text-gray-800 mt-3">
-                {sos.message ||
-                  "I need Help! Please send help or call me on my personal phone number."}
-              </Text>
+              <Text className="text-base text-gray-800 mt-3 font-bold	">
+                {sos.message}              </Text>
 
               {/* User Location */}
               <View className="mt-3">
