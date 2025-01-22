@@ -5,6 +5,7 @@ import {
   ScrollView,
   Linking,
   TouchableOpacity,
+  Picker,
 } from "react-native";
 import axios from "axios";
 import { API_URL } from "@env";
@@ -14,7 +15,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 const SOSMessage = () => {
   const [sosMessages, setSOSMessages] = useState([]);
   const [recipientId, setRecipientId] = useState(null);
-  const [selectedDevice, setSelectedDevice] = useState(null); // To track selected device
+  const [selectedDevice, setSelectedDevice] = useState(""); // To track selected device
   const [deviceList, setDeviceList] = useState([]); // To store unique device IDs
 
   useEffect(() => {
@@ -70,25 +71,22 @@ const SOSMessage = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Device Selector */}
-      <View className="flex-row justify-center p-4 bg-gray-100">
-        {deviceList.map((device) => (
-          <TouchableOpacity
-            key={device}
-            onPress={() => setSelectedDevice(device)}
-            className={`px-4 py-2 mx-2 rounded-full ${
-              selectedDevice === device ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          >
-            <Text
-              className={`text-sm ${
-                selectedDevice === device ? "text-white" : "text-black"
-              }`}
-            >
-              Device {device}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Dropdown Selector */}
+      <View className="p-4">
+        <Picker
+          selectedValue={selectedDevice}
+          onValueChange={(itemValue) => setSelectedDevice(itemValue)}
+          style={{
+            width: "100%",
+            backgroundColor: "#f0f0f0",
+            borderRadius: 8,
+            padding: 10,
+          }}
+        >
+          {deviceList.map((device) => (
+            <Picker.Item key={device} label={`Identifier: ${device}`} value={device} />
+          ))}
+        </Picker>
       </View>
 
       {/* SOS Messages */}
