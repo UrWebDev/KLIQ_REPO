@@ -102,7 +102,7 @@ const RecipientSOSReports = () => {
           }}
         >
           {deviceList.map((device) => (
-            <Picker.Item key={device} label={`Device: ${device}`} value={device} />
+            <Picker.Item key={device} label={`Identifier: ${device}`} value={device} />
           ))}
         </Picker>
       </View>
