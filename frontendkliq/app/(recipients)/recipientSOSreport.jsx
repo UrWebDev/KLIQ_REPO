@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Linking, Picker } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Linking, Modal, FlatList, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { API_URL } from "@env";
@@ -11,6 +11,7 @@ const RecipientSOSReports = () => {
   const [recipientId, setRecipientId] = useState(null);
   const [deviceList, setDeviceList] = useState([]); // List of unique device IDs
   const [selectedDevice, setSelectedDevice] = useState(''); // Selected device for filtering
+  const [isModalVisible, setIsModalVisible] = useState(false); // To control modal visibility
 
   useEffect(() => {
     const fetchRecipientId = async () => {
@@ -89,23 +90,57 @@ const RecipientSOSReports = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', padding: 16 }}>
-      {/* Device Selector */}
+      {/* Device Selection Button */}
       <View style={{ marginBottom: 16 }}>
-        <Picker
-          selectedValue={selectedDevice}
-          onValueChange={(itemValue) => setSelectedDevice(itemValue)}
+        <TouchableOpacity
+          onPress={() => setIsModalVisible(true)}
           style={{
             width: '100%',
             backgroundColor: '#f0f0f0',
             borderRadius: 8,
             padding: 10,
+            alignItems: 'center',
           }}
         >
-          {deviceList.map((device) => (
-            <Picker.Item key={device} label={`Identifier: ${device}`} value={device} />
-          ))}
-        </Picker>
+          <Text style={{ fontSize: 16, color: '#333' }}>
+            {selectedDevice ? `KLIQ USER: ${selectedDevice}` : 'Select Device'}
+          </Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Modal for Device List */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'white' }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Select Device</Text>
+          
+          <FlatList
+            data={deviceList}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedDevice(item);
+                  setIsModalVisible(false);
+                }}
+                style={{
+                  padding: 10,
+                  backgroundColor: '#f0f0f0',
+                  borderRadius: 8,
+                  marginBottom: 8,
+                }}
+              >
+                <Text>{`Identifier: ${item}`}</Text>
+              </TouchableOpacity>
+            )}
+          />
+
+          <Button title="Cancel" onPress={() => setIsModalVisible(false)} />
+        </View>
+      </Modal>
 
       <ScrollView>
         <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 }}>

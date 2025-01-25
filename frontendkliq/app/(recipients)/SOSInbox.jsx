@@ -5,7 +5,7 @@ import {
   ScrollView,
   Linking,
   TouchableOpacity,
-  Picker,
+  Modal,
 } from "react-native";
 import axios from "axios";
 import { API_URL } from "@env";
@@ -15,8 +15,9 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 const SOSMessage = () => {
   const [sosMessages, setSOSMessages] = useState([]);
   const [recipientId, setRecipientId] = useState(null);
-  const [selectedDevice, setSelectedDevice] = useState(""); // To track selected device
-  const [deviceList, setDeviceList] = useState([]); // To store unique device IDs
+  const [selectedDevice, setSelectedDevice] = useState("");
+  const [deviceList, setDeviceList] = useState([]);
+  const [isModalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     const getRecipientId = async () => {
@@ -47,11 +48,11 @@ const SOSMessage = () => {
 
         setSOSMessages(sortedMessages);
 
-        // Extract unique device IDs from messages
+        // Extract unique device IDs
         const devices = [...new Set(sortedMessages.map((msg) => msg.deviceId))];
         setDeviceList(devices);
 
-        // Set the first device as default selected
+        // Set default device
         if (devices.length > 0 && !selectedDevice) {
           setSelectedDevice(devices[0]);
         }
@@ -71,23 +72,83 @@ const SOSMessage = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Dropdown Selector */}
+      {/* Device Selection Button */}
       <View className="p-4">
-        <Picker
-          selectedValue={selectedDevice}
-          onValueChange={(itemValue) => setSelectedDevice(itemValue)}
+        <TouchableOpacity
+          onPress={() => setModalVisible(true)}
           style={{
-            width: "100%",
             backgroundColor: "#f0f0f0",
             borderRadius: 8,
             padding: 10,
           }}
         >
-          {deviceList.map((device) => (
-            <Picker.Item key={device} label={`Identifier: ${device}`} value={device} />
-          ))}
-        </Picker>
+          <Text style={{ fontSize: 16, color: "#000" }}>
+            {selectedDevice
+              ? `KLIQ User: ${selectedDevice}`
+              : "Select a device"}
+          </Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Modal for Device Selection */}
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.5)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              width: "80%",
+              borderRadius: 10,
+              padding: 20,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 20 }}>
+              Select a Device
+            </Text>
+            {deviceList.map((device, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setSelectedDevice(device);
+                  setModalVisible(false);
+                }}
+                style={{
+                  padding: 15,
+                  backgroundColor: "#f9f9f9",
+                  borderRadius: 8,
+                  marginBottom: 10,
+                }}
+              >
+                <Text style={{ fontSize: 16 }}>{`Identifier: ${device}`}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={{
+                padding: 15,
+                backgroundColor: "#e74c3c",
+                borderRadius: 8,
+                marginTop: 10,
+              }}
+            >
+              <Text style={{ fontSize: 16, color: "white", textAlign: "center" }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* SOS Messages */}
       <ScrollView className="flex-1 p-4">
@@ -104,7 +165,6 @@ const SOSMessage = () => {
                     : "border-gray-300"
                 }`}
               >
-                {/* Date and Time */}
                 <View className="flex-row justify-between items-center mb-2">
                   <Text className="text-xs text-gray-500">
                     {sos.receivedAt
@@ -113,8 +173,6 @@ const SOSMessage = () => {
                   </Text>
                   <Icon name="error" size={24} color="red" />
                 </View>
-
-                {/* Sender Info */}
                 <View className="flex-row justify-between items-center">
                   <View>
                     <Text className="text-lg font-bold">
@@ -124,17 +182,14 @@ const SOSMessage = () => {
                       {sos.sender || "Juan Dela Cruz"}
                     </Text>
                   </View>
-
-                  {/* Phone Call Button */}
                   <TouchableOpacity
                     onPress={() => {
                       const phoneNumber = sos.phoneNumber || "+639765786665";
                       const telURL = `tel:${phoneNumber}`;
-
                       Linking.canOpenURL(telURL)
                         .then((supported) => {
                           if (!supported) {
-                            console.error("Phone call feature is not supported");
+                            console.error("Phone call not supported");
                           } else {
                             return Linking.openURL(telURL);
                           }
@@ -146,13 +201,9 @@ const SOSMessage = () => {
                     <Icon name="phone" size={20} color="black" />
                   </TouchableOpacity>
                 </View>
-
-                {/* Message Content */}
                 <Text className="text-base text-gray-800 mt-3 font-bold">
                   {sos.message}
                 </Text>
-
-                {/* User Location */}
                 <View className="mt-3">
                   <Text className="text-sm font-bold text-gray-600">
                     User's Location:
