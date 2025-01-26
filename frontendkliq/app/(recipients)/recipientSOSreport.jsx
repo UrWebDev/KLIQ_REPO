@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Linking, Modal, FlatList, Button } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Linking, FlatList, Button } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { API_URL } from "@env";
@@ -11,7 +11,7 @@ const RecipientSOSReports = () => {
   const [recipientId, setRecipientId] = useState(null);
   const [deviceList, setDeviceList] = useState([]); // List of unique device IDs
   const [selectedDevice, setSelectedDevice] = useState(''); // Selected device for filtering
-  const [isModalVisible, setIsModalVisible] = useState(false); // To control modal visibility
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false); // To control dropdown visibility
 
   useEffect(() => {
     const fetchRecipientId = async () => {
@@ -90,10 +90,10 @@ const RecipientSOSReports = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', padding: 16 }}>
-      {/* Device Selection Button */}
+      {/* Device Selection Dropdown */}
       <View style={{ marginBottom: 16 }}>
         <TouchableOpacity
-          onPress={() => setIsModalVisible(true)}
+          onPress={() => setIsDropdownVisible(!isDropdownVisible)}
           style={{
             width: '100%',
             backgroundColor: '#f0f0f0',
@@ -106,17 +106,9 @@ const RecipientSOSReports = () => {
             {selectedDevice ? `KLIQ USER: ${selectedDevice}` : 'Select Device'}
           </Text>
         </TouchableOpacity>
-      </View>
 
-      {/* Modal for Device List */}
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={{ flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'white' }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Select Device</Text>
-          
+        {/* Dropdown List */}
+        {isDropdownVisible && (
           <FlatList
             data={deviceList}
             keyExtractor={(item) => item}
@@ -124,7 +116,7 @@ const RecipientSOSReports = () => {
               <TouchableOpacity
                 onPress={() => {
                   setSelectedDevice(item);
-                  setIsModalVisible(false);
+                  setIsDropdownVisible(false);
                 }}
                 style={{
                   padding: 10,
@@ -137,10 +129,8 @@ const RecipientSOSReports = () => {
               </TouchableOpacity>
             )}
           />
-
-          <Button title="Cancel" onPress={() => setIsModalVisible(false)} />
-        </View>
-      </Modal>
+        )}
+      </View>
 
       <ScrollView>
         <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 }}>

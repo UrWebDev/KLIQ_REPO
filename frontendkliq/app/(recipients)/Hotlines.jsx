@@ -176,7 +176,7 @@ const Hotlines = () => {
   return (
     <View className="flex-1 p-4" style={{ backgroundColor: "white" }}>
       {/* User's Personal Numbers */}
-      <Text className="text-lg font-bold mb-4">User's Personal Numbers:</Text>
+      <Text className="text-lg font-bold mb-4">KLIQ User's Personal Numbers:</Text>
       <View
         className="flex-row justify-between items-center bg-gray-100 p-4 mb-6 rounded-2xl shadow-md border border-gray-300"
       >

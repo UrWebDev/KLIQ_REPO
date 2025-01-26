@@ -5,7 +5,6 @@ import {
   ScrollView,
   Linking,
   TouchableOpacity,
-  Modal,
 } from "react-native";
 import axios from "axios";
 import { API_URL } from "@env";
@@ -17,7 +16,7 @@ const SOSMessage = () => {
   const [recipientId, setRecipientId] = useState(null);
   const [selectedDevice, setSelectedDevice] = useState("");
   const [deviceList, setDeviceList] = useState([]);
-  const [isModalVisible, setModalVisible] = useState(false);
+  const [isDropdownVisible, setDropdownVisible] = useState(false); // State for dropdown visibility
 
   useEffect(() => {
     const getRecipientId = async () => {
@@ -75,7 +74,7 @@ const SOSMessage = () => {
       {/* Device Selection Button */}
       <View className="p-4">
         <TouchableOpacity
-          onPress={() => setModalVisible(true)}
+          onPress={() => setDropdownVisible(!isDropdownVisible)} // Toggle dropdown visibility
           style={{
             backgroundColor: "#f0f0f0",
             borderRadius: 8,
@@ -88,40 +87,28 @@ const SOSMessage = () => {
               : "Select a device"}
           </Text>
         </TouchableOpacity>
-      </View>
 
-      {/* Modal for Device Selection */}
-      <Modal
-        visible={isModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.5)",
-          }}
-        >
+        {/* Dropdown List */}
+        {isDropdownVisible && (
           <View
             style={{
+              position: "absolute",
+              top: 60, // Adjust based on your layout
+              left: 10,
+              right: 10,
               backgroundColor: "white",
-              width: "80%",
-              borderRadius: 10,
-              padding: 20,
+              borderRadius: 8,
+              padding: 10,
+              elevation: 5,
+              zIndex: 10,
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 20 }}>
-              Select a Device
-            </Text>
             {deviceList.map((device, index) => (
               <TouchableOpacity
                 key={index}
                 onPress={() => {
                   setSelectedDevice(device);
-                  setModalVisible(false);
+                  setDropdownVisible(false); // Close dropdown after selection
                 }}
                 style={{
                   padding: 15,
@@ -133,22 +120,9 @@ const SOSMessage = () => {
                 <Text style={{ fontSize: 16 }}>{`Identifier: ${device}`}</Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={{
-                padding: 15,
-                backgroundColor: "#e74c3c",
-                borderRadius: 8,
-                marginTop: 10,
-              }}
-            >
-              <Text style={{ fontSize: 16, color: "white", textAlign: "center" }}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        )}
+      </View>
 
       {/* SOS Messages */}
       <ScrollView className="flex-1 p-4">
