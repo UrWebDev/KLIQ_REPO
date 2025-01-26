@@ -208,7 +208,7 @@ const Hotlines = () => {
         <View className="flex-1 justify-center items-center bg-black/50">
           <View className="bg-white w-4/5 rounded-lg p-5 shadow-md">
             <Text className="text-lg font-bold mb-4">
-              {editingContact ? "Update Contact" : "Add Contact"}
+              {editingContact ? "Update Emergency Hotlines" : "Add Emergency Hotlines"}
             </Text>
             <TextInput
               placeholder="Name"
