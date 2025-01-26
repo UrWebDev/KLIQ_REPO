@@ -7,7 +7,7 @@ import {
   FlatList,
   Alert,
   Modal,
-  Linking
+  Linking,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -22,7 +22,7 @@ const Hotlines = () => {
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedContact, setSelectedContact] = useState(null);
+  const [editingContact, setEditingContact] = useState(null);
   const [recipientId, setRecipientId] = useState(null);
 
   useEffect(() => {
@@ -48,24 +48,23 @@ const Hotlines = () => {
     }
   };
 
+  const resetForm = () => {
+    setName("");
+    setPhoneNumber("");
+    setEditingContact(null);
+  };
+
   const handleAddContact = async () => {
     if (!name.trim() || !phoneNumber.trim()) {
       Alert.alert("Validation", "Name and phone number are required.");
       return;
     }
-  
-    // Allow any length and any numeric input
-    if (!/^\d+$/.test(phoneNumber.trim())) { 
+    if (!/^\d+$/.test(phoneNumber.trim())) {
       Alert.alert("Validation", "Please enter a valid numeric phone number.");
       return;
     }
-  
     try {
-      const payload = { 
-        name: name.trim(), 
-        phoneNumber: phoneNumber.trim(), 
-        recipientId 
-      };
+      const payload = { name: name.trim(), phoneNumber: phoneNumber.trim(), recipientId };
       const response = await axios.post(`${BASE_URL}/addEmergencyContact`, payload);
       setContacts([...contacts, response.data]);
       resetForm();
@@ -75,28 +74,28 @@ const Hotlines = () => {
       Alert.alert("Error", "Failed to add contact. Please try again.");
     }
   };
-  
 
   const handleUpdateContact = async () => {
-    if (!name || !phoneNumber) {
-      Alert.alert("Validation", "Please fill out all fields.");
+    if (!name.trim() || !phoneNumber.trim()) {
+      Alert.alert("Validation", "Name and phone number are required.");
       return;
     }
     try {
       const response = await axios.put(
-        `${BASE_URL}/updateEmergencyContact/${selectedContact._id}`,
-        { name, phoneNumber }
+        `${BASE_URL}/updateEmergencyContact/${editingContact._id}`,
+        { name: name.trim(), phoneNumber: phoneNumber.trim() }
       );
       setContacts(
         contacts.map((contact) =>
-          contact._id === selectedContact._id ? response.data : contact
+          contact._id === editingContact._id ? response.data : contact
         )
       );
       setModalVisible(false);
       resetForm();
       Alert.alert("Success", "Contact updated successfully!");
     } catch (error) {
-      console.error("Error updating contact:", error);
+      console.error("Error updating contact:", error.response?.data || error.message);
+      Alert.alert("Error", "Failed to update contact. Please try again.");
     }
   };
 
@@ -106,21 +105,16 @@ const Hotlines = () => {
       setContacts(contacts.filter((contact) => contact._id !== id));
       Alert.alert("Success", "Contact deleted successfully!");
     } catch (error) {
-      console.error("Error deleting contact:", error);
+      console.error("Error deleting contact:", error.response?.data || error.message);
+      Alert.alert("Error", "Failed to delete contact. Please try again.");
     }
   };
 
   const openUpdateModal = (contact) => {
-    setSelectedContact(contact);
+    setEditingContact(contact);
     setName(contact.name);
     setPhoneNumber(contact.phoneNumber);
     setModalVisible(true);
-  };
-
-  const resetForm = () => {
-    setName("");
-    setPhoneNumber("");
-    setSelectedContact(null);
   };
 
   const renderContact = ({ item }) => (
@@ -130,28 +124,13 @@ const Hotlines = () => {
         <Text className="text-gray-500">{item.phoneNumber}</Text>
       </View>
       <View className="flex-row space-x-2">
-        
         {/* Call Button */}
         <TouchableOpacity
-          onPress={() => {
-            const phoneNumber = item.phoneNumber;
-            const telURL = `tel:${phoneNumber}`;
-  
-            Linking.canOpenURL(telURL)
-              .then((supported) => {
-                if (!supported) {
-                  console.error("Phone call feature is not supported");
-                } else {
-                  return Linking.openURL(telURL);
-                }
-              })
-              .catch((err) => console.error("An error occurred", err));
-          }}
+          onPress={() => Linking.openURL(`tel:${item.phoneNumber}`)}
           className="bg-blue-500 p-2 rounded-full"
         >
           <Icon name="phone" size={20} color="white" />
         </TouchableOpacity>
-  
         {/* Edit Button */}
         <TouchableOpacity
           onPress={() => openUpdateModal(item)}
@@ -159,7 +138,6 @@ const Hotlines = () => {
         >
           <Icon name="edit" size={20} color="white" />
         </TouchableOpacity>
-  
         {/* Delete Button */}
         <TouchableOpacity
           onPress={() => handleDeleteContact(item._id)}
@@ -167,19 +145,15 @@ const Hotlines = () => {
         >
           <Icon name="delete" size={20} color="white" />
         </TouchableOpacity>
-        
       </View>
     </View>
   );
-  
 
   return (
     <View className="flex-1 p-4" style={{ backgroundColor: "white" }}>
       {/* User's Personal Numbers */}
       <Text className="text-lg font-bold mb-4">User's Personal Numbers:</Text>
-      <View
-        className="flex-row justify-between items-center bg-gray-100 p-4 mb-6 rounded-2xl shadow-md border border-gray-300"
-      >
+      <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-6 rounded-2xl shadow-md border border-gray-300">
         <View>
           <Text className="text-lg font-bold">+639765786665</Text>
           <Text className="text-gray-600">Juan Dela Cruz</Text>
@@ -207,15 +181,16 @@ const Hotlines = () => {
       <Text className="text-2xl font-bold italic text-center mb-4">
         Emergency Hotlines
       </Text>
-  
       {/* Add Button */}
       <TouchableOpacity
         className="w-12 h-12 bg-gray-200 rounded-full justify-center items-center mb-6 self-center shadow-md"
-        onPress={() => setModalVisible(true)}
+        onPress={() => {
+          setModalVisible(true);
+          resetForm();
+        }}
       >
         <Icon name="add" size={30} color="black" />
       </TouchableOpacity>
-  
       {/* Emergency Contacts List */}
       <FlatList
         data={contacts}
@@ -223,29 +198,27 @@ const Hotlines = () => {
         keyExtractor={(item) => item._id}
         contentContainerStyle={{ paddingBottom: 50 }}
       />
-  
-      {/* Add Contact Modal */}
+      {/* Add/Update Contact Modal */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(false);
-          resetForm();
-        }}
+        onRequestClose={() => setModalVisible(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/50">
           <View className="bg-white w-4/5 rounded-lg p-5 shadow-md">
-            <Text className="text-lg font-bold mb-4">Add Emergency Contact</Text>
+            <Text className="text-lg font-bold mb-4">
+              {editingContact ? "Update Contact" : "Add Contact"}
+            </Text>
             <TextInput
-              placeholder="Emergency Name"
+              placeholder="Name"
               value={name}
               onChangeText={setName}
               className="border border-gray-300 rounded-full p-3 mb-3 bg-white text-gray-800"
               placeholderTextColor="rgba(0,0,0,0.5)"
             />
             <TextInput
-              placeholder="Contact Number"
+              placeholder="Phone Number"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
               className="border border-gray-300 rounded-full p-3 mb-4 bg-white text-gray-800"
@@ -253,16 +226,15 @@ const Hotlines = () => {
               placeholderTextColor="rgba(0,0,0,0.5)"
             />
             <TouchableOpacity
-              onPress={handleAddContact}
+              onPress={editingContact ? handleUpdateContact : handleAddContact}
               className="w-full p-3 bg-blue-500 rounded-full mb-3"
             >
-              <Text className="text-white text-center font-bold">Save</Text>
+              <Text className="text-white text-center font-bold">
+                {editingContact ? "Update" : "Add"}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
-                setModalVisible(false);
-                resetForm();
-              }}
+              onPress={() => setModalVisible(false)}
               className="w-full p-3 bg-red-500 rounded-full"
             >
               <Text className="text-white text-center font-bold">Cancel</Text>
@@ -272,7 +244,6 @@ const Hotlines = () => {
       </Modal>
     </View>
   );
-  
 };
 
 export default Hotlines;
