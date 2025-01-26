@@ -176,7 +176,7 @@ const Hotlines = () => {
   return (
     <View className="flex-1 p-4" style={{ backgroundColor: "white" }}>
       {/* User's Personal Numbers */}
-      <Text className="text-lg font-bold mb-4">KLIQ User's Personal Numbers:</Text>
+      <Text className="text-lg font-bold mb-4">User's Personal Numbers:</Text>
       <View
         className="flex-row justify-between items-center bg-gray-100 p-4 mb-6 rounded-2xl shadow-md border border-gray-300"
       >
@@ -203,39 +203,19 @@ const Hotlines = () => {
   <Icon name="phone" size={20} color="#fff" />
 </TouchableOpacity>
       </View>
-
       {/* Emergency Hotlines Header */}
       <Text className="text-2xl font-bold italic text-center mb-4">
         Emergency Hotlines
       </Text>
-
-      {/* Add Contact */}
-      <TextInput
-        placeholder="Emergency Name"
-        value={name}
-        onChangeText={setName}
-        className="border border-gray-300 rounded-full p-3 mb-3 bg-white text-gray-800"
-        placeholderTextColor="rgba(0,0,0,0.5)"
-      />
-      <TextInput
-        placeholder="Contact Number"
-        value={phoneNumber}
-        onChangeText={setPhoneNumber}
-        className="border border-gray-300 rounded-full p-3 mb-3 bg-white text-gray-800"
-        keyboardType="phone-pad"
-        placeholderTextColor="rgba(0,0,0,0.5)"
-      />
+  
+      {/* Add Button */}
       <TouchableOpacity
-        onPress={selectedContact ? handleUpdateContact : handleAddContact}
-        className={`w-full p-4 rounded-full ${
-          selectedContact ? "bg-green-500" : "bg-blue-500"
-        } mb-6`}
+        className="w-12 h-12 bg-gray-200 rounded-full justify-center items-center mb-6 self-center shadow-md"
+        onPress={() => setModalVisible(true)}
       >
-        <Text className="text-white text-center font-bold">
-          {selectedContact ? "Update Contact" : "Add Contact"}
-        </Text>
+        <Icon name="add" size={30} color="black" />
       </TouchableOpacity>
-
+  
       {/* Emergency Contacts List */}
       <FlatList
         data={contacts}
@@ -243,28 +223,29 @@ const Hotlines = () => {
         keyExtractor={(item) => item._id}
         contentContainerStyle={{ paddingBottom: 50 }}
       />
-
-      {/* Update Contact Modal */}
+  
+      {/* Add Contact Modal */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false);
+          resetForm();
+        }}
       >
         <View className="flex-1 justify-center items-center bg-black/50">
-          <View
-            className="bg-white w-4/5 rounded-lg p-5 shadow-md"
-          >
-            <Text className="text-lg font-bold mb-4">Update Contact</Text>
+          <View className="bg-white w-4/5 rounded-lg p-5 shadow-md">
+            <Text className="text-lg font-bold mb-4">Add Emergency Contact</Text>
             <TextInput
-              placeholder="Name"
+              placeholder="Emergency Name"
               value={name}
               onChangeText={setName}
               className="border border-gray-300 rounded-full p-3 mb-3 bg-white text-gray-800"
               placeholderTextColor="rgba(0,0,0,0.5)"
             />
             <TextInput
-              placeholder="Phone Number"
+              placeholder="Contact Number"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
               className="border border-gray-300 rounded-full p-3 mb-4 bg-white text-gray-800"
@@ -272,13 +253,16 @@ const Hotlines = () => {
               placeholderTextColor="rgba(0,0,0,0.5)"
             />
             <TouchableOpacity
-              onPress={handleUpdateContact}
-              className="w-full p-3 bg-green-500 rounded-full mb-3"
+              onPress={handleAddContact}
+              className="w-full p-3 bg-blue-500 rounded-full mb-3"
             >
               <Text className="text-white text-center font-bold">Save</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setModalVisible(false)}
+              onPress={() => {
+                setModalVisible(false);
+                resetForm();
+              }}
               className="w-full p-3 bg-red-500 rounded-full"
             >
               <Text className="text-white text-center font-bold">Cancel</Text>
@@ -288,6 +272,7 @@ const Hotlines = () => {
       </Modal>
     </View>
   );
+  
 };
 
 export default Hotlines;
