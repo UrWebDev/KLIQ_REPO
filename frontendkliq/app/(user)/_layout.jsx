@@ -3,12 +3,23 @@ import React, { useEffect, useState } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Make sure to import AsyncStorage
 
-const TabIcon = ({ color, name, focused }) => {
+const TabIcon = ({ name, focused }) => {
   return (
-    <View className="item-center">
-      <Text className={`${focused ? 'text-red-600' : 'text-black'} text-xs`} style={{ color: color }}>
+    <View className="items-center">
+      {/* Tab text */}
+      <Text
+        className={`text-xs ${
+          focused ? 'text-black font-bold' : 'text-gray-500'
+        }`}
+      >
         {name}
       </Text>
+      {/* Bottom underline for active tab */}
+      <View
+        className={`h-[2px] w-full ${
+          focused ? 'bg-black' : 'bg-transparent'
+        } mt-1`}
+      ></View>
     </View>
   );
 };
@@ -58,32 +69,32 @@ const TabIconTwo = () => {
         screenOptions={{
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: 'blue',
-            borderTopWidth: 1,
-            borderTopColor: '#232533',
-            height: 84,
+            backgroundColor: 'transparent', // Transparent background
+            borderBottomWidth: 1, // Bottom border
+            borderBottomColor: '#000000', // Black color for the border
+            height: 60, // Adjust the height
           },
-          tabBarActiveTintColor: '#FFFFFF',
-          tabBarInactiveTintColor: '#778899',
         }}
       >
+        {/* Tab 1: Add Device Contact */}
         <Tabs.Screen
           name="addDeviceContact"
           options={{
             title: 'Contacts',
             headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon color={color} name="Contact Management" focused={focused} />
+            tabBarIcon: ({ focused }) => (
+              <TabIcon name="Contact Management" focused={focused} />
             ),
           }}
         />
+        {/* Tab 2: User SOS Reports */}
         <Tabs.Screen
           name="userSOSreports"
           options={{
             title: 'SOS Reports',
             headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon color={color} name="SOS Reports" focused={focused} />
+            tabBarIcon: ({ focused }) => (
+              <TabIcon name="SOS Reports" focused={focused} />
             ),
           }}
         />
