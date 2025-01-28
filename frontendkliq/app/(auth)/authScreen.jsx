@@ -17,7 +17,11 @@ const AuthScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
   const [uniqueId, setUniqueId] = useState("");
+  const [age, setAge] = useState("");
+  const [name, setName] = useState("");
+  const [bloodType, setBloodType] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const router = useRouter();
 
   const handleAuth = async () => {
@@ -39,6 +43,16 @@ const AuthScreen = () => {
           Alert.alert("Error", `${role === "recipient" ? "Recipient" : "User"} ID is required.`);
           return;
         }
+
+        // Additional validation for user role
+        if (role === "user" && (!age.trim() || !name.trim() || !bloodType.trim())) {
+          Alert.alert("Error", "Age, Name, and Blood Type are required for users.");
+          return;
+        }
+        if (role === "recipient" && (!age.trim() || !name.trim())) {
+          Alert.alert("Error", "Age and Name are required for recipients.");
+          return;
+        }
       }
 
       let data;
@@ -46,9 +60,9 @@ const AuthScreen = () => {
         data = { username, password };
       } else {
         if (role === "recipient") {
-          data = { username, password, role, recipientId: uniqueId };
+          data = { username, password, role, recipientId: uniqueId, name, age };
         } else if (role === "user") {
-          data = { username, password, role, userId: uniqueId };
+          data = { username, password, role, userId: uniqueId, age, name, bloodType };
         }
       }
 
@@ -95,13 +109,16 @@ const AuthScreen = () => {
         <TextInput
           placeholder="Password"
           value={password}
-          secureTextEntry
+          secureTextEntry={!passwordVisible}
           onChangeText={setPassword}
           className="w-full px-4 py-3 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
           placeholderTextColor="rgba(0, 0, 0, 0.3)"
         />
-        <TouchableOpacity className="absolute top-3 right-4">
-          <Icon name="visibility" size={24} color="gray" />
+        <TouchableOpacity
+          className="absolute top-3 right-4"
+          onPress={() => setPasswordVisible(!passwordVisible)}
+        >
+          <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={24} color="gray" />
         </TouchableOpacity>
       </View>
 
@@ -144,12 +161,58 @@ const AuthScreen = () => {
           )}
 
           <TextInput
-            placeholder="Unique ID"
+            placeholder={`${role === "recipient" ? "Recipient" : "User"} Contact Number (serves as unique ID)`}
             value={uniqueId}
             onChangeText={setUniqueId}
             className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
             placeholderTextColor="rgba(0, 0, 0, 0.3)"
           />
+
+          {role === "user" && (
+            <>
+              <TextInput
+                placeholder="Age"
+                value={age}
+                onChangeText={setAge}
+                keyboardType="numeric"
+                className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+                placeholderTextColor="rgba(0, 0, 0, 0.3)"
+              />
+              <TextInput
+                placeholder="Name"
+                value={name}
+                onChangeText={setName}
+                className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+                placeholderTextColor="rgba(0, 0, 0, 0.3)"
+              />
+              <TextInput
+                placeholder="Blood Type"
+                value={bloodType}
+                onChangeText={setBloodType}
+                className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+                placeholderTextColor="rgba(0, 0, 0, 0.3)"
+              />
+            </>
+          )}
+          {role === "recipient" && (
+            <>
+            <TextInput
+              placeholder="Age"
+              value={age}
+              onChangeText={setAge}
+              keyboardType="numeric"
+              className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+              placeholderTextColor="rgba(0, 0, 0, 0.3)"
+            />
+            <TextInput
+              placeholder="Name"
+              value={name}
+              onChangeText={setName}
+              className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+              placeholderTextColor="rgba(0, 0, 0, 0.3)"
+            />
+          </>
+          )}
         </>
       )}
 
@@ -166,13 +229,11 @@ const AuthScreen = () => {
         <Text className="text-center text-sm text-gray-500">
           {isLogin ? (
             <>
-              don't have an account?{" "}
-              <Text style={{ fontWeight: "00", fontStyle: "italic" }}>Sign up</Text>
+              don’t have an account? <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Sign up</Text>
             </>
           ) : (
             <>
-              already have an account?{" "}
-              <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Log in</Text>
+              already have an account? <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Log in</Text>
             </>
           )}
         </Text>

@@ -7,7 +7,7 @@ const router = express.Router();
 // Register route
 router.post('/register', async (req, res) => {
     try {
-        const { username, password, role, recipientId, userId } = req.body;
+        const { username, password, role, recipientId, userId, age, name, bloodType } = req.body;
 
         // Role-based validation
         if (role === 'recipient' && !recipientId) {
@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
 
         // Hash password and create the user
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, password: hashedPassword, role, recipientId, userId });
+        const newUser = new User({ username, password: hashedPassword, role, recipientId, userId, age, name, bloodType });
         await newUser.save();
 
         res.status(201).json({ message: "User registered successfully" });
