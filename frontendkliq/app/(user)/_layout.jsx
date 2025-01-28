@@ -43,8 +43,17 @@ const TabIconTwo = () => {
     checkAuthStatus();
   }, [router]);
 
+   //hanlde clear interval so its not fetching when logged out
+   const clearAllIntervals = () => {
+    // Add this function to clear intervals if necessary
+    let id = window.setTimeout(() => {}, 0);
+    while (id--) {
+        window.clearTimeout(id); // Will clear timeouts and intervals
+    }
+  };
   // Handle logout
   const handleLogout = async () => {
+    clearAllIntervals();
     await AsyncStorage.removeItem('authToken');
     const checkTokenLogout = await AsyncStorage.getItem('authToken');
     console.log(checkTokenLogout); // Should be null after removal
