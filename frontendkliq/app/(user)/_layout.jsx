@@ -86,6 +86,7 @@ const TabIconTwo = () => {
   };
   // Handle logout
   const handleLogout = async () => {
+    setSidebarVisible(false);
     clearAllIntervals();
     await AsyncStorage.removeItem('authToken');
     const checkTokenLogout = await AsyncStorage.getItem('authToken');

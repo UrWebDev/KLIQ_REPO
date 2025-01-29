@@ -84,6 +84,7 @@ const TabsLayout = () => {
 
   // Handle logout
   const handleLogout = async () => {
+    setSidebarVisible(false);
     clearAllIntervals();
     await AsyncStorage.removeItem('authToken');
     router.push('/authScreen');
