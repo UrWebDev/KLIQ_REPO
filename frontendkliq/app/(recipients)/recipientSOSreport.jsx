@@ -1,17 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Linking, FlatList, Button } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Linking,
+  FlatList,
+  ActivityIndicator,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
-import { API_URL } from "@env";
+import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Dimensions } from 'react-native';
+import { BarChart } from 'react-native-gifted-charts'; // Importing BarChart from Gifted Charts
 
 const RecipientSOSReports = () => {
   const [sosMessages, setSOSMessages] = useState([]);
   const [expandedDates, setExpandedDates] = useState({});
   const [recipientId, setRecipientId] = useState(null);
-  const [deviceList, setDeviceList] = useState([]); // List of unique device IDs
-  const [selectedDevice, setSelectedDevice] = useState(''); // Selected device for filtering
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false); // To control dropdown visibility
+  const [deviceList, setDeviceList] = useState([]);
+  const [selectedDevice, setSelectedDevice] = useState('');
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [weeklyData, setWeeklyData] = useState([0, 0, 0, 0]);
 
   useEffect(() => {
     const fetchRecipientId = async () => {
@@ -20,10 +32,10 @@ const RecipientSOSReports = () => {
         if (storedRecipientId) {
           setRecipientId(storedRecipientId);
         } else {
-          console.error("Recipient ID not found in storage");
+          console.error('Recipient ID not found in storage');
         }
       } catch (error) {
-        console.error("Error fetching recipient ID from storage:", error);
+        console.error('Error fetching recipient ID from storage:', error);
       }
     };
 
@@ -35,31 +47,47 @@ const RecipientSOSReports = () => {
 
     const fetchSOSMessages = async () => {
       try {
-        const response = await axios.get(`${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`);
+        const response = await axios.get(
+          `${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`
+        );
         const sortedMessages = response.data.sort((a, b) => {
           return new Date(b.receivedAt) - new Date(a.receivedAt);
         });
 
         setSOSMessages(sortedMessages);
 
-        // Extract unique device IDs
         const devices = [...new Set(sortedMessages.map((msg) => msg.deviceId))];
         setDeviceList(devices);
 
-        // Automatically select the first device
         if (devices.length > 0 && !selectedDevice) {
           setSelectedDevice(devices[0]);
         }
+
+        calculateWeeklyData(sortedMessages);
       } catch (error) {
         console.error('Error fetching SOS messages:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchSOSMessages(); // Initial fetch
-    const intervalId = setInterval(fetchSOSMessages, 1000); // Refresh every second
+    fetchSOSMessages();
+    const intervalId = setInterval(fetchSOSMessages, 1000);
 
     return () => clearInterval(intervalId);
   }, [recipientId, selectedDevice]);
+
+  const calculateWeeklyData = (messages) => {
+    const weeks = [0, 0, 0, 0];
+    messages
+      .filter((msg) => msg.deviceId === selectedDevice)
+      .forEach((msg) => {
+        const sosDate = new Date(msg.receivedAt);
+        const week = Math.ceil(sosDate.getDate() / 7) - 1;
+        weeks[week] += 1;
+      });
+    setWeeklyData(weeks);
+  };
 
   const groupMessagesByDate = (messages) => {
     return messages.reduce((acc, message) => {
@@ -73,7 +101,7 @@ const RecipientSOSReports = () => {
   };
 
   const groupedMessages = groupMessagesByDate(
-    sosMessages.filter((msg) => msg.deviceId === selectedDevice) // Filter by selected device
+    sosMessages.filter((msg) => msg.deviceId === selectedDevice)
   );
 
   const toggleExpand = (date) => {
@@ -85,12 +113,23 @@ const RecipientSOSReports = () => {
 
   const containsLastWord = (message) => {
     if (!message) return false;
-    return message.toLowerCase().split(/\s+/).includes("last");
+    return message.toLowerCase().split(/\s+/).includes('last');
   };
+
+  if (loading) {
+    return <ActivityIndicator size="large" />;
+  }
+
+  const totalAlerts = weeklyData.reduce((sum, count) => sum + count, 0);
+
+  const barData = weeklyData.map((value, index) => ({
+    value,
+    label: `${index + 1}${['st', 'nd', 'rd', 'th'][index]} week`,
+    frontColor: '#FF0000',
+  }));
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', padding: 16 }}>
-      {/* Device Selection Dropdown */}
       <View style={{ marginBottom: 16 }}>
         <TouchableOpacity
           onPress={() => setIsDropdownVisible(!isDropdownVisible)}
@@ -107,7 +146,6 @@ const RecipientSOSReports = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Dropdown List */}
         {isDropdownVisible && (
           <FlatList
             data={deviceList}
@@ -117,6 +155,7 @@ const RecipientSOSReports = () => {
                 onPress={() => {
                   setSelectedDevice(item);
                   setIsDropdownVisible(false);
+                  calculateWeeklyData(sosMessages);
                 }}
                 style={{
                   padding: 10,
@@ -133,7 +172,36 @@ const RecipientSOSReports = () => {
       </View>
 
       <ScrollView>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 }}>
+        <View style={{ marginBottom: 16 }}>
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: 'bold',
+              textAlign: 'center',
+              marginBottom: 8,
+            }}
+          >
+            TOTAL: {totalAlerts} Alert Messages this Month
+          </Text>
+          <BarChart
+            data={barData}
+            barWidth={30}
+            noOfSections={5}
+            height={220}
+            frontColor="lightgray"
+            barBorderRadius={4}
+            style={{ marginVertical: 8 }}
+          />
+        </View>
+
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            marginBottom: 16,
+          }}
+        >
           SOS Reports
         </Text>
 
@@ -154,7 +222,12 @@ const RecipientSOSReports = () => {
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Icon name="chevron-down" size={16} color="black" style={{ marginRight: 8 }} />
+                <Icon
+                  name="chevron-down"
+                  size={16}
+                  color="black"
+                  style={{ marginRight: 8 }}
+                />
                 <Text style={{ color: '#1f2937', fontWeight: 'bold', fontSize: 18 }}>
                   {date}
                 </Text>
@@ -162,7 +235,7 @@ const RecipientSOSReports = () => {
               <Icon name="exclamation-triangle" size={20} color="red" />
             </TouchableOpacity>
 
-            {expandedDates[date] ? (
+            {expandedDates[date] &&
               groupedMessages[date].map((message, index) => (
                 <View
                   key={index}
@@ -172,7 +245,9 @@ const RecipientSOSReports = () => {
                     marginTop: 8,
                     backgroundColor: '#f3f4f6',
                     borderWidth: containsLastWord(message.message) ? 2 : 1,
-                    borderColor: containsLastWord(message.message) ? '#FF0000' : '#e5e7eb',
+                    borderColor: containsLastWord(message.message)
+                      ? '#FF0000'
+                      : '#e5e7eb',
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.1,
@@ -183,7 +258,14 @@ const RecipientSOSReports = () => {
                   <Text style={{ color: '#6b7280', fontSize: 12 }}>
                     {new Date(message.receivedAt).toLocaleTimeString()}
                   </Text>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1f2937', marginTop: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      color: '#1f2937',
+                      marginTop: 8,
+                    }}
+                  >
                     {message.message}
                   </Text>
                   <Text style={{ color: '#6b7280', marginTop: 4 }}>
@@ -191,17 +273,20 @@ const RecipientSOSReports = () => {
                   </Text>
                   <TouchableOpacity
                     onPress={() =>
-                      Linking.openURL(`https://www.google.com/maps?q=${message.latitude},${message.longitude}`)
+                      Linking.openURL(
+                        `https://www.google.com/maps?q=${message.latitude},${message.longitude}`
+                      )
                     }
                     style={{ marginTop: 8 }}
                   >
-                    <Text style={{ color: '#3b82f6', textDecorationLine: 'underline' }}>
+                    <Text
+                      style={{ color: '#3b82f6', textDecorationLine: 'underline' }}
+                    >
                       View on Google Maps
                     </Text>
                   </TouchableOpacity>
                 </View>
-              ))
-            ) : null}
+              ))}
           </View>
         ))}
       </ScrollView>
