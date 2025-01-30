@@ -93,14 +93,14 @@ const SOSMessage = () => {
           <View
             style={{
               position: "absolute",
-              top: 60, // Adjust based on your layout
+              top: 50, // Adjusted to ensure the dropdown appears below the button
               left: 10,
               right: 10,
               backgroundColor: "white",
               borderRadius: 8,
               padding: 10,
               elevation: 5,
-              zIndex: 10,
+              zIndex: 1000, // Increased zIndex to bring it to the front
             }}
           >
             {deviceList.map((device, index) => (
@@ -125,7 +125,12 @@ const SOSMessage = () => {
       </View>
 
       {/* SOS Messages */}
-      <ScrollView className="flex-1 p-4">
+      <ScrollView
+        className="flex-1 p-4"
+        style={{
+          marginTop: isDropdownVisible ? 90 : 0, // Add margin top when dropdown is visible
+        }}
+      >
         <Text className="text-2xl font-bold text-center mb-6">SOS Messages</Text>
         {sosMessages.length > 0 ? (
           sosMessages
@@ -150,10 +155,10 @@ const SOSMessage = () => {
                 <View className="flex-row justify-between items-center">
                   <View>
                     <Text className="text-lg font-bold">
-                      {sos.phoneNumber || "+639765786665"}
+                      {sos.phoneNUM || "+639765786665"}
                     </Text>
                     <Text className="text-gray-600">
-                      {sos.sender || "Juan Dela Cruz"}
+                      {sos.name || "Juan Dela Cruz"}
                     </Text>
                   </View>
                   <TouchableOpacity

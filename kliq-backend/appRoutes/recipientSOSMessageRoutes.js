@@ -3,7 +3,7 @@ import SOSModel from "../dbSchemas/recipientSOSMessageSchema.js";
 //receive an http request from the device
 //receive sms from device
 const receiveRecipientSOSMessage = async (req, res) => {
-  let { longitude, latitude, message, recipientId, deviceId } = req.body;
+  let { longitude, latitude, message, recipientId, deviceId, name, age, bloodType, phoneNUM } = req.body;
 
   // If recipientId is a string (i.e., JSON format), convert it into an array
   if (typeof recipientId === 'string') {
@@ -15,12 +15,12 @@ const receiveRecipientSOSMessage = async (req, res) => {
   }
 
   // Validation check for required fields
-  if (!longitude || !latitude || !message || !recipientId || !deviceId) {
+  if (!longitude || !latitude || !message || !recipientId || !deviceId || !name || !age || !bloodType || !phoneNUM) {
     return res.status(400).send("Incomplete data received.");
   }
 
   try {
-    const sos = new SOSModel({ longitude, latitude, message, recipientId, deviceId });
+    const sos = new SOSModel({ longitude, latitude, message, recipientId, deviceId, name, age, bloodType, phoneNUM });
     await sos.save();
 
     res.status(200).send("SOS message received and saved.");
