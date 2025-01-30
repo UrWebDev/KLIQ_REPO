@@ -268,6 +268,36 @@ const RecipientSOSReports = () => {
                   >
                     {message.message}
                   </Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      color: '#1f2937',
+                      marginTop: 8,
+                    }}
+                  >
+                    {message.name}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      color: '#1f2937',
+                      marginTop: 8,
+                    }}
+                  >
+                    {message.age}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      color: '#1f2937',
+                      marginTop: 8,
+                    }}
+                  >
+                    {message.bloodType}
+                  </Text>
                   <Text style={{ color: '#6b7280', marginTop: 4 }}>
                     Location: Lat {message.latitude}, Lng {message.longitude}
                   </Text>
