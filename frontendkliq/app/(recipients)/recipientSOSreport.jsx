@@ -12,7 +12,6 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Dimensions } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts'; // Importing BarChart from Gifted Charts
 
 const RecipientSOSReports = () => {
@@ -24,6 +23,23 @@ const RecipientSOSReports = () => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [weeklyData, setWeeklyData] = useState([0, 0, 0, 0]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [isMonthDropdownVisible, setIsMonthDropdownVisible] = useState(false);
+
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
 
   useEffect(() => {
     const fetchRecipientId = async () => {
@@ -75,12 +91,16 @@ const RecipientSOSReports = () => {
     const intervalId = setInterval(fetchSOSMessages, 1000);
 
     return () => clearInterval(intervalId);
-  }, [recipientId, selectedDevice]);
+  }, [recipientId, selectedDevice, selectedMonth]);
 
   const calculateWeeklyData = (messages) => {
     const weeks = [0, 0, 0, 0];
     messages
-      .filter((msg) => msg.deviceId === selectedDevice)
+      .filter(
+        (msg) =>
+          msg.deviceId === selectedDevice &&
+          new Date(msg.receivedAt).getMonth() === selectedMonth
+      )
       .forEach((msg) => {
         const sosDate = new Date(msg.receivedAt);
         const week = Math.ceil(sosDate.getDate() / 7) - 1;
@@ -101,7 +121,11 @@ const RecipientSOSReports = () => {
   };
 
   const groupedMessages = groupMessagesByDate(
-    sosMessages.filter((msg) => msg.deviceId === selectedDevice)
+    sosMessages.filter(
+      (msg) =>
+        msg.deviceId === selectedDevice &&
+        new Date(msg.receivedAt).getMonth() === selectedMonth
+    )
   );
 
   const toggleExpand = (date) => {
@@ -115,6 +139,13 @@ const RecipientSOSReports = () => {
     if (!message) return false;
     return message.toLowerCase().split(/\s+/).includes('last');
   };
+
+  const kliqUserDetails =
+    sosMessages.find((msg) => msg.deviceId === selectedDevice) || {
+      name: '',
+      age: '',
+      bloodType: '',
+    };
 
   if (loading) {
     return <ActivityIndicator size="large" />;
@@ -171,8 +202,33 @@ const RecipientSOSReports = () => {
         )}
       </View>
 
+      <View
+        style={{
+          backgroundColor: '#f9fafb',
+          padding: 16,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: '#e5e7eb',
+          marginBottom: 16,
+        }}
+      >
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 8, color: '#111827' }}>
+          {kliqUserDetails.name || 'Select a device to view details'}
+        </Text>
+        {kliqUserDetails.name && (
+          <>
+            <Text style={{ fontSize: 16, color: '#4b5563', marginBottom: 4 }}>
+              Age: {kliqUserDetails.age}
+            </Text>
+            <Text style={{ fontSize: 16, color: '#4b5563', marginBottom: 4 }}>
+              Blood Type: {kliqUserDetails.bloodType}
+            </Text>
+          </>
+        )}
+      </View>
+
       <ScrollView>
-        <View style={{ marginBottom: 16 }}>
+        <View style={{ marginBottom: 16, alignItems: 'center' }}>
           <Text
             style={{
               fontSize: 20,
@@ -181,8 +237,47 @@ const RecipientSOSReports = () => {
               marginBottom: 8,
             }}
           >
-            TOTAL: {totalAlerts} Alert Messages this Month
+            TOTAL: {totalAlerts} Alert Messages this
           </Text>
+
+          <TouchableOpacity
+            onPress={() => setIsMonthDropdownVisible(!isMonthDropdownVisible)}
+            style={{
+              width: '50%',
+              backgroundColor: '#f0f0f0',
+              borderRadius: 8,
+              padding: 10,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 16, color: '#333' }}>
+              {months[selectedMonth]}
+            </Text>
+          </TouchableOpacity>
+
+          {isMonthDropdownVisible && (
+            <FlatList
+              data={months}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item, index }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedMonth(index);
+                    setIsMonthDropdownVisible(false);
+                  }}
+                  style={{
+                    padding: 10,
+                    backgroundColor: '#f0f0f0',
+                    borderRadius: 8,
+                    marginBottom: 8,
+                  }}
+                >
+                  <Text>{item}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+
           <BarChart
             data={barData}
             barWidth={30}
