@@ -26,7 +26,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "0.74.5",
-    "react-native-ble-plx": "^3.2.1",
+    "react-native-ble-plx": "^3.5.0",
     "react-native-dotenv": "^3.4.11",
     "react-native-gifted-charts": "^1.4.56",
     "react-native-modal-dropdown": "^1.0.2",
