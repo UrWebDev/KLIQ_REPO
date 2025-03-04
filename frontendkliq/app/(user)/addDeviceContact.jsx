@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, PermissionsAndroid, Platform
+  View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, PermissionsAndroid, Platform, FlatList
 } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
@@ -18,7 +18,6 @@ const Contactss = () => {
   const [number, setNumber] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [receivedContact, setReceivedContact] = useState('');
-  const [characteristic, setCharacteristic] = useState(null);
 
 
   useEffect(() => {
@@ -34,24 +33,7 @@ const Contactss = () => {
       manager.destroy();
     };
   }, [manager]);
-  useEffect(() => {
-    if (device && characteristic) {
-      const subscription = characteristic.monitor((error, characteristic) => {
-        if (error) {
-          console.error("Error receiving data:", error);
-          return;
-        }
-        if (characteristic?.value) {
-          const decodedValue = atob(characteristic.value); // Decode from Base64
-          console.log("📥 Received contact data:", decodedValue);
-          setReceivedContact((prev) => (prev ? `${prev},${decodedValue}` : decodedValue));
-        }
-      });
-  
-      return () => subscription.remove(); // Cleanup on unmount
-    }
-  }, [device, characteristic]);
-  
+
 
   const requestBluetoothPermissions = async () => {
     if (Platform.OS === 'android' && Platform.Version >= 31) {
@@ -61,7 +43,8 @@ const Contactss = () => {
           PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         ]);
-  
+
+
         if (
           granted["android.permission.BLUETOOTH_SCAN"] !== PermissionsAndroid.RESULTS.GRANTED ||
           granted["android.permission.BLUETOOTH_CONNECT"] !== PermissionsAndroid.RESULTS.GRANTED ||
@@ -71,7 +54,8 @@ const Contactss = () => {
           Alert.alert("Permission Denied", "Bluetooth permissions are required.");
           return false;
         }
-  
+
+
         console.log("Bluetooth permissions granted.");
         return true;
       } catch (err) {
@@ -120,135 +104,103 @@ const Contactss = () => {
   };
 
 
-const connectToDevice = async (device) => {
-  try {
-    await device.connect();
-    console.log("✅ Connected to device:", device.id);
-    setDevice(device);
+  const connectToDevice = async (scannedDevice) => {
+    try {
+        console.log("📡 Connecting to:", scannedDevice.id);
 
-    const services = await device.discoverAllServicesAndCharacteristics();
-    console.log("🔍 Services discovered");
 
-    // Find the correct BLE Service
-    const serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"; // Change if needed
-    const service = await device.services().then(services => 
-      services.find(s => s.uuid === serviceUUID)
-    );
+        const connectedDevice = await scannedDevice.connect();
+        await connectedDevice.discoverAllServicesAndCharacteristics();
 
-    if (!service) {
-      console.error("❌ Service not found!");
-      return;
+
+        console.log("✅ Device successfully connected:", connectedDevice.id);
+        setDevice(connectedDevice);
+        setConnected(true);
+        Alert.alert("🎉 Success", "Connected to ESP32!");
+
+
+        // 🚀 Request higher MTU before anything else
+        await connectedDevice.requestMTU(517);
+        console.log("✅ MTU size increased to 512");
+
+
+        startListeningForNotifications(connectedDevice);
+        fetchStoredContacts(connectedDevice);
+    } catch (error) {
+        console.error("❌ Connection error:", error);
+        Alert.alert("Error", "Failed to connect. Please try again.");
     }
+};
 
-    // Find the correct BLE Characteristic
-    const charUUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8"; // Change if needed
-    const char = await service.characteristics().then(chars =>
-      chars.find(c => c.uuid === charUUID)
-    );
 
-    if (!char) {
-      console.error("❌ Characteristic not found!");
-      return;
-    }
 
-    console.log("📡 Characteristic found:", char.uuid);
-    setCharacteristic(char); // Save characteristic in state
 
-    // Subscribe to notifications
-    char.monitor((error, characteristic) => {
-      if (error) {
-        console.error("⚠️ Error receiving data:", error);
+ 
+
+
+ 
+  const startListeningForNotifications = async (connectedDevice) => {
+    try {
+      console.log("Checking if device is connected for notifications...");
+      await new Promise(resolve => setTimeout(resolve, 3000));
+ 
+      let isConnected = await connectedDevice.isConnected();
+      if (!isConnected) {
+        console.log("Device lost connection, retrying...");
         return;
       }
+ 
+      console.log("Subscribing to notifications...");
+      await new Promise(resolve => setTimeout(resolve, 2000));
+ 
+      console.log("Service UUID:", SERVICE_UUID);
+      console.log("Characteristic UUID:", CHARACTERISTIC_UUID);
+ 
+      // Correct function usage with only required arguments
+      await connectedDevice.monitorCharacteristicForService(
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID,
+        (error, characteristic) => {
+          if (error) {
+            console.error("❌ Notification error:", error);
+            return;
+          }
+     
+          if (characteristic?.value) {
+            const decodedValue = Buffer.from(characteristic.value, 'base64').toString('utf-8');
+            console.log("📩 Received Data:", decodedValue);
+            setReceivedContact(decodedValue);
+            // Debugging: Log raw BLE data
+            console.log("🛠 Raw Base64 Data:", characteristic.value);
+          } else {
+            console.log("⚠️ No data received.");
+          }
+        }
+      );
+     
+     
+ 
+      console.log("✅ Subscribed to notifications successfully!");
+    } catch (error) {
+      console.error("Failed to start notifications:", error);
+    }
+  };
+ 
+ 
+ 
+
+  const fetchStoredContacts = async (connectedDevice) => {
+    try {
+      const characteristic = await connectedDevice.readCharacteristicForService(SERVICE_UUID, CHARACTERISTIC_UUID);
       if (characteristic?.value) {
-        const decodedValue = atob(characteristic.value); // Decode Base64
-        console.log("📥 Received contact data:", decodedValue);
-        setReceivedContact((prev) => (prev ? `${prev},${decodedValue}` : decodedValue));
+        const decodedValue = Buffer.from(characteristic.value, 'base64').toString('utf-8');
+        setReceivedContact(decodedValue);
+        console.log("📩 Retrieved Stored Data:", decodedValue);
       }
-    });
-
-    setConnected(true);
-  } catch (error) {
-    console.error("❌ Connection error:", error);
-    setConnected(false);
-  }
-};
-
-
-
-
-
- 
-
-
- 
-const startListeningForNotifications = async (connectedDevice) => {
-  try {
-    console.log("Checking if device is connected for notifications...");
-    await new Promise(resolve => setTimeout(resolve, 3000));
-
-    let isConnected = await connectedDevice.isConnected();
-    if (!isConnected) {
-      console.log("Device lost connection, retrying...");
-      return;
+    } catch (error) {
+      console.error("❌ Failed to fetch stored contacts:", error);
     }
-
-    console.log("Subscribing to notifications...");
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    console.log("Service UUID:", SERVICE_UUID);
-    console.log("Characteristic UUID:", CHARACTERISTIC_UUID);
-
-    // 🛠 Read stored contacts first
-    const characteristic = await connectedDevice.readCharacteristicForService(
-      SERVICE_UUID,
-      CHARACTERISTIC_UUID
-    );
-
-    if (characteristic?.value) {
-      const initialValue = Buffer.from(characteristic.value, 'base64').toString('utf-8');
-      console.log("📩 Initial Data:", initialValue);
-      setReceivedContact(initialValue); // Update UI
-    }
-
-    // ✅ Start listening for notifications
-    console.log("📡 Waiting before enabling notifications...");
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Give ESP32 time to send notifications
-
-    connectedDevice.monitorCharacteristicForService(
-      SERVICE_UUID,
-      CHARACTERISTIC_UUID,
-      (error, characteristic) => {
-        if (error) {
-          console.error("❌ Notification error:", error);
-          return;
-        }
-
-        if (characteristic?.value) {
-          const decodedValue = Buffer.from(characteristic.value, 'base64').toString('utf-8');
-          console.log("📩 Received Data:", decodedValue);
-          setReceivedContact(decodedValue);
-          console.log("🛠 Raw Base64 Data:", characteristic.value);
-        } else {
-          console.log("⚠️ No data received.");
-        }
-      }
-    );
-
-    console.log("✅ Subscribed to notifications successfully!");
-  } catch (error) {
-    console.error("Failed to start notifications:", error);
-  }
-};
-
-
-
-
- 
- 
- 
-
-
+  };
   const sendContactData = async (contactData) => {
     if (!device) {
         Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
@@ -303,6 +255,92 @@ const startListeningForNotifications = async (connectedDevice) => {
     const contactData = `${name},${number}`;
     await sendContactData(contactData);
   };
+  const deleteContact = async (contactId) => {
+    if (!device) {
+        Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
+        return;
+    }
+
+    try {
+        let isConnected = await device.isConnected();
+        if (!isConnected) {
+            console.log('Reconnecting...');
+            await connectToDevice(device);
+        }
+
+        const deleteCommand = `DELETE:${contactId}`;
+        const base64Data = Buffer.from(deleteCommand, 'utf-8').toString('base64');
+
+        console.log("🗑 Sending Delete Command:", deleteCommand);
+
+        await device.writeCharacteristicWithoutResponseForService(
+            SERVICE_UUID,
+            CHARACTERISTIC_UUID,
+            base64Data
+        );
+
+        console.log('✅ Contact delete request sent!');
+
+        // Wait for the ESP32 to send the updated contacts list
+        setTimeout(async () => {
+            const updatedContactsBase64 = await device.readCharacteristicForService(SERVICE_UUID, CHARACTERISTIC_UUID);
+            const updatedContacts = Buffer.from(updatedContactsBase64.value, 'base64').toString('utf-8');
+
+            setReceivedContact(updatedContacts);
+            console.log("📡 Updated Contacts from ESP32:", updatedContacts);
+        }, 1000);
+
+        Alert.alert("Success", "Contact deleted successfully!");
+    } catch (error) {
+        console.error('❌ Failed to delete contact:', error);
+        Alert.alert('Error', 'Failed to delete contact. Check connection.');
+    }
+};
+
+
+const updateContact = async (contactId, newName, newNumber) => {
+  if (!device) {
+      Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
+      return;
+  }
+
+  try {
+      let isConnected = await device.isConnected();
+      if (!isConnected) {
+          console.log('Reconnecting...');
+          await connectToDevice(device);
+      }
+
+      const updateCommand = `UPDATE:${contactId},${newName},${newNumber}`;
+      const base64Data = Buffer.from(updateCommand, 'utf-8').toString('base64');
+
+      console.log("✏️ Sending Update Command:", updateCommand);
+
+      await device.writeCharacteristicWithoutResponseForService(
+          SERVICE_UUID,
+          CHARACTERISTIC_UUID,
+          base64Data
+      );
+
+      // 🚀 Update the contact in the local state immediately
+      setReceivedContact((prevContacts) => {
+          return prevContacts
+              .split(",")
+              .map((contact) => {
+                  const parts = contact.split(":");
+                  return parts[0] === contactId ? `${contactId}:${newName}:${newNumber}` : contact;
+              })
+              .join(",");
+      });
+
+      console.log('✅ Contact updated successfully!');
+      Alert.alert("Success", "Contact updated successfully!");
+  } catch (error) {
+      console.error('❌ Failed to update contact:', error);
+      Alert.alert('Error', 'Failed to update contact. Check connection.');
+  }
+};
+
 
 
   const disconnectDevice = async () => {
@@ -321,38 +359,101 @@ const startListeningForNotifications = async (connectedDevice) => {
       }
     }
   };
+  const formattedContacts = receivedContact
+  .split(",")
+  .map(contact => {
+      const parts = contact.split(":"); // Assuming format is ID:Name:Number
+      return { id: parts[0], name: parts[1], number: parts[2] };
+  });
+  const showUpdateDialog = (contact) => {
+    let newName = contact.name;
+    let newNumber = contact.number;
 
+    Alert.alert(
+        "Update Contact",
+        "Enter new details",
+        [
+            {
+                text: "Cancel",
+                style: "cancel"
+            },
+            {
+                text: "Save",
+                onPress: () => {
+                    if (newName && newNumber) {
+                        updateContact(contact.id, newName, newNumber);
+                    } else {
+                        Alert.alert("Error", "Both fields are required.");
+                    }
+                }
+            }
+        ],
+        {
+            cancelable: true,
+            onDismiss: () => console.log("Update dismissed")
+        }
+    );
 
+    // Since Alert.alert doesn't support TextInput directly, you need to use a modal or a separate screen for better UX.
+};
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Emergency Contacts</Text>
       <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setName} />
       <TextInput style={styles.input} placeholder="Enter Number" value={number} onChangeText={setNumber} keyboardType="phone-pad" />
-  
+
+
       <TouchableOpacity style={styles.button} onPress={sendContact} disabled={!connected}>
         <Text style={styles.buttonText}>Send Contact</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={disconnectDevice} disabled={!connected}>
         <Text style={styles.buttonText}>Disconnect</Text>
       </TouchableOpacity>
-  
+
+
       <Text>Status: {connected ? "Connected" : "Not Connected"}</Text>
-  
-      {receivedContact ? (
-  <View style={styles.receivedContainer}>
-    <Text style={styles.receivedTitle}>Received Contacts:</Text>
-    {receivedContact.split(',').map((contact, index) => (
-      <Text key={index} style={styles.receivedText}>{contact}</Text>
-    ))}
-  </View>
-) : <Text>Waiting for contact to render.....</Text>}
+      <FlatList
+    data={formattedContacts}
+    keyExtractor={(item) => item.id.toString()}
+    renderItem={({ item }) => (
+        <View style={styles.contactItem}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</Text>
+            <Text style={{ fontSize: 14, color: '#666' }}>{item.number}</Text>
+
+            <TouchableOpacity onPress={() => updateContact(item.id, "New Name", "New Number")}>
+                <Text style={{ color: "blue" }}>Edit</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => deleteContact(item.id)}>
+                <Text style={{ color: "red" }}>Delete</Text>
+            </TouchableOpacity>
+        </View>
+    )}
+/>
+
     </View>
   );
 };
 
 
 const styles = StyleSheet.create({
-  container: {
+  contactItem: { fontSize: 10, padding: 5, borderBottomWidth: 1, borderBottomColor: '#ccc', display: 'flex' },
+  
+  deleteButton: {
+    backgroundColor: '#e74c3c',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 5,
+    alignItems: 'center',
+},
+updateButton: {
+    backgroundColor: '#f1c40f',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 5,
+    alignItems: 'center',
+},
+container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
