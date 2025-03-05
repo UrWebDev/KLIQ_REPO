@@ -169,7 +169,19 @@ const Contactss = () => {
           if (characteristic?.value) {
             const decodedValue = Buffer.from(characteristic.value, 'base64').toString('utf-8');
             console.log("📩 Received Data:", decodedValue);
-            setReceivedContact(decodedValue);
+            setReceivedContact((prevContacts) => {
+              if (!prevContacts) return decodedValue; // First contact received
+          
+              const newContacts = decodedValue.split(",");
+              const existingContacts = prevContacts.split(",");
+          
+              // Merge unique contacts only
+              const mergedContacts = [...new Set([...existingContacts, ...newContacts])];
+          
+              return mergedContacts.join(",");
+          });
+          
+          
             // Debugging: Log raw BLE data
             console.log("🛠 Raw Base64 Data:", characteristic.value);
           } else {
