@@ -249,9 +249,6 @@ const Contactss = () => {
 };
 
 
- 
-
-
   const sendContact = async () => {
     if (!connected || !device) {
       Alert.alert("Error", "Not connected to a device.");
@@ -312,10 +309,11 @@ const Contactss = () => {
 
 const updateContact = () => {
   if (!selectedContact) return;
-  const updatedData = `${selectedContact.id},${name},${number}`;
+  const updatedData = `UPDATE:${selectedContact.id},${name},${number}`;  // Ensure ID, Name, and Number are sent
   sendContactData(updatedData);
   setModalVisible(false);
 };
+
 
 const openEditModal = (contact) => {
   setSelectedContact(contact);
