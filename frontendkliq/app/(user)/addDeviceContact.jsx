@@ -214,98 +214,87 @@ const Contactss = () => {
       console.error("❌ Failed to fetch stored contacts:", error);
     }
   };
-  const sendContactData = async (contactData) => {
-    if (!device) {
-        Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
-        return;
-    }
-
-
-    try {
-        let isConnected = await device.isConnected();
-        if (!isConnected) {
-            console.log('Reconnecting...');
-            await connectToDevice(device);
-        }
-
-
-        const base64Data = Buffer.from(contactData, 'utf-8').toString('base64');
-        console.log("🛠 Encoded Base64 Data:", base64Data);
-
-
-        await device.writeCharacteristicWithoutResponseForService(
-            SERVICE_UUID,
-            CHARACTERISTIC_UUID,
-            base64Data
-        );
-
-
-        console.log('✅ Contact data sent successfully!');
-        Alert.alert("Success", "Contact sent successfully!");
-    } catch (error) {
-        console.error('❌ Failed to send contact data:', error);
-        Alert.alert('Error', 'Failed to send contact data. Check connection.');
-    }
-};
-
 
   const sendContact = async () => {
     if (!connected || !device) {
       Alert.alert("Error", "Not connected to a device.");
       return;
     }
-
-
+  
     if (!name || !number) {
       Alert.alert("Error", "Please enter both name and number.");
       return;
     }
-
-
-    const contactData = `${name},${number}`;
-    await sendContactData(contactData);
+  
+    const contact = { name, number }; // ✅ No ID here, just Name and Number
+    await sendContactData(contact);
   };
+  
   const deleteContact = async (contactId) => {
+    let updatedContacts = receivedContact ? receivedContact.split(",") : [];
+  
+    // ✅ Remove the contact
+    const filteredContacts = updatedContacts.filter(contact => {
+      const parts = contact.split(":");
+      return parts[0] !== contactId.toString();
+    });
+  
+    // ✅ Convert updated list back to string
+    const updatedData = filteredContacts.join(",");
+  
+    // ✅ Send updated data to ESP32
+    await sendContactData(updatedData);
+  
+    // ✅ Update UI immediately
+    setReceivedContact(updatedData);
+  };
+  
+  const sendContactData = async (contact) => {
     if (!device) {
-        Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
-        return;
+      Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
+      return;
     }
-
+  
     try {
-        let isConnected = await device.isConnected();
-        if (!isConnected) {
-            console.log('Reconnecting...');
-            await connectToDevice(device);
-        }
-
-        const deleteCommand = `DELETE:${contactId}`;
-        const base64Data = Buffer.from(deleteCommand, 'utf-8').toString('base64');
-
-        console.log("🗑 Sending Delete Command:", deleteCommand);
-
-        await device.writeCharacteristicWithoutResponseForService(
-            SERVICE_UUID,
-            CHARACTERISTIC_UUID,
-            base64Data
-        );
-
-        console.log('✅ Contact delete request sent!');
-
-        // Wait for the ESP32 to send the updated contacts list
-        setTimeout(async () => {
-            const updatedContactsBase64 = await device.readCharacteristicForService(SERVICE_UUID, CHARACTERISTIC_UUID);
-            const updatedContacts = Buffer.from(updatedContactsBase64.value, 'base64').toString('utf-8');
-
-            setReceivedContact(updatedContacts);
-            console.log("📡 Updated Contacts from ESP32:", updatedContacts);
-        }, 1000);
-
-        Alert.alert("Success", "Contact deleted successfully!");
+      let isConnected = await device.isConnected();
+      if (!isConnected) {
+        console.log('Reconnecting...');
+        await connectToDevice(device);
+      }
+  
+      // ✅ Ensure we send ONLY "Name,Number" (ESP32 expected format)
+      const formattedData = `${contact.name},${contact.number}`;
+  
+      // ✅ Encode to Base64 before sending
+      const base64Data = Buffer.from(formattedData, 'utf-8').toString('base64');
+      console.log("🛠 Encoded Base64 Data:", base64Data);
+  
+      await device.writeCharacteristicWithoutResponseForService(
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID,
+        base64Data
+      );
+  
+      console.log('✅ Contact data sent successfully!');
+      Alert.alert("Success", "Contact updated successfully!");
     } catch (error) {
-        console.error('❌ Failed to delete contact:', error);
-        Alert.alert('Error', 'Failed to delete contact. Check connection.');
+      console.error('❌ Failed to send contact data:', error);
+      Alert.alert('Error', 'Failed to send contact data. Check connection.');
     }
-};
+  };
+  
+  // ✅ Fix duplicate key issue
+  const formattedContacts = receivedContact
+    .split(",")
+    .map(contact => {
+        const parts = contact.split(":");
+        return parts.length === 3 ? { id: parts[0], name: parts[1], number: parts[2] } : null;
+    })
+    .filter(Boolean) // Remove invalid entries
+    .reduce((acc, contact) => {
+      if (!acc.some(c => c.id === contact.id)) acc.push(contact);
+      return acc;
+    }, []); // Ensure unique IDs
 
 const updateContact = () => {
   if (!selectedContact) return;
@@ -313,21 +302,12 @@ const updateContact = () => {
   sendContactData(updatedData);
   setModalVisible(false);
 };
-
-
 const openEditModal = (contact) => {
   setSelectedContact(contact);
   setName(contact.name);
   setNumber(contact.number);
   setModalVisible(true);
 };
-
-  const formattedContacts = receivedContact
-  .split(",")
-  .map(contact => {
-      const parts = contact.split(":"); // Assuming format is ID:Name:Number
-      return { id: parts[0], name: parts[1], number: parts[2] };
-  });
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Emergency Contacts</Text>
