@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, PermissionsAndroid, Platform, FlatList
+  View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, PermissionsAndroid, Platform, FlatList, Modal
 } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
@@ -18,7 +18,8 @@ const Contactss = () => {
   const [number, setNumber] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [receivedContact, setReceivedContact] = useState('');
-
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
 
   useEffect(() => {
     const subscription = manager.onStateChange((state) => {
@@ -309,105 +310,26 @@ const Contactss = () => {
     }
 };
 
-
-const updateContact = async (contactId, newName, newNumber) => {
-  if (!device) {
-      Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
-      return;
-  }
-
-  try {
-      let isConnected = await device.isConnected();
-      if (!isConnected) {
-          console.log('Reconnecting...');
-          await connectToDevice(device);
-      }
-
-      const updateCommand = `UPDATE:${contactId},${newName},${newNumber}`;
-      const base64Data = Buffer.from(updateCommand, 'utf-8').toString('base64');
-
-      console.log("✏️ Sending Update Command:", updateCommand);
-
-      await device.writeCharacteristicWithoutResponseForService(
-          SERVICE_UUID,
-          CHARACTERISTIC_UUID,
-          base64Data
-      );
-
-      // 🚀 Update the contact in the local state immediately
-      setReceivedContact((prevContacts) => {
-          return prevContacts
-              .split(",")
-              .map((contact) => {
-                  const parts = contact.split(":");
-                  return parts[0] === contactId ? `${contactId}:${newName}:${newNumber}` : contact;
-              })
-              .join(",");
-      });
-
-      console.log('✅ Contact updated successfully!');
-      Alert.alert("Success", "Contact updated successfully!");
-  } catch (error) {
-      console.error('❌ Failed to update contact:', error);
-      Alert.alert('Error', 'Failed to update contact. Check connection.');
-  }
+const updateContact = () => {
+  if (!selectedContact) return;
+  const updatedData = `${selectedContact.id},${name},${number}`;
+  sendContactData(updatedData);
+  setModalVisible(false);
 };
 
+const openEditModal = (contact) => {
+  setSelectedContact(contact);
+  setName(contact.name);
+  setNumber(contact.number);
+  setModalVisible(true);
+};
 
-
-  const disconnectDevice = async () => {
-    if (device) {
-      try {
-        const isConnected = await device.isConnected();
-        if (isConnected) {
-          await device.cancelConnection();
-        }
-        setConnected(false);
-        setDevice(null);
-        Alert.alert("Disconnected", "Device has been disconnected.");
-      } catch (error) {
-        console.error('Failed to disconnect:', error);
-        Alert.alert('Error', 'Failed to disconnect the device.');
-      }
-    }
-  };
   const formattedContacts = receivedContact
   .split(",")
   .map(contact => {
       const parts = contact.split(":"); // Assuming format is ID:Name:Number
       return { id: parts[0], name: parts[1], number: parts[2] };
   });
-  const showUpdateDialog = (contact) => {
-    let newName = contact.name;
-    let newNumber = contact.number;
-
-    Alert.alert(
-        "Update Contact",
-        "Enter new details",
-        [
-            {
-                text: "Cancel",
-                style: "cancel"
-            },
-            {
-                text: "Save",
-                onPress: () => {
-                    if (newName && newNumber) {
-                        updateContact(contact.id, newName, newNumber);
-                    } else {
-                        Alert.alert("Error", "Both fields are required.");
-                    }
-                }
-            }
-        ],
-        {
-            cancelable: true,
-            onDismiss: () => console.log("Update dismissed")
-        }
-    );
-
-    // Since Alert.alert doesn't support TextInput directly, you need to use a modal or a separate screen for better UX.
-};
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Emergency Contacts</Text>
@@ -418,30 +340,46 @@ const updateContact = async (contactId, newName, newNumber) => {
       <TouchableOpacity style={styles.button} onPress={sendContact} disabled={!connected}>
         <Text style={styles.buttonText}>Send Contact</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={disconnectDevice} disabled={!connected}>
-        <Text style={styles.buttonText}>Disconnect</Text>
-      </TouchableOpacity>
 
 
       <Text>Status: {connected ? "Connected" : "Not Connected"}</Text>
       <FlatList
-    data={formattedContacts}
-    keyExtractor={(item) => item.id.toString()}
-    renderItem={({ item }) => (
-        <View style={styles.contactItem}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</Text>
-            <Text style={{ fontSize: 14, color: '#666' }}>{item.number}</Text>
+  data={formattedContacts}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={({ item }) => (
+    <View style={styles.contactItem}>
+      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</Text>
+      <Text style={{ fontSize: 14, color: '#666' }}>{item.number}</Text>
 
-            <TouchableOpacity onPress={() => updateContact(item.id, "New Name", "New Number")}>
-                <Text style={{ color: "blue" }}>Edit</Text>
+      {item.id && item.name && item.number ? (
+        <>
+            <TouchableOpacity onPress={() => openEditModal(item)}>
+              <Text style={{ color: "blue" }}>Edit</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => deleteContact(item.id)}>
-                <Text style={{ color: "red" }}>Delete</Text>
-            </TouchableOpacity>
-        </View>
-    )}
+          <TouchableOpacity onPress={() => deleteContact(item.id)}>
+            <Text style={{ color: "red" }}>Delete</Text>
+          </TouchableOpacity>
+        </>
+      ) : null}
+    </View>
+  )}
 />
+<Modal visible={modalVisible} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Contact</Text>
+            <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setName} />
+            <TextInput style={styles.input} placeholder="Enter Number" value={number} onChangeText={setNumber} keyboardType="phone-pad" />
+            <TouchableOpacity style={styles.button} onPress={updateContact}>
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );
@@ -464,7 +402,58 @@ updateButton: {
     borderRadius: 5,
     marginTop: 5,
     alignItems: 'center',
+},contactItem: {
+  fontSize: 10,
+  padding: 5,
+  borderBottomWidth: 1,
+  borderBottomColor: '#ccc',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  width: '100%'
 },
+modalContainer: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+},
+modalContent: {
+  backgroundColor: 'white',
+  padding: 20,
+  borderRadius: 10,
+  width: '80%',
+  alignItems: 'center',
+},
+modalTitle: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  marginBottom: 10,
+},
+input: {
+  borderWidth: 1,
+  borderColor: '#ccc',
+  borderRadius: 5,
+  padding: 10,
+  width: 250,
+  marginBottom: 10,
+},
+button: {
+  backgroundColor: '#4CAF50',
+  padding: 15,
+  borderRadius: 5,
+  marginBottom: 10,
+},
+cancelButton: {
+  backgroundColor: 'red',
+  padding: 15,
+  borderRadius: 5,
+  marginBottom: 10,
+},
+buttonText: {
+  color: 'white',
+  fontSize: 16,
+},
+//main
 container: {
     flex: 1,
     justifyContent: 'center',
