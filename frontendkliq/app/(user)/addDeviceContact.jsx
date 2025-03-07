@@ -269,7 +269,7 @@ const Contactss = () => {
   };
   
   
-  const sendContactData = async (contact) => {
+  const sendContactData = async (contactData) => {
     if (!device) {
       Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
       return;
@@ -282,11 +282,13 @@ const Contactss = () => {
         await connectToDevice(device);
       }
   
-      // ✅ Ensure we send ONLY "Name,Number" (ESP32 expected format)
-      const formattedData = `${contact.name},${contact.number}`;
+      if (!contactData || contactData.includes("undefined")) {
+        console.error("❌ Invalid contact data:", contactData);
+        Alert.alert("Error", "Invalid contact data. Please check inputs.");
+        return;
+      }
   
-      // ✅ Encode to Base64 before sending
-      const base64Data = Buffer.from(formattedData, 'utf-8').toString('base64');
+      const base64Data = Buffer.from(contactData, 'utf-8').toString('base64');
       console.log("🛠 Encoded Base64 Data:", base64Data);
   
       await device.writeCharacteristicWithoutResponseForService(
@@ -303,6 +305,7 @@ const Contactss = () => {
     }
   };
   
+  
   // ✅ Fix duplicate key issue
   const formattedContacts = receivedContact
     .split(",")
@@ -316,12 +319,18 @@ const Contactss = () => {
       return acc;
     }, []); // Ensure unique IDs
 
-const updateContact = () => {
-  if (!selectedContact) return;
-  const updatedData = `UPDATE:${selectedContact.id},${name},${number}`;  // Ensure ID, Name, and Number are sent
-  sendContactData(updatedData);
-  setModalVisible(false);
-};
+    const updateContact = () => {
+      if (!selectedContact || !name || !number) {
+        Alert.alert("Error", "Please enter both name and number.");
+        return;
+      }
+    
+      // ✅ Ensure ID, name, and number are correctly formatted
+      const updatedData = `UPDATE:${selectedContact.id},${name},${number}`;
+      sendContactData(updatedData);
+      setModalVisible(false);
+    };
+    
 const openEditModal = (contact) => {
   setSelectedContact(contact);
   setName(contact.name);
