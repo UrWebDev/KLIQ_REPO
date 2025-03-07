@@ -231,23 +231,43 @@ const Contactss = () => {
   };
   
   const deleteContact = async (contactId) => {
-    let updatedContacts = receivedContact ? receivedContact.split(",") : [];
+    if (!device) {
+      Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
+      return;
+    }
   
-    // ✅ Remove the contact
-    const filteredContacts = updatedContacts.filter(contact => {
-      const parts = contact.split(":");
-      return parts[0] !== contactId.toString();
-    });
+    try {
+      let isConnected = await device.isConnected();
+      if (!isConnected) {
+        console.log('Reconnecting...');
+        await connectToDevice(device);
+      }
   
-    // ✅ Convert updated list back to string
-    const updatedData = filteredContacts.join(",");
+      // ✅ Send delete request in proper format: "DELETE:ID"
+      const deleteCommand = `DELETE:${contactId}`;
+      const base64Data = Buffer.from(deleteCommand, 'utf-8').toString('base64');
+      console.log("🛠 Encoded Base64 Data:", base64Data);
   
-    // ✅ Send updated data to ESP32
-    await sendContactData(updatedData);
+      await device.writeCharacteristicWithoutResponseForService(
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID,
+        base64Data
+      );
   
-    // ✅ Update UI immediately
-    setReceivedContact(updatedData);
+      console.log('✅ Contact delete request sent successfully!');
+      Alert.alert("Success", "Contact deleted successfully!");
+  
+      // ✅ Remove from local state to update UI
+      setReceivedContact((prevContacts) =>
+        prevContacts.split(",").filter(c => !c.startsWith(`${contactId}:`)).join(",")
+      );
+  
+    } catch (error) {
+      console.error('❌ Failed to send delete request:', error);
+      Alert.alert('Error', 'Failed to delete contact. Check connection.');
+    }
   };
+  
   
   const sendContactData = async (contact) => {
     if (!device) {
