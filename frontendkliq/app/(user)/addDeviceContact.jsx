@@ -328,15 +328,31 @@ const Contactss = () => {
 
     const updateContact = () => {
       if (!selectedContact || !name || !number) {
-        Alert.alert("Error", "Please enter both name and number.");
-        return;
+          Alert.alert("Error", "Please enter both name and number.");
+          return;
       }
-    
-      // ✅ Ensure ID, name, and number are correctly formatted
+  
+      // ✅ Send the updated contact data to ESP32
       const updatedData = `UPDATE:${selectedContact.id},${name},${number}`;
       sendContactData(updatedData);
+      // ✅ Close the modal
       setModalVisible(false);
-    };
+  
+      // ✅ Manually update the FlatList (REAL-TIME)
+      setReceivedContact(prev =>
+          prev
+              .split(",")
+              .map(contact => {
+                  const parts = contact.split(":");
+                  if (parts[0] === selectedContact.id) {
+                      return `${selectedContact.id}:${name}:${number}`;
+                  }
+                  return contact;
+              })
+              .join(",")
+      );
+  };
+  
     
 const openEditModal = (contact) => {
   setSelectedContact(contact);
