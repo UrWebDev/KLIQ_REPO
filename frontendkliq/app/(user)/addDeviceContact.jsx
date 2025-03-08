@@ -217,18 +217,24 @@ const Contactss = () => {
 
   const sendContact = async () => {
     if (!connected || !device) {
-      Alert.alert("Error", "Not connected to a device.");
-      return;
+        Alert.alert("Error", "Not connected to a device.");
+        return;
     }
-  
+
     if (!name || !number) {
-      Alert.alert("Error", "Please enter both name and number.");
-      return;
+        Alert.alert("Error", "Please enter both name and number.");
+        return;
     }
-  
-    const contact = { name, number }; // ✅ No ID here, just Name and Number
-    await sendContactData(contact);
-  };
+
+    // ✅ Create the contactData as a string (NO OBJECT)
+    const contactData = `${name},${number}`;
+
+    console.log("📨 Sending new contact:", contactData);
+
+    // ✅ Now pass the contactData to the sendContactData function
+    await sendContactData(contactData);
+};
+
   
   const deleteContact = async (contactId) => {
     if (!device) {
@@ -271,39 +277,40 @@ const Contactss = () => {
   
   const sendContactData = async (contactData) => {
     if (!device) {
-      Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
-      return;
-    }
-  
-    try {
-      let isConnected = await device.isConnected();
-      if (!isConnected) {
-        console.log('Reconnecting...');
-        await connectToDevice(device);
-      }
-  
-      if (!contactData || contactData.includes("undefined")) {
-        console.error("❌ Invalid contact data:", contactData);
-        Alert.alert("Error", "Invalid contact data. Please check inputs.");
+        Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
         return;
-      }
-  
-      const base64Data = Buffer.from(contactData, 'utf-8').toString('base64');
-      console.log("🛠 Encoded Base64 Data:", base64Data);
-  
-      await device.writeCharacteristicWithoutResponseForService(
-        SERVICE_UUID,
-        CHARACTERISTIC_UUID,
-        base64Data
-      );
-  
-      console.log('✅ Contact data sent successfully!');
-      Alert.alert("Success", "Contact updated successfully!");
-    } catch (error) {
-      console.error('❌ Failed to send contact data:', error);
-      Alert.alert('Error', 'Failed to send contact data. Check connection.');
     }
-  };
+
+    if (typeof contactData !== 'string') {
+        console.error('❌ contactData must be a string. Received:', contactData);
+        Alert.alert('Error', 'Invalid contact data.');
+        return;
+    }
+
+    try {
+        let isConnected = await device.isConnected();
+        if (!isConnected) {
+            console.log('Reconnecting...');
+            await connectToDevice(device);
+        }
+
+        const base64Data = Buffer.from(contactData, 'utf-8').toString('base64');
+        console.log("🛠 Encoded Base64 Data:", base64Data);
+
+        await device.writeCharacteristicWithoutResponseForService(
+            SERVICE_UUID,
+            CHARACTERISTIC_UUID,
+            base64Data
+        );
+
+        console.log('✅ Contact data sent successfully!');
+        Alert.alert("Success", "Contact added successfully!");
+    } catch (error) {
+        console.error('❌ Failed to send contact data:', error);
+        Alert.alert('Error', 'Failed to send contact data. Check connection.');
+    }
+};
+
   
   
   // ✅ Fix duplicate key issue
