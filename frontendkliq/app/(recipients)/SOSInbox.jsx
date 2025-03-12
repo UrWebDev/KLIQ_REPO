@@ -165,7 +165,7 @@ const SOSMessage = () => {
                     onPress={() => {
                       const phoneNumber = sos.phoneNumber || "+639765786665";
                       const telURL = `tel:${phoneNumber}`;
-                      Linking.canOpenURL(telURL)
+                      Linking.openURL(telURL)
                         .then((supported) => {
                           if (!supported) {
                             console.error("Phone call not supported");
