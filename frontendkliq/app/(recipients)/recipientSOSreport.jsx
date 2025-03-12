@@ -7,6 +7,8 @@ import {
   Linking,
   FlatList,
   ActivityIndicator,
+  Modal,
+  Pressable
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
@@ -228,7 +230,7 @@ const RecipientSOSReports = () => {
       </View>
 
       <ScrollView>
-        <View style={{ marginBottom: 16, alignItems: 'center' }}>
+      <View style={{ marginBottom: 16, alignItems: 'center' }}>
           <Text
             style={{
               fontSize: 20,
@@ -240,8 +242,9 @@ const RecipientSOSReports = () => {
             TOTAL: {totalAlerts} Alert Messages this
           </Text>
 
+          {/* Month Selection Button */}
           <TouchableOpacity
-            onPress={() => setIsMonthDropdownVisible(!isMonthDropdownVisible)}
+            onPress={() => setIsMonthDropdownVisible(true)}
             style={{
               width: '50%',
               backgroundColor: '#f0f0f0',
@@ -255,29 +258,55 @@ const RecipientSOSReports = () => {
             </Text>
           </TouchableOpacity>
 
-          {isMonthDropdownVisible && (
-            <FlatList
-              data={months}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item, index }) => (
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedMonth(index);
-                    setIsMonthDropdownVisible(false);
-                  }}
-                  style={{
-                    padding: 10,
-                    backgroundColor: '#f0f0f0',
-                    borderRadius: 8,
-                    marginBottom: 8,
-                  }}
-                >
-                  <Text>{item}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          )}
+          {/* Month Selection Modal */}
+          <Modal
+            visible={isMonthDropdownVisible}
+            transparent={true}
+            animationType="fade"
+          >
+            <Pressable
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              onPress={() => setIsMonthDropdownVisible(false)} // Close when tapping outside
+            >
+              <View
+                style={{
+                  backgroundColor: 'white',
+                  padding: 20,
+                  borderRadius: 10,
+                  width: '80%',
+                }}
+              >
+                <FlatList
+                  data={months}
+                  keyExtractor={(item, index) => index.toString()}
+                  nestedScrollEnabled={true}
+                  renderItem={({ item, index }) => (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedMonth(index);
+                        setIsMonthDropdownVisible(false);
+                      }}
+                      style={{
+                        padding: 10,
+                        backgroundColor: '#f0f0f0',
+                        borderRadius: 8,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text>{item}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            </Pressable>
+          </Modal>
 
+          {/* Bar Chart */}
           <BarChart
             data={barData}
             barWidth={30}
