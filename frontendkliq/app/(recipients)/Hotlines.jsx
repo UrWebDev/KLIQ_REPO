@@ -24,6 +24,13 @@ const Hotlines = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
   const [recipientId, setRecipientId] = useState(null);
+  const [deviceList, setDeviceList] = useState([]);
+  const [selectedDevice, setSelectedDevice] = useState("");
+  const [userPhoneNumber, setUserPhoneNumber] = useState("N/A");
+  const [isDropdownVisible, setDropdownVisible] = useState(false);
+  const [allMessages, setAllMessages] = useState([]);
+
+
 
   useEffect(() => {
     const fetchRecipientId = async () => {
@@ -34,7 +41,7 @@ const Hotlines = () => {
   }, []);
 
   useEffect(() => {
-    if (recipientId) fetchContacts();
+    if (recipientId) {fetchContacts();fetchUserPhoneNumber();}
   }, [recipientId]);
 
   const fetchContacts = async () => {
@@ -48,6 +55,53 @@ const Hotlines = () => {
     }
   };
 
+  const fetchUserPhoneNumber = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`
+      );
+  
+      if (response.data && response.data.length > 0) {
+        // Extract unique device IDs
+        const devices = [...new Set(response.data.map((msg) => msg.deviceId))];
+        setDeviceList(devices);
+  
+        // Store messages in state
+        setAllMessages(response.data);
+  
+        // Automatically select the first device
+        if (devices.length > 0) {
+          setSelectedDevice(devices[0]);
+          handleDeviceChange(devices[0], response.data);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user phone number:", error);
+      setUserPhoneNumber("N/A");
+    }
+  };
+  
+  const handleDeviceChange = (deviceId) => {
+    setSelectedDevice(deviceId);
+    setDropdownVisible(false);
+  
+    // Filter messages using state
+    const filteredByDevice = allMessages.filter(
+      (sos) => sos.deviceId === deviceId
+    );
+  
+    if (filteredByDevice.length > 0) {
+      const latestPhoneNumber = filteredByDevice[filteredByDevice.length - 1].phoneNUM;
+      setUserPhoneNumber(latestPhoneNumber);
+    } else {
+      setUserPhoneNumber("N/A");
+    }
+  };
+  
+  
+  
+  
+  
   const resetForm = () => {
     setName("");
     setPhoneNumber("");
@@ -151,32 +205,82 @@ const Hotlines = () => {
 
   return (
     <View className="flex-1 p-4" style={{ backgroundColor: "white" }}>
-      {/* User's Personal Numbers */}
-      <Text className="text-lg font-bold mb-4">User's Personal Numbers:</Text>
-      <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-6 rounded-2xl shadow-md border border-gray-300">
-        <View>
-          <Text className="text-lg font-bold">+639765786665</Text>
-          <Text className="text-gray-600">Juan Dela Cruz</Text>
-        </View>
-        <TouchableOpacity
-  className="bg-blue-500 p-2 rounded-full"
-  onPress={() => {
-    const phoneNumber = "+639765786665";
-    const telURL = `tel:${phoneNumber}`;
-    Linking.canOpenURL(telURL)
-      .then((supported) => {
-        if (!supported) {
-          Alert.alert("Error", "Phone call feature is not supported on this device.");
-        } else {
-          return Linking.openURL(telURL);
-        }
-      })
-      .catch((err) => console.error("An error occurred", err));
-  }}
+{/* Device Selection Button */}
+<View className="p-4">
+  <TouchableOpacity
+    onPress={() => setDropdownVisible(!isDropdownVisible)} // Toggle dropdown visibility
+    style={{
+      backgroundColor: "#f0f0f0",
+      borderRadius: 8,
+      padding: 10,
+    }}
+  >
+    <Text style={{ fontSize: 16, color: "#000" }}>
+      {selectedDevice
+        ? `KLIQ User: ${selectedDevice}`
+        : "Select a device"}
+    </Text>
+  </TouchableOpacity>
+
+  {/* Dropdown List */}
+  {isDropdownVisible && (
+    <View
+      style={{
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        padding: 10,
+        marginTop: 5,
+        borderWidth: 1,
+        borderColor: "#ccc",
+      }}
+    >
+{deviceList.map((deviceId, index) => (
+  <TouchableOpacity
+    key={index}
+    onPress={() => handleDeviceChange(deviceId)}
+    style={{
+      paddingVertical: 8,
+      borderBottomWidth: index !== deviceList.length - 1 ? 1 : 0,
+      borderColor: "#eee",
+    }}
+  >
+    <Text style={{ color: "#000" }}>{deviceId}</Text>
+  </TouchableOpacity>
+))}
+
+    </View>
+  )}
+</View>
+
+{/* Render Phone Number */}
+<Text className="text-lg font-bold mb-4">
+  Phone Number for Device: {selectedDevice}
+</Text>
+<View
+  className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-2xl shadow-md border border-gray-300"
 >
-  <Icon name="phone" size={20} color="#fff" />
-</TouchableOpacity>
-      </View>
+  <View>
+    <Text className="text-lg font-bold">
+      {userPhoneNumber !== "N/A" ? userPhoneNumber : "N/A"}
+    </Text>
+    <Text className="text-gray-600">Personal Number</Text>
+  </View>
+  <TouchableOpacity
+    className="bg-blue-500 p-2 rounded-full"
+    onPress={() => {
+      if (userPhoneNumber !== "N/A") {
+        Linking.openURL(`tel:${userPhoneNumber}`);
+      } else {
+        Alert.alert("No phone number found.");
+      }
+    }}
+  >
+    <Icon name="phone" size={20} color="#fff" />
+  </TouchableOpacity>
+</View>
+
+
+
       {/* Emergency Hotlines Header */}
       <Text className="text-2xl font-bold italic text-center mb-4">
         Emergency Hotlines
