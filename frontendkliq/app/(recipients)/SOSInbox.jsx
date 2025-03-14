@@ -140,7 +140,9 @@ const SOSMessage = () => {
                 key={index}
                 className={`bg-gray-100 p-4 mb-4 rounded-2xl shadow-md border ${
                   sos.message && sos.message.toLowerCase().includes("last")
-                    ? "border-red-500"
+                    ? "border-red-500" :
+                  sos.message && sos.message.toLowerCase().includes("safe")
+                    ? "border-green-500"
                     : "border-gray-300"
                 }`}
               >

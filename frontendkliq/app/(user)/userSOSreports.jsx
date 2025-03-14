@@ -87,9 +87,13 @@
       }));
     };
 
-    const containsLastWord = (message) => {
+    const getBorderColor = (message) => {
       if (!message) return false;
-      return String(message).toLowerCase().split(/\s+/).includes("last");
+      const words = String(message).toLowerCase().split(/\s+/);
+      if(words.includes("last")) return '#FF0000'
+      if(words.includes('safe')) return '#00FF00'
+
+      return '#e5e7eb'
     };
 
     const totalAlerts = weeklyData.reduce((sum, count) => sum + count, 0);
@@ -227,7 +231,7 @@
                       marginTop: 8,
                       backgroundColor: '#f3f4f6',
                       borderWidth: 2,
-                      borderColor: containsLastWord(message.message) ? '#FF0000' : '#e5e7eb',
+                      borderColor: getBorderColor(message.message),
                     }}
                   >
                     <Text style={{ color: '#6b7280', fontSize: 12 }}>

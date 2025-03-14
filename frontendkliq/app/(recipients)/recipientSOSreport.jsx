@@ -137,9 +137,14 @@ const RecipientSOSReports = () => {
     }));
   };
 
-  const containsLastWord = (message) => {
-    if (!message) return false;
-    return message.toLowerCase().split(/\s+/).includes('last');
+  const getBorderColor = (message) => {
+    if (!message) return '#e5e7eb'; // Default gray
+  
+    const words = message.toLowerCase().split(/\s+/);
+    if (words.includes('last')) return '#FF0000'; // Red for "last"
+    if (words.includes('safe')) return '#00FF00'; // Green for "safe"
+  
+    return '#e5e7eb'; // Default gray
   };
 
   const kliqUserDetails =
@@ -368,10 +373,8 @@ const RecipientSOSReports = () => {
                     borderRadius: 16,
                     marginTop: 8,
                     backgroundColor: '#f3f4f6',
-                    borderWidth: containsLastWord(message.message) ? 2 : 1,
-                    borderColor: containsLastWord(message.message)
-                      ? '#FF0000'
-                      : '#e5e7eb',
+                    borderWidth: message.message ? 2 : 1,
+                    borderColor: getBorderColor(message.message),
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.1,
