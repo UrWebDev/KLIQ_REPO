@@ -16,7 +16,7 @@ const SOSMessage = () => {
   const [recipientId, setRecipientId] = useState(null);
   const [selectedDevice, setSelectedDevice] = useState("");
   const [deviceList, setDeviceList] = useState([]);
-  const [isDropdownVisible, setDropdownVisible] = useState(false); // State for dropdown visibility
+  const [isDropdownVisible, setDropdownVisible] = useState(false);
 
   useEffect(() => {
     const getRecipientId = async () => {
@@ -47,11 +47,9 @@ const SOSMessage = () => {
 
         setSOSMessages(sortedMessages);
 
-        // Extract unique device IDs
         const devices = [...new Set(sortedMessages.map((msg) => msg.deviceId))];
         setDeviceList(devices);
 
-        // Set default device
         if (devices.length > 0 && !selectedDevice) {
           setSelectedDevice(devices[0]);
         }
@@ -63,44 +61,54 @@ const SOSMessage = () => {
       }
     };
 
-    fetchSOSMessages(); // Initial fetch
-    const intervalId = setInterval(fetchSOSMessages, 1000); // Auto-refresh every second
+    fetchSOSMessages();
+    const intervalId = setInterval(fetchSOSMessages, 1000);
 
     return () => clearInterval(intervalId);
   }, [recipientId, selectedDevice]);
 
   return (
     <View className="flex-1 bg-white">
-      {/* Device Selection Button */}
-      <View className="p-4">
+      {/* Device Dropdown */}
+      <View className="p-4 relative z-50">
         <TouchableOpacity
-          onPress={() => setDropdownVisible(!isDropdownVisible)} // Toggle dropdown visibility
+          onPress={() => setDropdownVisible(!isDropdownVisible)}
           style={{
-            backgroundColor: "#f0f0f0",
-            borderRadius: 8,
-            padding: 10,
+            backgroundColor: "#f5f5f5",
+            borderRadius: 10,
+            paddingVertical: 12,
+            paddingHorizontal: 15,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderWidth: 1,
+            borderColor: "#ccc",
           }}
         >
-          <Text style={{ fontSize: 16, color: "#000" }}>
-            {selectedDevice
-              ? `KLIQ User: ${selectedDevice}`
-              : "Select a device"}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Icon name="person" size={18} color="#000" style={{ marginRight: 8 }} />
+            <Text style={{ fontSize: 14, color: "#000", fontWeight: "600" }}>
+              {selectedDevice ? `${selectedDevice}` : "Select Device"}
+            </Text>
+          </View>
+          <Icon
+            name={isDropdownVisible ? "arrow-drop-up" : "arrow-drop-down"}
+            size={24}
+            color="#000"
+          />
         </TouchableOpacity>
 
-        {/* Dropdown List */}
         {isDropdownVisible && (
           <View
             style={{
-              position: "absolute",
-              top: 50, // Adjusted to ensure the dropdown appears below the button
-              left: 10,
-              right: 10,
               backgroundColor: "white",
-              borderRadius: 8,
-              padding: 10,
-              elevation: 5,
-              zIndex: 1000, // Increased zIndex to bring it to the front
+              borderRadius: 10,
+              paddingVertical: 8,
+              paddingHorizontal: 10,
+              marginTop: 5,
+              borderWidth: 1,
+              borderColor: "#ccc",
+              elevation: 3,
             }}
           >
             {deviceList.map((device, index) => (
@@ -108,16 +116,16 @@ const SOSMessage = () => {
                 key={index}
                 onPress={() => {
                   setSelectedDevice(device);
-                  setDropdownVisible(false); // Close dropdown after selection
+                  setDropdownVisible(false);
                 }}
                 style={{
-                  padding: 15,
-                  backgroundColor: "#f9f9f9",
-                  borderRadius: 8,
-                  marginBottom: 10,
+                  paddingVertical: 10,
+                  paddingHorizontal: 5,
                 }}
               >
-                <Text style={{ fontSize: 16 }}>{`Identifier: ${device}`}</Text>
+                <Text style={{ fontSize: 14, color: "#333" }}>
+                  {device}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -125,23 +133,17 @@ const SOSMessage = () => {
       </View>
 
       {/* SOS Messages */}
-      <ScrollView
-        className="flex-1 p-4"
-        style={{
-          marginTop: isDropdownVisible ? 90 : 0, // Add margin top when dropdown is visible
-        }}
-      >
-        <Text className="text-2xl font-bold text-center mb-6">SOS Messages</Text>
+      <ScrollView className="flex-1 p-4 -mt-2">
         {sosMessages.length > 0 ? (
           sosMessages
-            .filter((sos) => sos.deviceId === selectedDevice) // Filter by selected device
+            .filter((sos) => sos.deviceId === selectedDevice)
             .map((sos, index) => (
               <View
                 key={index}
                 className={`bg-gray-100 p-4 mb-4 rounded-2xl shadow-md border ${
                   sos.message && sos.message.toLowerCase().includes("last")
-                    ? "border-red-500" :
-                  sos.message && sos.message.toLowerCase().includes("safe")
+                    ? "border-red-500"
+                    : sos.message && sos.message.toLowerCase().includes("safe")
                     ? "border-green-500"
                     : "border-gray-300"
                 }`}

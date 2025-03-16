@@ -4,24 +4,24 @@ import { Tabs, useRouter } from 'expo-router';
 import { NativeWindStyleSheet } from 'nativewind';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { API_URL } from '@env'; // Ensure your `.env` is set up correctly
+import { API_URL } from '@env';
 
-// Tab icon component replicating the design
+// Updated TabIcon component
 const TabIcon = ({ name, focused }) => (
-  <View className="items-center">
+  <View className="flex-col items-center justify-center">
     <Text
       className={`text-xs ${
-        focused ? 'text-black font-bold' : 'text-black-500'
+        focused ? 'text-black font-bold' : 'text-gray-500'
       }`}
     >
       {name}
     </Text>
-    {/* Black underline for the active tab */}
+    {/* Underline effect */}
     <View
-      className={`h-[2px] w-full ${
-        focused ? 'bg-red' : 'bg-transparent'
-      } mt-1`}
-    ></View>
+      className={`h-[2px] w-10 mt-1 rounded-full transition-all duration-300 ${
+        focused ? 'bg-black' : 'bg-transparent'
+      }`}
+    />
   </View>
 );
 
@@ -74,15 +74,13 @@ const TabsLayout = () => {
     checkAuthStatus();
   }, [router]);
 
-  // Handle clear interval so it's not fetching when logged out
   const clearAllIntervals = () => {
     let id = window.setTimeout(() => {}, 0);
     while (id--) {
-      window.clearTimeout(id); // Will clear timeouts and intervals
+      window.clearTimeout(id);
     }
   };
 
-  // Handle logout
   const handleLogout = async () => {
     setSidebarVisible(false);
     clearAllIntervals();
@@ -90,12 +88,11 @@ const TabsLayout = () => {
     router.push('/authScreen');
   };
 
-    // If authentication is not checked yet (isAuthenticated is null), show nothing or a loading state
-    if (isAuthenticated === null) {
-      return <Text>Loading...</Text>; // You can show a loading spinner here
-    }
+  if (isAuthenticated === null) {
+    return <Text>Loading...</Text>;
+  }
   if (!isAuthenticated) {
-    return null; // Show a loading indicator if needed
+    return null;
   }
 
   return (
@@ -135,17 +132,18 @@ const TabsLayout = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Tabs */}
       <Tabs
         screenOptions={{
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: 'transparent', // Transparent background for the tab bar
-            borderBottomWidth: 1, // Bottom border to separate tab bar
-            borderBottomColor: '#000000', // Black bottom border
-            height: 60, // Adjust the height for the design
+            backgroundColor: 'white',
+            borderTopWidth: 1,
+            borderTopColor: '#000000',
+            height: 60,
           },
-          tabBarActiveTintColor: '#000000', // Black text for active tabs
-          tabBarInactiveTintColor: '#808080', // Gray text for inactive tabs
+          tabBarActiveTintColor: '#000000',
+          tabBarInactiveTintColor: '#808080',
         }}
       >
         <Tabs.Screen
