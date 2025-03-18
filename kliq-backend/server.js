@@ -44,3 +44,7 @@ import { receiveRecipientSOSMessage, getFilteredSOSMessages, getUserFilteredSOSr
 app.post("/recipients/receive-sosMessage", receiveRecipientSOSMessage)
 app.get("/recipients/get-filteredReceived-sosMessages/:recipientId", getFilteredSOSMessages)
 app.get("/users/get-filteredSosMessages/:deviceId", getUserFilteredSOSreports)
+
+import profileRoutes from "./appRoutes/profileRoutes.js"; // Import the profiles route
+// Routes
+app.use("/profiles", profileRoutes); // Use the /profiles route
