@@ -1,39 +1,50 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { Tabs, useRouter } from 'expo-router';
+import { View, Text, Button, TouchableOpacity, Modal, ActivityIndicator, Dimensions } from 'react-native';
+import { Tabs, useRouter, useSegments } from 'expo-router';
 import { NativeWindStyleSheet } from 'nativewind';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { API_URL } from '@env';
+import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
 
-// Updated TabIcon component
+const screenWidth = Dimensions.get('window').width;
+const tabCount = 3;
+const tabWidth = screenWidth / tabCount;
+
+// ✅ Tab Icon Fix
 const TabIcon = ({ name, focused }) => (
-  <View className="flex-col items-center justify-center">
+  <View className="flex-col items-center justify-center pb-[4px]">
     <Text
-      className={`text-xs ${
-        focused ? 'text-black font-bold' : 'text-gray-500'
+      className={`text-[13px] uppercase ${
+        focused ? 'text-black font-semibold' : 'text-gray-400'
       }`}
     >
       {name}
     </Text>
-    {/* Underline effect */}
-    <View
-      className={`h-[2px] w-10 mt-1 rounded-full transition-all duration-300 ${
-        focused ? 'bg-black' : 'bg-transparent'
-      }`}
-    />
   </View>
 );
 
 const TabsLayout = () => {
   const router = useRouter();
+  const segments = useSegments();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch recipient profile data
+  const translateX = useSharedValue(0);
+
+  useEffect(() => {
+    const activeIndex = segments[segments.length - 1] === 'Hotlines' ? 0 : segments[segments.length - 1] === 'SOSInbox' ? 1 : 2;
+    translateX.value = withSpring(activeIndex * tabWidth, {
+      damping: 10,
+      stiffness: 120,
+      mass: 0.5,
+    });
+  }, [segments]);
+
+  // Sidebar & Auth logic stays the same
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -43,11 +54,9 @@ const TabsLayout = () => {
           setLoading(false);
           return;
         }
-
         const response = await axios.get(`${API_URL}/profiles`, {
           params: { uniqueId },
         });
-
         setProfile(response.data);
       } catch (err) {
         setError(err.response?.data?.error || 'An error occurred');
@@ -55,11 +64,9 @@ const TabsLayout = () => {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, []);
 
-  // Check authentication status
   useEffect(() => {
     const checkAuthStatus = async () => {
       const token = await AsyncStorage.getItem('authToken');
@@ -70,9 +77,12 @@ const TabsLayout = () => {
         router.push('/authScreen');
       }
     };
-
     checkAuthStatus();
   }, [router]);
+
+  const animatedUnderlineStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
   const clearAllIntervals = () => {
     let id = window.setTimeout(() => {}, 0);
@@ -137,10 +147,16 @@ const TabsLayout = () => {
         screenOptions={{
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: 'white',
-            borderTopWidth: 1,
-            borderTopColor: '#000000',
+            backgroundColor: '#ffffff',
+            borderTopWidth: 0,
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
             height: 60,
+            paddingBottom: 1,
+            position: 'relative',
           },
           tabBarActiveTintColor: '#000000',
           tabBarInactiveTintColor: '#808080',
@@ -149,35 +165,50 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="Hotlines"
           options={{
-            title: 'Hotlines',
+            title: 'HOTLINES',
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon name="Hotlines" focused={focused} />
+              <TabIcon name="HOTLINES" focused={focused} />
             ),
           }}
         />
         <Tabs.Screen
           name="SOSInbox"
           options={{
-            title: 'SOS Inbox',
+            title: 'INBOX',
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon name="SOS Inbox" focused={focused} />
+              <TabIcon name="INBOX" focused={focused} />
             ),
           }}
         />
         <Tabs.Screen
           name="recipientSOSreport"
           options={{
-            title: 'SOS Reports',
+            title: 'REPORTS',
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon name="SOS Reports" focused={focused} />
+              <TabIcon name="REPORTS" focused={focused} />
             ),
           }}
         />
-
       </Tabs>
+
+      {/* Animated sliding underline */}
+      <View className="absolute bottom-0 w-full h-[3px] bg-transparent">
+        <Animated.View
+          style={[
+            {
+              height: 3,
+              width: tabWidth - 24,
+              backgroundColor: 'black',
+              borderRadius: 9999,
+              marginLeft: 12,
+            },
+            animatedUnderlineStyle,
+          ]}
+        />
+      </View>
     </>
   );
 };
