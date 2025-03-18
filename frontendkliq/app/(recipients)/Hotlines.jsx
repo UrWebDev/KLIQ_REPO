@@ -62,17 +62,24 @@ const Hotlines = () => {
       );
   
       if (response.data && response.data.length > 0) {
-        // Extract unique device IDs
-        const devices = [...new Set(response.data.map((msg) => msg.deviceId))];
-        setDeviceList(devices);
+        // Extract unique device IDs & names
+        const devices = response.data.reduce((acc, msg) => {
+          if (!acc.some((device) => device.deviceId === msg.deviceId)) {
+            acc.push({ 
+              deviceId: msg.deviceId, 
+              name: msg.name || "Unknown Device" // ✅ Default to "Unknown Device"
+            });
+          }
+          return acc;
+        }, []);
   
-        // Store messages in state
+        setDeviceList(devices);
         setAllMessages(response.data);
   
         // Automatically select the first device
         if (devices.length > 0) {
-          setSelectedDevice(devices[0]);
-          handleDeviceChange(devices[0], response.data);
+          setSelectedDevice(devices[0].deviceId);
+          handleDeviceChange(devices[0].deviceId);
         }
       }
     } catch (error) {
@@ -215,11 +222,11 @@ const Hotlines = () => {
       padding: 10,
     }}
   >
-    <Text style={{ fontSize: 16, color: "#000" }}>
-      {selectedDevice
-        ? `KLIQ User: ${selectedDevice}`
-        : "Select a device"}
-    </Text>
+<Text style={{ fontSize: 16, color: "#000" }}>
+  {selectedDevice
+    ? `KLIQ User: ${deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device"}`
+    : "Select a device"}
+</Text>
   </TouchableOpacity>
 
   {/* Dropdown List */}
@@ -234,17 +241,17 @@ const Hotlines = () => {
         borderColor: "#ccc",
       }}
     >
-{deviceList.map((deviceId, index) => (
+{deviceList.map((device, index) => (
   <TouchableOpacity
     key={index}
-    onPress={() => handleDeviceChange(deviceId)}
+    onPress={() => handleDeviceChange(device.deviceId)}
     style={{
       paddingVertical: 8,
       borderBottomWidth: index !== deviceList.length - 1 ? 1 : 0,
       borderColor: "#eee",
     }}
   >
-    <Text style={{ color: "#000" }}>{deviceId}</Text>
+    <Text style={{ color: "#000" }}>{device.name}</Text> {/* ✅ Now showing deviceName */}
   </TouchableOpacity>
 ))}
 
