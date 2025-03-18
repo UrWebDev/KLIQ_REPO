@@ -176,17 +176,6 @@ const TabIconTwo = () => {
             ),
           }}
         />
-        {/* Tab 2: User Profile*/}
-        <Tabs.Screen
-          name="userProfile"
-          options={{
-            title: 'User Profile',
-            headerShown: false,
-            tabBarIcon: ({ focused }) => (
-              <TabIcon name="User Profile" focused={focused} />
-            ),
-          }}
-        />
       </Tabs>
     </>
   );
