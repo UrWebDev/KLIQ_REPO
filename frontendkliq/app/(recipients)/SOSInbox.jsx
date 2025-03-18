@@ -47,12 +47,18 @@ const SOSMessage = () => {
 
         setSOSMessages(sortedMessages);
 
-        const devices = [...new Set(sortedMessages.map((msg) => msg.deviceId))];
+        const devices = sortedMessages.reduce((acc, msg) => {
+          if (!acc.some((d) => d.deviceId === msg.deviceId)) {
+            acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
+          }
+          return acc;
+        }, []);
+        
         setDeviceList(devices);
 
         if (devices.length > 0 && !selectedDevice) {
-          setSelectedDevice(devices[0]);
-        }
+          setSelectedDevice(devices[0].deviceId); // Set the first deviceId instead of "Unknown Device"
+        }        
       } catch (error) {
         console.error(
           "Error fetching SOS messages:",
@@ -88,8 +94,12 @@ const SOSMessage = () => {
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Icon name="person" size={18} color="#000" style={{ marginRight: 8 }} />
             <Text style={{ fontSize: 14, color: "#000", fontWeight: "600" }}>
-              {selectedDevice ? `${selectedDevice}` : "Select Device"}
-            </Text>
+  {selectedDevice
+    ? deviceList.find((d) => d.deviceId === selectedDevice)?.name ||
+      deviceList[0]?.name || "Loading..."
+    : "Select Device"}
+</Text>
+
           </View>
           <Icon
             name={isDropdownVisible ? "arrow-drop-up" : "arrow-drop-down"}
@@ -111,23 +121,24 @@ const SOSMessage = () => {
               elevation: 3,
             }}
           >
-            {deviceList.map((device, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => {
-                  setSelectedDevice(device);
-                  setDropdownVisible(false);
-                }}
-                style={{
-                  paddingVertical: 10,
-                  paddingHorizontal: 5,
-                }}
-              >
-                <Text style={{ fontSize: 14, color: "#333" }}>
-                  {device}
-                </Text>
-              </TouchableOpacity>
-            ))}
+{deviceList.map((device, index) => (
+  <TouchableOpacity
+    key={index}
+    onPress={() => {
+      setSelectedDevice(device.deviceId); // Still stores `deviceId`
+      setDropdownVisible(false);
+    }}
+    style={{
+      paddingVertical: 10,
+      paddingHorizontal: 5,
+    }}
+  >
+    <Text style={{ fontSize: 14, color: "#333" }}>
+      {device.name} {/* Show Name instead of deviceId */}
+    </Text>
+  </TouchableOpacity>
+))}
+
           </View>
         )}
       </View>
