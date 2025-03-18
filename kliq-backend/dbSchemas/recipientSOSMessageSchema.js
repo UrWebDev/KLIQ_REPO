@@ -7,8 +7,6 @@ const sosMessageSchema = new mongoose.Schema({
   receivedAt: { type: Date, default: Date.now },
   recipientId: { type: [String], required: true }, // Link SOS messages to recipients
   name: String,
-  age: String,
-  bloodType: String,
   phoneNUM: String,
   deviceId: String,
 });
