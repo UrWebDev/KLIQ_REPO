@@ -176,16 +176,7 @@ const TabsLayout = () => {
             ),
           }}
         />
-        <Tabs.Screen
-          name="recipientProfile"
-          options={{
-            title: 'Recipient Profile',
-            headerShown: false,
-            tabBarIcon: ({ focused }) => (
-              <TabIcon name="Recipient Profile" focused={focused} />
-            ),
-          }}
-        />
+
       </Tabs>
     </>
   );
