@@ -126,7 +126,7 @@ const TabIconTwo = () => {
                         <Text className="text-xl font-bold mb-4">Recipient Profile</Text>
                         <Text className="text-lg">Name: {profile.name}</Text>
                         <Text className="text-lg">Age: {profile.age}</Text>
-                        <Text className="text-lg">Age: {profile.bloodType}</Text>
+                        <Text className="text-lg">BloodType: {profile.bloodType}</Text>
                       </View>
                     )
                   )}
