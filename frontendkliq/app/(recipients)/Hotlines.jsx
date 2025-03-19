@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   Linking,
+  Animated,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -30,7 +31,23 @@ const Hotlines = () => {
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [allMessages, setAllMessages] = useState([]);
 
+  const dropdownAnim = useState(new Animated.Value(0))[0];
 
+  useEffect(() => {
+    if (isDropdownVisible) {
+      Animated.timing(dropdownAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(dropdownAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isDropdownVisible]);
 
   useEffect(() => {
     const fetchRecipientId = async () => {
@@ -62,12 +79,11 @@ const Hotlines = () => {
       );
   
       if (response.data && response.data.length > 0) {
-        // Extract unique device IDs & names
         const devices = response.data.reduce((acc, msg) => {
           if (!acc.some((device) => device.deviceId === msg.deviceId)) {
             acc.push({ 
               deviceId: msg.deviceId, 
-              name: msg.name || "Unknown Device" // ✅ Default to "Unknown Device"
+              name: msg.name || "Unknown Device"
             });
           }
           return acc;
@@ -76,7 +92,6 @@ const Hotlines = () => {
         setDeviceList(devices);
         setAllMessages(response.data);
   
-        // Automatically select the first device
         if (devices.length > 0) {
           setSelectedDevice(devices[0].deviceId);
           handleDeviceChange(devices[0].deviceId);
@@ -92,7 +107,6 @@ const Hotlines = () => {
     setSelectedDevice(deviceId);
     setDropdownVisible(false);
   
-    // Filter messages using state
     const filteredByDevice = allMessages.filter(
       (sos) => sos.deviceId === deviceId
     );
@@ -104,11 +118,7 @@ const Hotlines = () => {
       setUserPhoneNumber("N/A");
     }
   };
-  
-  
-  
-  
-  
+
   const resetForm = () => {
     setName("");
     setPhoneNumber("");
@@ -179,32 +189,36 @@ const Hotlines = () => {
   };
 
   const renderContact = ({ item }) => (
-    <View className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-2xl shadow-md border border-gray-300">
+    <View className="flex-row justify-between items-center w-full px-5 py-5 mb-3 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
       <View>
-        <Text className="text-lg font-bold">{item.name}</Text>
-        <Text className="text-gray-500">{item.phoneNumber}</Text>
+        <Text className="text-lg font-bold text-black">{item.name}</Text>
+        <Text className="italic text-gray-700">{item.phoneNumber}</Text>
       </View>
-      <View className="flex-row space-x-2">
-        {/* Call Button */}
-        <TouchableOpacity
-          onPress={() => Linking.openURL(`tel:${item.phoneNumber}`)}
-          className="bg-blue-500 p-2 rounded-full"
-        >
-          <Icon name="phone" size={20} color="white" />
+      <View className="flex-row space-x-3">
+      <TouchableOpacity
+        onPress={() => {
+          Alert.alert(
+            "Delete Contact",
+            `Are you sure you want to delete "${item.name}" from your emergency contacts?`,
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: () => handleDeleteContact(item._id),
+              },
+            ],
+            { cancelable: true }
+          );
+        }}
+      >
+        <Icon name="delete" size={25} color="black" />
+      </TouchableOpacity>
+        <TouchableOpacity onPress={() => openUpdateModal(item)}>
+          <Icon name="edit" size={25} color="black" />
         </TouchableOpacity>
-        {/* Edit Button */}
-        <TouchableOpacity
-          onPress={() => openUpdateModal(item)}
-          className="bg-green-500 p-2 rounded-full"
-        >
-          <Icon name="edit" size={20} color="white" />
-        </TouchableOpacity>
-        {/* Delete Button */}
-        <TouchableOpacity
-          onPress={() => handleDeleteContact(item._id)}
-          className="bg-red-500 p-2 rounded-full"
-        >
-          <Icon name="delete" size={20} color="white" />
+        <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.phoneNumber}`)}>
+          <Icon name="phone" size={25} color="black" />
         </TouchableOpacity>
       </View>
     </View>
@@ -213,95 +227,94 @@ const Hotlines = () => {
   return (
     <View className="flex-1 p-4" style={{ backgroundColor: "white" }}>
 {/* Device Selection Button */}
-<View className="p-4">
+<View className="p-4 relative">
   <TouchableOpacity
-    onPress={() => setDropdownVisible(!isDropdownVisible)} // Toggle dropdown visibility
-    style={{
-      backgroundColor: "#f0f0f0",
-      borderRadius: 8,
-      padding: 10,
-    }}
+    onPress={() => setDropdownVisible(!isDropdownVisible)}
+    className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm"
   >
-<Text style={{ fontSize: 16, color: "#000" }}>
-  {`KLIQ User: ${
-    String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device")
-  }`}
-</Text>
+    <View className="flex-row items-center space-x-2">
+      <Icon name="person-outline" size={20} color="black" />
+      <Text className="font-extrabold text-base text-black">
+        {String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device")}
+      </Text>
+    </View>
+    <Icon name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="black" />
   </TouchableOpacity>
 
-  {/* Dropdown List */}
+  {/* Animated Dropdown List */}
   {isDropdownVisible && (
-    <View
+    <Animated.View
+      className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
       style={{
-        backgroundColor: "#fff",
-        borderRadius: 8,
-        padding: 10,
-        marginTop: 5,
-        borderWidth: 1,
-        borderColor: "#ccc",
+        top: '150%',
+        opacity: dropdownAnim,
+        transform: [
+          {
+            translateY: dropdownAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-10, 0], // Slide down effect
+            }),
+          },
+        ],
       }}
     >
-{deviceList.map((device, index) => (
-  <TouchableOpacity
-    key={index}
-    onPress={() => handleDeviceChange(device.deviceId)}
-    style={{
-      paddingVertical: 8,
-      borderBottomWidth: index !== deviceList.length - 1 ? 1 : 0,
-      borderColor: "#eee",
-    }}
-  >
-    <Text style={{ color: "#000" }}>{String(device.name || "Unknown Device")}</Text>
-  </TouchableOpacity>
-))}
-
-    </View>
+      {deviceList.map((device, index) => (
+        <TouchableOpacity
+          key={index}
+          onPress={() => handleDeviceChange(device.deviceId)}
+          className="p-3 border-b border-gray-200 last:border-b-0"
+        >
+          <Text className="text-black">{String(device.name || "Unknown Device")}</Text>
+        </TouchableOpacity>
+      ))}
+    </Animated.View>
   )}
 </View>
 
 {/* Render Phone Number */}
-<Text className="text-lg font-bold mb-4">
-  Phone Number for Device: {selectedDevice}
+<Text className="text-lg font-extrabold mb-3">
+  User’s Personal Numbers: {selectedDevice}
 </Text>
-<View
-  className="flex-row justify-between items-center bg-gray-100 p-4 mb-2 rounded-2xl shadow-md border border-gray-300"
->
+<View className="flex-row justify-between items-center w-full px-6 py-5 mb-4 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
   <View>
-    <Text className="text-lg font-bold">
+    <Text className="text-xl font-semibold text-black">
       {userPhoneNumber !== "N/A" ? userPhoneNumber : "N/A"}
     </Text>
-    <Text className="text-gray-600">Personal Number</Text>
+    <Text className="italic text-gray-700">Personal Number</Text>
   </View>
-  <TouchableOpacity
-    className="bg-blue-500 p-2 rounded-full"
-    onPress={() => {
-      if (userPhoneNumber !== "N/A") {
-        Linking.openURL(`tel:${userPhoneNumber}`);
-      } else {
-        Alert.alert("No phone number found.");
-      }
-    }}
-  >
-    <Icon name="phone" size={20} color="#fff" />
-  </TouchableOpacity>
+      <TouchableOpacity
+      className="p-2"
+      onPress={() => {
+        if (userPhoneNumber !== "N/A") {
+          Linking.openURL(`tel:${userPhoneNumber}`);
+        } else {
+          Alert.alert("No phone number found.");
+        }
+      }}
+    >
+      <Icon name="phone" size={29} color="black" />
+    </TouchableOpacity>
 </View>
 
-
-
       {/* Emergency Hotlines Header */}
-      <Text className="text-2xl font-bold italic text-center mb-4">
+      <Text className="text-2xl font-extrabold italic text-center mb-4">
         Emergency Hotlines
       </Text>
+
       {/* Add Button */}
-      <TouchableOpacity
-        className="w-12 h-12 bg-gray-200 rounded-full justify-center items-center mb-6 self-center shadow-md"
-        onPress={() => {
-          setModalVisible(true);
-          resetForm();
-        }}
-      >
-        <Icon name="add" size={30} color="black" />
-      </TouchableOpacity>
+          <View className="justify-center items-center w-full px-5 py-4 mb-3 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
+            {/* Only the icon is clickable */}
+            <TouchableOpacity
+              className="w-12 h-12 bg-gray-200 rounded-full justify-center items-center border-4 border-black shadow-md"
+              onPress={() => {
+                setModalVisible(true);
+                resetForm();
+              }}
+            >
+              <Icon name="add" size={30} color="black" />
+            </TouchableOpacity>
+          </View>
+
       {/* Emergency Contacts List */}
       <FlatList
         data={contacts}
@@ -310,49 +323,62 @@ const Hotlines = () => {
         contentContainerStyle={{ paddingBottom: 50 }}
       />
       {/* Add/Update Contact Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+<Modal
+  animationType="fade"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View className="flex-1 justify-center items-center bg-black/50">
+    <View className="bg-white w-4/5 rounded-2xl p-6 shadow-lg relative">
+      {/* Modal Header */}
+      <View className="flex-row justify-between items-center mb-4">
+        <Text className="text-xl font-extrabold text-black">
+          {editingContact ? "Update Emergency Contact" : "Add Emergency Contact"}
+        </Text>
+        <TouchableOpacity onPress={() => setModalVisible(false)}>
+          <Icon name="close" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Name Input */}
+      <TextInput
+        placeholder="Name"
+        value={name}
+        onChangeText={setName}
+        className="border border-gray-300 rounded-xl p-4 mb-4 bg-white text-gray-800 shadow-sm"
+        placeholderTextColor="rgba(0,0,0,0.5)"
+      />
+      {/* Phone Number Input */}
+      <TextInput
+        placeholder="Phone Number"
+        value={phoneNumber}
+        onChangeText={setPhoneNumber}
+        className="border border-gray-300 rounded-xl p-4 mb-5 bg-white text-gray-800 shadow-sm"
+        keyboardType="phone-pad"
+        placeholderTextColor="rgba(0,0,0,0.5)"
+      />
+
+      {/* Primary Button */}
+      <TouchableOpacity
+        onPress={editingContact ? handleUpdateContact : handleAddContact}
+        className="w-full p-4 bg-green-600 rounded-xl mb-3 shadow-md"
       >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white w-4/5 rounded-lg p-5 shadow-md">
-            <Text className="text-lg font-bold mb-4">
-              {editingContact ? "Update Emergency Hotlines" : "Add Emergency Hotlines"}
-            </Text>
-            <TextInput
-              placeholder="Name"
-              value={name}
-              onChangeText={setName}
-              className="border border-gray-300 rounded-full p-3 mb-3 bg-white text-gray-800"
-              placeholderTextColor="rgba(0,0,0,0.5)"
-            />
-            <TextInput
-              placeholder="Phone Number"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              className="border border-gray-300 rounded-full p-3 mb-4 bg-white text-gray-800"
-              keyboardType="phone-pad"
-              placeholderTextColor="rgba(0,0,0,0.5)"
-            />
-            <TouchableOpacity
-              onPress={editingContact ? handleUpdateContact : handleAddContact}
-              className="w-full p-3 bg-blue-500 rounded-full mb-3"
-            >
-              <Text className="text-white text-center font-bold">
-                {editingContact ? "Update" : "Add"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              className="w-full p-3 bg-red-500 rounded-full"
-            >
-              <Text className="text-white text-center font-bold">Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        <Text className="text-white text-center font-bold text-lg">
+          {editingContact ? "Update Contact" : "Add Contact"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Cancel Button */}
+      <TouchableOpacity
+        onPress={() => setModalVisible(false)}
+        className="w-full p-4 bg-gray-400 rounded-xl shadow"
+      >
+        <Text className="text-white text-center font-bold text-lg">Cancel</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
     </View>
   );
 };
