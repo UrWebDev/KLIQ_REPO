@@ -223,9 +223,9 @@ const Hotlines = () => {
     }}
   >
 <Text style={{ fontSize: 16, color: "#000" }}>
-  {selectedDevice
-    ? `KLIQ User: ${deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device"}`
-    : "Select a device"}
+  {`KLIQ User: ${
+    String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device")
+  }`}
 </Text>
   </TouchableOpacity>
 
@@ -251,7 +251,7 @@ const Hotlines = () => {
       borderColor: "#eee",
     }}
   >
-    <Text style={{ color: "#000" }}>{device.name}</Text> {/* ✅ Now showing deviceName */}
+    <Text style={{ color: "#000" }}>{String(device.name || "Unknown Device")}</Text>
   </TouchableOpacity>
 ))}
 
