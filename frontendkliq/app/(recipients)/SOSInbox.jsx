@@ -210,7 +210,7 @@ const SOSMessage = () => {
                     }
                   >
                     <Text className="text-blue-500 underline">
-                      {sos.location || "View Location"}
+                      {sos.location || "Click Here to see my location!"}
                     </Text>
                   </TouchableOpacity>
                 </View>
