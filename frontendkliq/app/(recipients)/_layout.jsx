@@ -5,6 +5,7 @@ import { NativeWindStyleSheet } from 'nativewind';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { API_URL } from '@env';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Import Icon for the close button
 
 const TabIcon = ({ name, focused }) => {
   const opacity = useRef(new Animated.Value(focused ? 1 : 0.5)).current;
@@ -133,13 +134,24 @@ const TabsLayout = () => {
     <>
       {/* Sidebar Modal */}
       <Modal
-        animationType="slide"
+        animationType="fade" // Changed to fade animation
         transparent={true}
         visible={sidebarVisible}
         onRequestClose={() => setSidebarVisible(false)}
       >
-        <View className="flex-1 bg-black bg-opacity-50 justify-center">
-          <View className="bg-white m-[4vw] p-[4vw] rounded-lg">
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white w-4/5 rounded-2xl p-6 shadow-lg relative">
+            {/* Modal Header */}
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-extrabold text-black">
+                Recipient Profile
+              </Text>
+              <TouchableOpacity onPress={() => setSidebarVisible(false)}>
+                <Icon name="close" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Profile Content */}
             {loading ? (
               <ActivityIndicator size="large" color="#0000ff" />
             ) : error ? (
@@ -147,22 +159,39 @@ const TabsLayout = () => {
             ) : (
               profile && (
                 <View>
-                  <Text className="text-xl font-bold mb-4">Recipient Profile</Text>
-                  <Text className="text-lg">Name: {profile.name}</Text>
-                  <Text className="text-lg">Age: {profile.age}</Text>
+                  <Text className="text-lg mb-2">Name: {profile.name}</Text>
+                  <Text className="text-lg mb-4">Age: {profile.age}</Text>
                 </View>
               )
             )}
-            <Button title="Logout" onPress={handleLogout} color="red" />
-            <Button title="Close" onPress={() => setSidebarVisible(false)} />
+
+            {/* Logout Button */}
+            <TouchableOpacity
+              onPress={handleLogout}
+              className="w-full p-4 bg-red-600 rounded-xl mb-3 shadow-md"
+            >
+              <Text className="text-white text-center font-bold text-lg">
+                Logout
+              </Text>
+            </TouchableOpacity>
+
+            {/* Close Button */}
+            <TouchableOpacity
+              onPress={() => setSidebarVisible(false)}
+              className="w-full p-4 bg-gray-400 rounded-xl shadow"
+            >
+              <Text className="text-white text-center font-bold text-lg">
+                Close
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
       {/* Hamburger Button */}
-      <View className="absolute top-[4vw] left-[4vw] z-10">
+      <View className="absolute top-[20vw] left-[4vw] z-10">
         <TouchableOpacity onPress={() => setSidebarVisible(true)}>
-          <Text style={{ fontSize: screenWidth < 400 ? 24 : 28, fontWeight: 'bold' }}>≡</Text>
+          <Text style={{ fontSize: screenWidth < 40 ? 24 : 28, fontWeight: 'bold' }}>≡</Text>
         </TouchableOpacity>
       </View>
 
