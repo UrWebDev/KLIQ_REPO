@@ -44,7 +44,7 @@ const AuthScreen = () => {
           return;
         }
 
-        // Additional validation for user role
+        // Additional validation for user roleaa
         if (role === "user" && (!age.trim() || !name.trim() || !bloodType.trim())) {
           Alert.alert("Error", "Age, Name, and Blood Type are required for users.");
           return;
