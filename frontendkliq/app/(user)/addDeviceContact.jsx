@@ -9,7 +9,7 @@ import { Buffer } from 'buffer';
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
-
+const bleManager = new BleManager();
 const Contactss = () => {
   const [manager] = useState(new BleManager());
   const [device, setDevice] = useState(null);
@@ -20,6 +20,9 @@ const Contactss = () => {
   const [receivedContact, setReceivedContact] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
+  const [Name, setNamee] = useState('');
+  const [phoneNum, setPhoneNum] = useState('');
+  const [deviceId, setDeviceId] = useState('');
 
   useEffect(() => {
     const subscription = manager.onStateChange((state) => {
@@ -37,27 +40,39 @@ const Contactss = () => {
 
 
   const requestBluetoothPermissions = async () => {
-    if (Platform.OS === 'android' && Platform.Version >= 31) {
+    if (Platform.OS === 'android') {
       try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        ]);
-
-
-        if (
-          granted["android.permission.BLUETOOTH_SCAN"] !== PermissionsAndroid.RESULTS.GRANTED ||
-          granted["android.permission.BLUETOOTH_CONNECT"] !== PermissionsAndroid.RESULTS.GRANTED ||
-          granted["android.permission.ACCESS_FINE_LOCATION"] !== PermissionsAndroid.RESULTS.GRANTED
-        ) {
-          console.error("Bluetooth permissions denied.");
-          Alert.alert("Permission Denied", "Bluetooth permissions are required.");
-          return false;
+        if (Platform.Version >= 31) {
+          // Android 12+ (API 31+)
+          const granted = await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          ]);
+  
+          if (
+            granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN] !== PermissionsAndroid.RESULTS.GRANTED ||
+            granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT] !== PermissionsAndroid.RESULTS.GRANTED ||
+            granted[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] !== PermissionsAndroid.RESULTS.GRANTED
+          ) {
+            console.error("❌ Bluetooth permissions denied.");
+            Alert.alert("Permission Denied", "Bluetooth permissions are required.");
+            return false;
+          }
+        } else {
+          // Android 11 and below
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+          );
+  
+          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            console.error("❌ Location permission denied.");
+            Alert.alert("Permission Denied", "Location permission is required.");
+            return false;
+          }
         }
-
-
-        console.log("Bluetooth permissions granted.");
+  
+        console.log("✅ Bluetooth permissions granted.");
         return true;
       } catch (err) {
         console.warn(err);
@@ -66,27 +81,31 @@ const Contactss = () => {
     }
     return true;
   };
+  
 
 
   const scanAndConnect = async () => {
+    const hasPermissions = await requestBluetoothPermissions();
+    if (!hasPermissions) {
+      console.log("🚫 Cannot scan, permissions not granted.");
+      return;
+    }
+  
     if (isScanning) {
       console.warn("⚠️ BLE scan already running. Skipping new scan.");
       return;
     }
-
-
+  
     console.log("📡 Starting BLE scan...");
     setIsScanning(true);
-
-
+  
     manager.startDeviceScan(null, null, async (error, scannedDevice) => {
       if (error) {
         console.error("❌ Scan error:", error);
         setIsScanning(false);
         return;
       }
-
-
+  
       if (scannedDevice && scannedDevice.name === 'ESP32-ContactDevice') {
         console.log("✅ Found ESP32. Stopping scan and connecting...");
         manager.stopDeviceScan();
@@ -94,15 +113,14 @@ const Contactss = () => {
         await connectToDevice(scannedDevice);
       }
     });
-
-
-    // Stop scanning after 10 seconds if no device is found
+  
     setTimeout(() => {
       console.log("⏳ Stopping BLE scan after timeout...");
       manager.stopDeviceScan();
       setIsScanning(false);
     }, 10000);
   };
+  
 
 
   const connectToDevice = async (scannedDevice) => {
@@ -133,72 +151,59 @@ const Contactss = () => {
     }
 };
 
+const startListeningForNotifications = async (connectedDevice) => {
+  try {
+    console.log("Checking if device is connected for notifications...");
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
-
-
- 
-
-
- 
-  const startListeningForNotifications = async (connectedDevice) => {
-    try {
-      console.log("Checking if device is connected for notifications...");
-      await new Promise(resolve => setTimeout(resolve, 3000));
- 
-      let isConnected = await connectedDevice.isConnected();
-      if (!isConnected) {
-        console.log("Device lost connection, retrying...");
-        return;
-      }
- 
-      console.log("Subscribing to notifications...");
-      await new Promise(resolve => setTimeout(resolve, 2000));
- 
-      console.log("Service UUID:", SERVICE_UUID);
-      console.log("Characteristic UUID:", CHARACTERISTIC_UUID);
- 
-      // Correct function usage with only required arguments
-      await connectedDevice.monitorCharacteristicForService(
-        SERVICE_UUID,
-        CHARACTERISTIC_UUID,
-        (error, characteristic) => {
-          if (error) {
-            console.error("❌ Notification error:", error);
-            return;
-          }
-     
-          if (characteristic?.value) {
-            const decodedValue = Buffer.from(characteristic.value, 'base64').toString('utf-8');
-            console.log("📩 Received Data:", decodedValue);
-            setReceivedContact((prevContacts) => {
-              if (!prevContacts) return decodedValue; // First contact received
-          
-              const newContacts = decodedValue.split(",");
-              const existingContacts = prevContacts.split(",");
-          
-              // Merge unique contacts only
-              const mergedContacts = [...new Set([...existingContacts, ...newContacts])];
-          
-              return mergedContacts.join(",");
-          });
-          
-          
-            // Debugging: Log raw BLE data
-            console.log("🛠 Raw Base64 Data:", characteristic.value);
-          } else {
-            console.log("⚠️ No data received.");
-          }
-        }
-      );
-     
-     
- 
-      console.log("✅ Subscribed to notifications successfully!");
-    } catch (error) {
-      console.error("Failed to start notifications:", error);
+    let isConnected = await connectedDevice.isConnected();
+    if (!isConnected) {
+      console.log("❌ Device lost connection, retrying...");
+      return;
     }
-  };
- 
+
+    console.log("📡 Subscribing to notifications...");
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    console.log("Service UUID:", SERVICE_UUID);
+    console.log("Characteristic UUID:", CHARACTERISTIC_UUID);
+
+    const transactionId = "monitor";
+    const subscriptionType = "all"; // or "notification" or "indication"
+
+    bleManager.monitorCharacteristicForDevice(
+      connectedDevice.id, // deviceIdentifier
+      SERVICE_UUID,
+      CHARACTERISTIC_UUID,
+      (error, characteristic) => {
+        if (error) {
+          console.error("❌ Notification error:", error);
+          return;
+        }
+
+        console.log("📩 Received characteristic:", characteristic);
+
+        try {
+          if (characteristic?.value) {
+            const decodedValue = Buffer.from(characteristic.value, "base64").toString("utf-8");
+            console.log("📩 Received Data:", decodedValue);
+          } else {
+            console.warn("⚠️ Received characteristic without a value!");
+          }
+        } catch (decodeError) {
+          console.error("❌ Error decoding Base64:", decodeError);
+        }
+      },
+      transactionId,
+      subscriptionType // ✅ Added subscriptionType
+    );
+
+    console.log("✅ Subscribed to notifications successfully!");
+  } catch (error) {
+    console.error("❌ Failed to start notifications:", error);
+  }
+};
+
  
  
 
@@ -360,8 +365,44 @@ const openEditModal = (contact) => {
   setNumber(contact.number);
   setModalVisible(true);
 };
+
+//for devicde id
+const sendContactt = async () => {
+  if (!connected || !device) {
+    Alert.alert("Error", "Not connected to ESP32.");
+    return;
+  }
+
+  if (!Name || !phoneNum || !deviceId) {
+    Alert.alert("Error", "Please fill out all fields.");
+    return;
+  }
+
+  const contactData = `${Name},${phoneNum},${deviceId}`;
+  const base64Data = Buffer.from(contactData, 'utf-8').toString('base64');
+  
+  try {
+    await device.writeCharacteristicWithoutResponseForService(
+      SERVICE_UUID,
+      CHARACTERISTIC_UUID,
+      base64Data
+    );
+    console.log("✅ Contact sent:", contactData);
+    Alert.alert("Success", "Contact sent to ESP32!");
+  } catch (error) {
+    console.error("❌ Failed to send contact:", error);
+    Alert.alert("Error", "Failed to send contact.");
+  }
+};
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Send Contact</Text>
+      <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setNamee} />
+      <TextInput style={styles.input} placeholder="Enter Phone Number" value={phoneNum} onChangeText={setPhoneNum} keyboardType="phone-pad" />
+      <TextInput style={styles.input} placeholder="Enter Device ID" value={deviceId} onChangeText={setDeviceId} />
+      <TouchableOpacity style={styles.button} onPress={sendContactt} disabled={!connected}> 
+        <Text style={styles.buttonText}>Send Contact</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Emergency Contacts</Text>
       <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setName} />
       <TextInput style={styles.input} placeholder="Enter Number" value={number} onChangeText={setNumber} keyboardType="phone-pad" />
