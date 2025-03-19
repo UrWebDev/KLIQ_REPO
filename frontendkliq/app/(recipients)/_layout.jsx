@@ -1,39 +1,78 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Button, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { Tabs, useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Button, TouchableOpacity, Modal, ActivityIndicator, Dimensions, Animated, useWindowDimensions } from 'react-native';
+import { Tabs, useRouter, useSegments } from 'expo-router';
 import { NativeWindStyleSheet } from 'nativewind';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { API_URL } from '@env';
 
-// Updated TabIcon component
-const TabIcon = ({ name, focused }) => (
-  <View className="flex-col items-center justify-center">
-    <Text
-      className={`text-xs ${
-        focused ? 'text-black font-bold' : 'text-gray-500'
-      }`}
+const TabIcon = ({ name, focused }) => {
+  const opacity = useRef(new Animated.Value(focused ? 1 : 0.5)).current;
+  const scale = useRef(new Animated.Value(focused ? 1 : 0.95)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: focused ? 1 : 0.5,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scale, {
+        toValue: focused ? 1 : 0.95,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [focused]);
+
+  return (
+    <Animated.View
+      className="flex-1 items-center justify-center"
+      style={{ opacity, transform: [{ scale }] }}
     >
-      {name}
-    </Text>
-    {/* Underline effect */}
-    <View
-      className={`h-[2px] w-10 mt-1 rounded-full transition-all duration-300 ${
-        focused ? 'bg-black' : 'bg-transparent'
-      }`}
-    />
-  </View>
-);
+      <Text
+        className="uppercase"
+        style={{
+          fontSize: 12,
+          fontWeight: focused ? '600' : '400',
+          color: focused ? '#000000' : '#808080',
+        }}
+      >
+        {name}
+      </Text>
+    </Animated.View>
+  );
+};
 
 const TabsLayout = () => {
   const router = useRouter();
+  const segments = useSegments();
+  const { width: screenWidth } = useWindowDimensions();
+  const tabCount = 3;
+  const tabWidth = screenWidth / tabCount;
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch recipient profile data
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const activeIndex =
+      segments[segments.length - 1] === 'Hotlines'
+        ? 0
+        : segments[segments.length - 1] === 'SOSInbox'
+        ? 1
+        : 2;
+    Animated.spring(translateX, {
+      toValue: activeIndex * tabWidth,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 100,
+    }).start();
+  }, [segments, tabWidth]);
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -43,11 +82,9 @@ const TabsLayout = () => {
           setLoading(false);
           return;
         }
-
         const response = await axios.get(`${API_URL}/profiles`, {
           params: { uniqueId },
         });
-
         setProfile(response.data);
       } catch (err) {
         setError(err.response?.data?.error || 'An error occurred');
@@ -55,11 +92,9 @@ const TabsLayout = () => {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, []);
 
-  // Check authentication status
   useEffect(() => {
     const checkAuthStatus = async () => {
       const token = await AsyncStorage.getItem('authToken');
@@ -70,7 +105,6 @@ const TabsLayout = () => {
         router.push('/authScreen');
       }
     };
-
     checkAuthStatus();
   }, [router]);
 
@@ -105,7 +139,7 @@ const TabsLayout = () => {
         onRequestClose={() => setSidebarVisible(false)}
       >
         <View className="flex-1 bg-black bg-opacity-50 justify-center">
-          <View className="bg-white m-4 p-6 rounded-lg">
+          <View className="bg-white m-[4vw] p-[4vw] rounded-lg">
             {loading ? (
               <ActivityIndicator size="large" color="#0000ff" />
             ) : error ? (
@@ -126,9 +160,9 @@ const TabsLayout = () => {
       </Modal>
 
       {/* Hamburger Button */}
-      <View className="absolute top-4 left-4 z-10">
+      <View className="absolute top-[4vw] left-[4vw] z-10">
         <TouchableOpacity onPress={() => setSidebarVisible(true)}>
-          <Text className="text-2xl font-bold">≡</Text>
+          <Text style={{ fontSize: screenWidth < 400 ? 24 : 28, fontWeight: 'bold' }}>≡</Text>
         </TouchableOpacity>
       </View>
 
@@ -137,10 +171,17 @@ const TabsLayout = () => {
         screenOptions={{
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: 'white',
-            borderTopWidth: 1,
-            borderTopColor: '#000000',
-            height: 60,
+            backgroundColor: '#ffffff',
+            borderTopWidth: 0,
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            height: screenWidth < 400 ? 55 : 65,
+            paddingBottom: 1,
+            position: 'relative',
+            flexDirection: 'row',
           },
           tabBarActiveTintColor: '#000000',
           tabBarInactiveTintColor: '#808080',
@@ -149,35 +190,51 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="Hotlines"
           options={{
-            title: 'Hotlines',
+            title: 'HOTLINES',
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon name="Hotlines" focused={focused} />
+              <TabIcon name="HOTLINES" focused={focused} />
             ),
+            tabBarItemStyle: { flex: 1 },
           }}
         />
         <Tabs.Screen
           name="SOSInbox"
           options={{
-            title: 'SOS Inbox',
+            title: 'INBOX',
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon name="SOS Inbox" focused={focused} />
+              <TabIcon name="INBOX" focused={focused} />
             ),
+            tabBarItemStyle: { flex: 1 },
           }}
         />
         <Tabs.Screen
           name="recipientSOSreport"
           options={{
-            title: 'SOS Reports',
+            title: 'REPORTS',
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon name="SOS Reports" focused={focused} />
+              <TabIcon name="REPORTS" focused={focused} />
             ),
+            tabBarItemStyle: { flex: 1 },
           }}
         />
-
       </Tabs>
+
+      {/* Animated underline */}
+      <View className="absolute bottom-0 w-full h-[3px] bg-transparent">
+        <Animated.View
+          style={{
+            height: 3,
+            width: tabWidth * 0.7,
+            backgroundColor: 'black',
+            borderRadius: 9999,
+            marginLeft: tabWidth * 0.15,
+            transform: [{ translateX }],
+          }}
+        />
+      </View>
     </>
   );
 };
