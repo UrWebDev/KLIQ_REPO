@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const roles = [
-  { label: "Device User", value: "user" },
+  { label: "KLIQ User", value: "user" },
   { label: "Recipient", value: "recipient" },
 ];
 
@@ -43,6 +43,8 @@ const AuthScreen = () => {
           Alert.alert("Error", `${role === "recipient" ? "Recipient" : "User"} ID is required.`);
           return;
         }
+
+        // Additional validation for user role
         if (role === "user" && (!age.trim() || !name.trim() || !bloodType.trim())) {
           Alert.alert("Error", "Age, Name, and Blood Type are required for users.");
           return;
@@ -64,8 +66,11 @@ const AuthScreen = () => {
         }
       }
 
+      console.log("Sending Data:", data);
+
       const response = isLogin ? await login(data) : await register(data);
 
+      console.log(response);
       Alert.alert("Success", response.data.message || "Login Successful");
 
       if (response.data.token) {
@@ -81,106 +86,86 @@ const AuthScreen = () => {
         router.push("/SOSInbox");
       }
     } catch (error) {
+      console.error("Auth Error:", error.response?.data || error.message);
       Alert.alert("Error", error.response?.data?.message || "Something went wrong.");
     }
   };
 
   return (
-    <View className="flex-1 bg-gray-50 justify-center items-center px-6">
+    <View className="flex-1 bg-gray-50 justify-center px-6">
       <Text className="text-center text-3xl font-bold mb-6">
         {isLogin ? "Log in" : "Sign Up"}
       </Text>
 
-      {/* Username Input */}
       <TextInput
-        placeholder="Username"
+        placeholder="Input"
         value={username}
         onChangeText={setUsername}
-        className="w-4/5 px-7 py-6 mb-4 rounded-full border border-black bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-        placeholderTextColor="rgba(0, 0, 0, 0.5)"
+        className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+        placeholderTextColor="rgba(0, 0, 0, 0.3)"
       />
 
-      {/* Password Input */}
-      <View className="relative w-4/5 mb-4">
+      <View className="relative w-full mb-4">
         <TextInput
           placeholder="Password"
           value={password}
           secureTextEntry={!passwordVisible}
           onChangeText={setPassword}
-          className="w-full px-7 py-6 rounded-full border border-black bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-          placeholderTextColor="rgba(0, 0, 0, 0.5)"
+          className="w-full px-4 py-3 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+          placeholderTextColor="rgba(0, 0, 0, 0.3)"
         />
         <TouchableOpacity
-          className="absolute top-5 right-6"
+          className="absolute top-3 right-4"
           onPress={() => setPasswordVisible(!passwordVisible)}
         >
           <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={24} color="gray" />
         </TouchableOpacity>
       </View>
 
-      {/* Additional fields for Sign Up */}
       {!isLogin && (
         <>
-          {/* Confirm Password */}
-            <View className="relative w-4/5 mb-4">
-                <TextInput
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  secureTextEntry={!passwordVisible}
-                  onChangeText={setConfirmPassword}
-                  className="w-full px-7 py-6 rounded-full border border-black bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-                  placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                />
-            <TouchableOpacity
-              className="absolute top-5 right-6"
-              onPress={() => setPasswordVisible(!passwordVisible)}
-            >
-              <Icon
-                name={passwordVisible ? "visibility" : "visibility-off"}
-                size={24}
-                color="gray"
-              />
-            </TouchableOpacity>
-          </View>
-        
-         {/* Role Dropdown */}
-         <TouchableOpacity
-            className="w-4/5 px-7 py-5 mb-4 flex-row justify-between rounded-t-xl border-b border-black bg-gray-300 shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
+          <TextInput
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            secureTextEntry
+            onChangeText={setConfirmPassword}
+            className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+            placeholderTextColor="rgba(0, 0, 0, 0.3)"
+          />
+
+          <TouchableOpacity
+            className="w-full px-4 py-3 mb-4 flex-row justify-between items-center rounded-full border border-gray-300 bg-gray-100"
             onPress={() => setDropdownVisible(!dropdownVisible)}
           >
-            <View className="flex-row items-center">
-            <Text className="text-gray-700 italic mr-2">
+            <Text className="text-gray-700">
               {role ? roles.find((r) => r.value === role)?.label : "Select Role"}
             </Text>
-            <View className="h-6 w-px bg-black mr-4" />
-            </View>
-            <Icon name="arrow-drop-down" size={24} color="gray"/>           
+            <Icon name="arrow-drop-down" size={24} color="gray" />
           </TouchableOpacity>
 
           {dropdownVisible && (
-            <View className="w-4/5 mb-4 border border-black rounded-xl bg-gray-100 shadow-lg shadow-black/20">
+            <View className="w-full mb-4 border border-gray-300 rounded-lg bg-white">
               {roles.map((item) => (
                 <TouchableOpacity
                   key={item.value}
-                  className="px-4 py-3 border-b border-gray-300 last:border-b-0"
+                  className="px-4 py-3 border-b border-gray-200 last:border-b-0"
                   onPress={() => {
                     setRole(item.value);
                     setDropdownVisible(false);
                   }}
                 >
-                  <Text className="text-gray-700 italic">{item.label}</Text>
+                  <Text className="text-gray-700">{item.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           )}
 
-          {/* Unique ID */}
           <TextInput
-            placeholder={`${role === "recipient" ? "Recipient" : "User"} Contact # (serves as unique ID)`}
+            placeholder={`${role === "recipient" ? "Recipient" : "User"} Contact Number (serves as unique ID)`}
             value={uniqueId}
             onChangeText={setUniqueId}
-            className="w-4/5 px-7 py-6 mb-4 rounded-full border border-black bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-            placeholderTextColor="rgba(0, 0, 0, 0.5)"
+            className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+            placeholderTextColor="rgba(0, 0, 0, 0.3)"
           />
 
           {role === "user" && (
@@ -190,70 +175,65 @@ const AuthScreen = () => {
                 value={age}
                 onChangeText={setAge}
                 keyboardType="numeric"
-                className="w-4/5 px-7 py-6 mb-4 rounded-full border border-black bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+                placeholderTextColor="rgba(0, 0, 0, 0.3)"
               />
               <TextInput
                 placeholder="Name"
                 value={name}
                 onChangeText={setName}
-                className="w-4/5 px-7 py-6 mb-4 rounded-full border border-black bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+                placeholderTextColor="rgba(0, 0, 0, 0.3)"
               />
               <TextInput
                 placeholder="Blood Type"
                 value={bloodType}
                 onChangeText={setBloodType}
-                className="w-4/5 px-7 py-6 mb-4 rounded-full border border-black bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+                placeholderTextColor="rgba(0, 0, 0, 0.3)"
               />
             </>
           )}
-
           {role === "recipient" && (
             <>
-              <TextInput
-                placeholder="Age"
-                value={age}
-                onChangeText={setAge}
-                keyboardType="numeric"
-                className="w-4/5 px-7 py-6 mb-4 rounded-full border border-black bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-                placeholderTextColor="rgba(0, 0, 0, 0.5)"
-              />
-              <TextInput
-                placeholder="Name"
-                value={name}
-                onChangeText={setName}
-                className="w-4/5 px-7 py-6 mb-4 rounded-full border border-black bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-                placeholderTextColor="rgba(0, 0, 0, 0.5)"
-              />
-            </>
+            <TextInput
+              placeholder="Age"
+              value={age}
+              onChangeText={setAge}
+              keyboardType="numeric"
+              className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+              placeholderTextColor="rgba(0, 0, 0, 0.3)"
+            />
+            <TextInput
+              placeholder="Name"
+              value={name}
+              onChangeText={setName}
+              className="w-full px-4 py-3 mb-4 rounded-full border border-gray-300 bg-gray-100 text-gray-700"
+              placeholderTextColor="rgba(0, 0, 0, 0.3)"
+            />
+          </>
           )}
         </>
       )}
 
-      {/* Auth Button */}
       <TouchableOpacity
-        className="w-4/6 py-2.5 mb-3 rounded-full bg-black shadow-lg shadow-black/40 items-center"
+        className="w-full py-3 mb-4 rounded-full bg-black items-center"
         onPress={handleAuth}
       >
-        <Text className="text-white text-lg font-bold italic">
+        <Text className="text-white text-lg font-bold">
           {isLogin ? "Log in" : "Sign in"}
         </Text>
       </TouchableOpacity>
 
-      {/* Toggle between login/sign up */}
       <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
         <Text className="text-center text-sm text-gray-500">
           {isLogin ? (
             <>
-              don’t have an account?{" "}
-              <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Sign up</Text>
+              don’t have an account? <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Sign up</Text>
             </>
           ) : (
             <>
-              already have an account?{" "}
-              <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Log in</Text>
+              already have an account? <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Log in</Text>
             </>
           )}
         </Text>
