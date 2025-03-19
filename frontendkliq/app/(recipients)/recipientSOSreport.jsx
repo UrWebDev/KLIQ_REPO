@@ -62,7 +62,7 @@ const RecipientSOSReports = () => {
 
   useEffect(() => {
     if (!recipientId) return;
-
+  
     const fetchSOSMessages = async () => {
       try {
         const response = await axios.get(
@@ -71,16 +71,23 @@ const RecipientSOSReports = () => {
         const sortedMessages = response.data.sort((a, b) => {
           return new Date(b.receivedAt) - new Date(a.receivedAt);
         });
-
+  
         setSOSMessages(sortedMessages);
-
-        const devices = [...new Set(sortedMessages.map((msg) => msg.deviceId))];
+  
+        // Extract unique devices and their names
+        const devices = [];
+        sortedMessages.forEach((msg) => {
+          if (!devices.some((device) => device.deviceId === msg.deviceId)) {
+            devices.push({ deviceId: msg.deviceId, name: msg.name || 'Unknown Device' });
+          }
+        });
+  
         setDeviceList(devices);
-
+  
         if (devices.length > 0 && !selectedDevice) {
-          setSelectedDevice(devices[0]);
+          setSelectedDevice(devices[0].deviceId);
         }
-
+  
         calculateWeeklyData(sortedMessages);
       } catch (error) {
         console.error('Error fetching SOS messages:', error);
@@ -88,10 +95,10 @@ const RecipientSOSReports = () => {
         setLoading(false);
       }
     };
-
+  
     fetchSOSMessages();
     const intervalId = setInterval(fetchSOSMessages, 1000);
-
+  
     return () => clearInterval(intervalId);
   }, [recipientId, selectedDevice, selectedMonth]);
 
@@ -168,46 +175,48 @@ const RecipientSOSReports = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', padding: 16 }}>
-      <View style={{ marginBottom: 16 }}>
-        <TouchableOpacity
-          onPress={() => setIsDropdownVisible(!isDropdownVisible)}
-          style={{
-            width: '100%',
-            backgroundColor: '#f0f0f0',
-            borderRadius: 8,
-            padding: 10,
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ fontSize: 16, color: '#333' }}>
-            {selectedDevice ? `KLIQ USER: ${selectedDevice}` : 'Select Device'}
-          </Text>
-        </TouchableOpacity>
+ <View style={{ marginBottom: 16 }}>
+      <TouchableOpacity
+        onPress={() => setIsDropdownVisible(!isDropdownVisible)}
+        style={{
+          width: '100%',
+          backgroundColor: '#f0f0f0',
+          borderRadius: 8,
+          padding: 10,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ fontSize: 16, color: '#333' }}>
+          {selectedDevice
+            ? `KLIQ USER: ${deviceList.find((d) => d.deviceId === selectedDevice)?.name || 'Unknown'}`
+            : 'Select Device'}
+        </Text>
+      </TouchableOpacity>
 
-        {isDropdownVisible && (
-          <FlatList
-            data={deviceList}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => {
-                  setSelectedDevice(item);
-                  setIsDropdownVisible(false);
-                  calculateWeeklyData(sosMessages);
-                }}
-                style={{
-                  padding: 10,
-                  backgroundColor: '#f0f0f0',
-                  borderRadius: 8,
-                  marginBottom: 8,
-                }}
-              >
-                <Text>{`Identifier: ${item}`}</Text>
-              </TouchableOpacity>
-            )}
-          />
-        )}
-      </View>
+      {isDropdownVisible && (
+        <FlatList
+          data={deviceList}
+          keyExtractor={(item) => item.deviceId}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedDevice(item.deviceId);
+                setIsDropdownVisible(false);
+                calculateWeeklyData(sosMessages);
+              }}
+              style={{
+                padding: 10,
+                backgroundColor: '#f0f0f0',
+                borderRadius: 8,
+                marginBottom: 8,
+              }}
+            >
+              <Text>{item.name}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      )}
+    </View>
 
       <View
         style={{
