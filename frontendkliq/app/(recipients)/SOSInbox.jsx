@@ -5,6 +5,7 @@ import {
   ScrollView,
   Linking,
   TouchableOpacity,
+  Animated,
 } from "react-native";
 import axios from "axios";
 import { API_URL } from "@env";
@@ -17,6 +18,24 @@ const SOSMessage = () => {
   const [selectedDevice, setSelectedDevice] = useState("");
   const [deviceList, setDeviceList] = useState([]);
   const [isDropdownVisible, setDropdownVisible] = useState(false);
+
+  const dropdownAnim = useState(new Animated.Value(0))[0];
+
+  useEffect(() => {
+    if (isDropdownVisible) {
+      Animated.timing(dropdownAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(dropdownAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isDropdownVisible]);
 
   useEffect(() => {
     const getRecipientId = async () => {
@@ -53,12 +72,12 @@ const SOSMessage = () => {
           }
           return acc;
         }, []);
-        
+
         setDeviceList(devices);
 
         if (devices.length > 0 && !selectedDevice) {
           setSelectedDevice(devices[0].deviceId); // Set the first deviceId instead of "Unknown Device"
-        }        
+        }
       } catch (error) {
         console.error(
           "Error fetching SOS messages:",
@@ -74,72 +93,61 @@ const SOSMessage = () => {
   }, [recipientId, selectedDevice]);
 
   return (
-    <View className="flex-1 bg-white">
-      {/* Device Dropdown */}
-      <View className="p-4 relative z-50">
+    <View className="flex-1 p-5" style={{ backgroundColor: "white" }}>
+      {/* Dropdown Selection Button */}
+      <View className="relative mt-10 ml-[11%] mr-0 pr-1 mb-4">
         <TouchableOpacity
           onPress={() => setDropdownVisible(!isDropdownVisible)}
-          style={{
-            backgroundColor: "#f5f5f5",
-            borderRadius: 10,
-            paddingVertical: 12,
-            paddingHorizontal: 15,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            borderWidth: 1,
-            borderColor: "#ccc",
-          }}
+          className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
         >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Icon name="person" size={18} color="#000" style={{ marginRight: 8 }} />
-            <Text style={{ fontSize: 14, color: "#000", fontWeight: "600" }}>
-  {selectedDevice
-    ? deviceList.find((d) => d.deviceId === selectedDevice)?.name ||
-      deviceList[0]?.name || "Loading..."
-    : "Select Device"}
-</Text>
-
+          <View className="flex-row items-center space-x-2">
+            <Icon name="person-outline" size={20} color="black" />
+            <Text className="font-extrabold text-base text-black">
+              {String(
+                deviceList.find((d) => d.deviceId === selectedDevice)?.name ||
+                  "Unknown Device"
+              )}
+            </Text>
           </View>
           <Icon
-            name={isDropdownVisible ? "arrow-drop-up" : "arrow-drop-down"}
-            size={24}
-            color="#000"
+            name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+            size={20}
+            color="black"
           />
         </TouchableOpacity>
 
+        {/* Animated Dropdown List */}
         {isDropdownVisible && (
-          <View
+          <Animated.View
+            className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
             style={{
-              backgroundColor: "white",
-              borderRadius: 10,
-              paddingVertical: 8,
-              paddingHorizontal: 10,
-              marginTop: 5,
-              borderWidth: 1,
-              borderColor: "#ccc",
-              elevation: 3,
+              top: "120%",
+              opacity: dropdownAnim,
+              transform: [
+                {
+                  translateY: dropdownAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-10, 0], // Slide down effect
+                  }),
+                },
+              ],
             }}
           >
-{deviceList.map((device, index) => (
-  <TouchableOpacity
-    key={index}
-    onPress={() => {
-      setSelectedDevice(device.deviceId); // Still stores `deviceId`
-      setDropdownVisible(false);
-    }}
-    style={{
-      paddingVertical: 10,
-      paddingHorizontal: 5,
-    }}
-  >
-    <Text style={{ fontSize: 14, color: "#333" }}>
-      {device.name} {/* Show Name instead of deviceId */}
-    </Text>
-  </TouchableOpacity>
-))}
-
-          </View>
+            {deviceList.map((device, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setSelectedDevice(device.deviceId);
+                  setDropdownVisible(false);
+                }}
+                className="p-3 border-b border-gray-200 last:border-b-0"
+              >
+                <Text className="text-black">
+                  {String(device.name || "Unknown Device")}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </Animated.View>
         )}
       </View>
 
@@ -149,70 +157,81 @@ const SOSMessage = () => {
           sosMessages
             .filter((sos) => sos.deviceId === selectedDevice)
             .map((sos, index) => (
-              <View
-                key={index}
-                className={`bg-gray-100 p-4 mb-4 rounded-2xl shadow-md border ${
-                  sos.message && sos.message.toLowerCase().includes("last")
-                    ? "border-red-500"
-                    : sos.message && sos.message.toLowerCase().includes("safe")
-                    ? "border-green-500"
-                    : "border-gray-300"
-                }`}
-              >
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-xs text-gray-500">
+              <View key={index} className="mb-4">
+                {/* Timestamp with Red Triangle Exclamation Point */}
+                <View className="flex-row items-center ml-5 mb-2">
+                  <Icon name="error" size={20} color="red" />
+                  <Text className="text-lg font-black ml-1">
                     {sos.receivedAt
                       ? new Date(sos.receivedAt).toLocaleString()
                       : "Date not available"}
                   </Text>
-                  <Icon name="error" size={24} color="red" />
                 </View>
-                <View className="flex-row justify-between items-center">
-                  <View>
-                    <Text className="text-lg font-bold">
-                      {sos.phoneNUM || "+639765786665"}
-                    </Text>
-                    <Text className="text-gray-600">
-                      {sos.name || "Juan Dela Cruz"}
-                    </Text>
+
+                {/* SOS Message Container */}
+                <View
+                  className={`bg-gray-300 p-4 rounded-3xl border ${
+                    sos.message && sos.message.toLowerCase().includes("last")
+                      ? "border-red-500"
+                      : sos.message && sos.message.toLowerCase().includes("safe")
+                      ? "border-green-500"
+                      : "border-black-300"
+                  }`}
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 4, // For Android
+                  }}
+                >
+                  <View className="flex-row justify-between items-center">
+                    <View>
+                      <Text className="text-lg font-bold ml-2 tracking-wider">
+                        {sos.phoneNUM || "+63 9765 786 665"}
+                      </Text>
+                      <Text className="text-gray-600 ml-2 italic">
+                        {sos.name || "Juan Dela Cruz"}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        const phoneNumber = sos.phoneNumber || "+63 9765 786 665";
+                        const telURL = `tel:${phoneNumber}`;
+                        Linking.openURL(telURL)
+                          .then((supported) => {
+                            if (!supported) {
+                              console.error("Phone call not supported");
+                            } else {
+                              return Linking.openURL(telURL);
+                            }
+                          })
+                          .catch((err) => console.error("An error occurred", err));
+                      }}
+                      className="p-3 rounded-full"
+                    >
+                      <Icon name="phone" size={29} color="black" />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      const phoneNumber = sos.phoneNumber || "+639765786665";
-                      const telURL = `tel:${phoneNumber}`;
-                      Linking.openURL(telURL)
-                        .then((supported) => {
-                          if (!supported) {
-                            console.error("Phone call not supported");
-                          } else {
-                            return Linking.openURL(telURL);
-                          }
-                        })
-                        .catch((err) => console.error("An error occurred", err));
-                    }}
-                    className="bg-gray-200 p-3 rounded-full"
-                  >
-                    <Icon name="phone" size={20} color="black" />
-                  </TouchableOpacity>
-                </View>
-                <Text className="text-base text-gray-800 mt-3 font-bold">
-                  {sos.message}
-                </Text>
-                <View className="mt-3">
-                  <Text className="text-sm font-bold text-gray-600">
-                    User's Location:
+                  <Text className="tracking-tighter text-xl ml-2 text-gray-800 mt-5 mb-5 font-extrabold">
+                    {sos.message}
                   </Text>
-                  <TouchableOpacity
-                    onPress={() =>
-                      Linking.openURL(
-                        `http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`
-                      )
-                    }
-                  >
-                    <Text className="text-blue-500 underline">
-                      {sos.location || "Click Here to see my location!"}
+                  <View className="mt-3">
+                    <Text className="text-lg font-bold ml-2 text-gray-600">
+                      User's Location:
                     </Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() =>
+                        Linking.openURL(
+                          `http://maps.google.com/maps?q=${sos.latitude},${sos.longitude}`
+                        )
+                      }
+                    >
+                      <Text className="text-blue-400 italic underline m-1">
+                        {sos.location || "Click Here to see location!"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             ))
