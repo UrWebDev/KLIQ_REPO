@@ -204,19 +204,19 @@ const TabsLayout = () => {
       </Modal>
 
       {/* Hamburger Button */}
-          <View className="absolute top-[14vw] left-[5vw] z-10">
-      <TouchableOpacity onPress={() => setSidebarVisible(!sidebarVisible)}>
-        <Animated.Text
-          style={{
-            fontSize: screenWidth < 40 ? 24 : 50,
-            fontWeight: 'bold',
-            transform: [{ rotate: rotateInterpolate }],
-          }}
-        >
-          ≡
-        </Animated.Text>
-      </TouchableOpacity>
-    </View>
+      <View className="absolute top-[14vw] left-[5vw] z-10">
+        <TouchableOpacity onPress={() => setSidebarVisible(!sidebarVisible)}>
+          <Animated.Text
+            style={{
+              fontSize: screenWidth < 40 ? 24 : 50,
+              fontWeight: 'bold',
+              transform: [{ rotate: rotateInterpolate }],
+            }}
+          >
+            ≡
+          </Animated.Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Tabs */}
       <Tabs
@@ -279,14 +279,24 @@ const TabsLayout = () => {
         <Animated.View
           style={{
             height: 3,
-            width: tabWidth * 0.7,
+            width: tabWidth,
             backgroundColor: 'black',
             borderRadius: 9999,
-            marginLeft: tabWidth * 0.15,
             transform: [{ translateX }],
           }}
         />
       </View>
+
+      {/* Long underline */}
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          width: '100%',
+          height: 1,
+          backgroundColor: '#808080',
+        }}
+      />
     </>
   );
 };
