@@ -57,6 +57,21 @@ const TabsLayout = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const rotation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(rotation, {
+      toValue: sidebarVisible ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [sidebarVisible]);
+  
+  const rotateInterpolate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+  
   const translateX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -189,11 +204,19 @@ const TabsLayout = () => {
       </Modal>
 
       {/* Hamburger Button */}
-      <View className="absolute top-[20vw] left-[4vw] z-10">
-        <TouchableOpacity onPress={() => setSidebarVisible(true)}>
-          <Text style={{ fontSize: screenWidth < 40 ? 24 : 28, fontWeight: 'bold' }}>≡</Text>
-        </TouchableOpacity>
-      </View>
+          <View className="absolute top-[14vw] left-[5vw] z-10">
+      <TouchableOpacity onPress={() => setSidebarVisible(!sidebarVisible)}>
+        <Animated.Text
+          style={{
+            fontSize: screenWidth < 40 ? 24 : 50,
+            fontWeight: 'bold',
+            transform: [{ rotate: rotateInterpolate }],
+          }}
+        >
+          ≡
+        </Animated.Text>
+      </TouchableOpacity>
+    </View>
 
       {/* Tabs */}
       <Tabs

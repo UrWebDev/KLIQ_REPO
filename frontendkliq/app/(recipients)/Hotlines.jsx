@@ -225,12 +225,13 @@ const Hotlines = () => {
   );
 
   return (
-    <View className="flex-1 p-4" style={{ backgroundColor: "white" }}>
+    <View className="flex-1 p-5" style={{ backgroundColor: "white" }}>
+
 {/* Device Selection Button */}
-<View className="p-4 relative">
+<View className="relative mt-10 ml-[11%] mr-0 pr-1 mb-4">
   <TouchableOpacity
     onPress={() => setDropdownVisible(!isDropdownVisible)}
-    className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm"
+    className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
   >
     <View className="flex-row items-center space-x-2">
       <Icon name="person-outline" size={20} color="black" />
@@ -246,7 +247,7 @@ const Hotlines = () => {
     <Animated.View
       className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
       style={{
-        top: '150%',
+        top: '120%',
         opacity: dropdownAnim,
         transform: [
           {
@@ -271,13 +272,14 @@ const Hotlines = () => {
   )}
 </View>
 
+
 {/* Render Phone Number */}
 <Text className="text-lg font-extrabold mb-3">
   User’s Personal Numbers: {selectedDevice}
 </Text>
 <View className="flex-row justify-between items-center w-full px-6 py-5 mb-4 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
   <View>
-    <Text className="text-xl font-semibold text-black">
+    <Text className="text-xl font-extrabold text-black">
       {userPhoneNumber !== "N/A" ? userPhoneNumber : "N/A"}
     </Text>
     <Text className="italic text-gray-700">Personal Number</Text>
