@@ -20,7 +20,7 @@ const Contactss = () => {
   const [receivedContact, setReceivedContact] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
-  const [Name, setNamee] = useState('');
+  const [NAME, setNamee] = useState('');
   const [phoneNum, setPhoneNum] = useState('');
   const [deviceId, setDeviceId] = useState('');
 
@@ -366,42 +366,32 @@ const openEditModal = (contact) => {
   setModalVisible(true);
 };
 
-//for devicde id
-const sendContactt = async () => {
+// 📡 Send New Contact (NVS)
+const sendContactNVS = async () => {
   if (!connected || !device) {
     Alert.alert("Error", "Not connected to ESP32.");
     return;
   }
 
-  if (!Name || !phoneNum || !deviceId) {
-    Alert.alert("Error", "Please fill out all fields.");
+  if (!NAME.trim() || !phoneNum.trim() || !deviceId.trim()) {
+    Alert.alert("Error", "All fields are required.");
     return;
   }
 
-  const contactData = `${Name},${phoneNum},${deviceId}`;
-  const base64Data = Buffer.from(contactData, 'utf-8').toString('base64');
-  
-  try {
-    await device.writeCharacteristicWithoutResponseForService(
-      SERVICE_UUID,
-      CHARACTERISTIC_UUID,
-      base64Data
-    );
-    console.log("✅ Contact sent:", contactData);
-    Alert.alert("Success", "Contact sent to ESP32!");
-  } catch (error) {
-    console.error("❌ Failed to send contact:", error);
-    Alert.alert("Error", "Failed to send contact.");
-  }
+  const contactData = `${NAME},${phoneNum},${deviceId}`;
+  await sendContactData(contactData);
+  setNamee('');
+  setPhoneNum('');
+  setDeviceId('');
 };
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Send Contact</Text>
-      <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setNamee} />
-      <TextInput style={styles.input} placeholder="Enter Phone Number" value={phoneNum} onChangeText={setPhoneNum} keyboardType="phone-pad" />
-      <TextInput style={styles.input} placeholder="Enter Device ID" value={deviceId} onChangeText={setDeviceId} />
-      <TouchableOpacity style={styles.button} onPress={sendContactt} disabled={!connected}> 
-        <Text style={styles.buttonText}>Send Contact</Text>
+      <Text style={styles.title}>📩 Send Contact to NVS</Text>
+      <TextInput style={styles.input} placeholder="Name" value={NAME} onChangeText={setNamee} />
+      <TextInput style={styles.input} placeholder="Phone Number" value={phoneNum} onChangeText={setPhoneNum} keyboardType="phone-pad" />
+      <TextInput style={styles.input} placeholder="Device ID" value={deviceId} onChangeText={setDeviceId} />
+      <TouchableOpacity style={styles.button} onPress={sendContactNVS} disabled={!connected}>
+        <Text style={styles.buttonText}>Send to NVS</Text>
       </TouchableOpacity>
       <Text style={styles.title}>Emergency Contacts</Text>
       <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setName} />
