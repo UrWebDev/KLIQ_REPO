@@ -190,30 +190,36 @@ const Hotlines = () => {
 
   const renderContact = ({ item }) => (
     <View className="flex-row justify-between items-center w-full px-5 py-5 mb-3 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
-      <View>
+      {/* Contact Details */}
+      <View className="flex-1">
         <Text className="text-lg font-bold text-black">{item.name}</Text>
         <Text className="italic text-gray-700">{item.phoneNumber}</Text>
       </View>
+
+      {/* Vertical Line */}
+      <View style={{ height: '100%', width: 1, backgroundColor: 'black', marginHorizontal: 10 }} />
+
+      {/* Action Buttons */}
       <View className="flex-row space-x-3">
-      <TouchableOpacity
-        onPress={() => {
-          Alert.alert(
-            "Delete Contact",
-            `Are you sure you want to delete "${item.name}" from your emergency contacts?`,
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Delete",
-                style: "destructive",
-                onPress: () => handleDeleteContact(item._id),
-              },
-            ],
-            { cancelable: true }
-          );
-        }}
-      >
-        <Icon name="delete" size={25} color="black" />
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert(
+              "Delete Contact",
+              `Are you sure you want to delete "${item.name}" from your emergency contacts?`,
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: () => handleDeleteContact(item._id),
+                },
+              ],
+              { cancelable: true }
+            );
+          }}
+        >
+          <Icon name="delete" size={25} color="black" />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => openUpdateModal(item)}>
           <Icon name="edit" size={25} color="black" />
         </TouchableOpacity>
@@ -272,31 +278,35 @@ const Hotlines = () => {
   )}
 </View>
 
+      {/* Render Phone Number */}
+      <Text className="text-lg font-extrabold mb-3">
+        User’s Personal Numbers: {selectedDevice}
+      </Text>
+      <View className="flex-row justify-between items-center w-full px-6 py-5 mb-4 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
+        <View>
+          <Text className="text-xl font-extrabold text-black">
+            {userPhoneNumber !== "N/A" ? userPhoneNumber : "N/A"}
+          </Text>
+          <Text className="italic text-gray-700">Personal Number</Text>
+        </View>
 
-{/* Render Phone Number */}
-<Text className="text-lg font-extrabold mb-3">
-  User’s Personal Numbers: {selectedDevice}
-</Text>
-<View className="flex-row justify-between items-center w-full px-6 py-5 mb-4 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
-  <View>
-    <Text className="text-xl font-extrabold text-black">
-      {userPhoneNumber !== "N/A" ? userPhoneNumber : "N/A"}
-    </Text>
-    <Text className="italic text-gray-700">Personal Number</Text>
-  </View>
-      <TouchableOpacity
-      className="p-2"
-      onPress={() => {
-        if (userPhoneNumber !== "N/A") {
-          Linking.openURL(`tel:${userPhoneNumber}`);
-        } else {
-          Alert.alert("No phone number found.");
-        }
-      }}
-    >
-      <Icon name="phone" size={29} color="black" />
-    </TouchableOpacity>
-</View>
+        {/* Vertical Line - Moved closer to the phone icon */}
+        <View style={{ height: '100%', width: 1, backgroundColor: 'black', marginLeft: 90 }} />
+
+        {/* Phone Icon */}
+        <TouchableOpacity
+          className="p-2"
+          onPress={() => {
+            if (userPhoneNumber !== "N/A") {
+              Linking.openURL(`tel:${userPhoneNumber}`);
+            } else {
+              Alert.alert("No phone number found.");
+            }
+          }}
+        >
+          <Icon name="phone" size={29} color="black" />
+        </TouchableOpacity>
+      </View>
 
       {/* Emergency Hotlines Header */}
       <Text className="text-2xl font-extrabold italic text-center mb-4">
