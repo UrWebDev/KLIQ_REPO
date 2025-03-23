@@ -292,7 +292,6 @@ const RecipientSOSReports = () => {
         )}
       </View>
 
-      
       <ScrollView>
         {/* TOTAL Message */}
             <View style={{ marginBottom: 16, alignItems: 'center' }}>
@@ -311,7 +310,7 @@ const RecipientSOSReports = () => {
         {/* Month Selection Button */}
           <TouchableOpacity
             onPress={() => setIsMonthDropdownVisible(true)}
-            className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-5 py-2 shadow-sm"
+            className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-xl px-5 py-2 shadow-sm"
           >
             <View className="flex-row items-center space-x-2">
               <Text className="text-base text-black">
