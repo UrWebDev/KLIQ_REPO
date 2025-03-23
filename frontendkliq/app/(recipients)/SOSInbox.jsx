@@ -227,7 +227,7 @@ const SOSMessage = () => {
                         )
                       }
                     >
-                      <Text className="text-blue-400 italic underline m-1">
+                      <Text className="text-blue-500 italic underline m-1">
                         {sos.location || "Click Here to see location!"}
                       </Text>
                     </TouchableOpacity>
