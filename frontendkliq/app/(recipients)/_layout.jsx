@@ -59,6 +59,8 @@ const TabsLayout = () => {
 
   const rotation = useRef(new Animated.Value(0)).current;
 
+  
+
   useEffect(() => {
     Animated.timing(rotation, {
       toValue: sidebarVisible ? 1 : 0,
@@ -116,9 +118,14 @@ const TabsLayout = () => {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
         setIsAuthenticated(true);
+        const userString = await AsyncStorage.getItem("authData");
+        const data = JSON.parse(userString)
+        console.log(data, "recep layout");
+        
+        if(data.role == 'user') router.replace("/userSOSreports")
       } else {
         setIsAuthenticated(false);
-        router.push('/authScreen');
+        router.replace('/authScreen');
       }
     };
     checkAuthStatus();
@@ -135,7 +142,7 @@ const TabsLayout = () => {
     setSidebarVisible(false);
     clearAllIntervals();
     await AsyncStorage.removeItem('authToken');
-    router.push('/authScreen');
+    router.replace('/authScreen');
   };
 
   if (isAuthenticated === null) {

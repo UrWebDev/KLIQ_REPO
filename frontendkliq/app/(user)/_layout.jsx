@@ -67,9 +67,14 @@ const TabIconTwo = () => {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
         setIsAuthenticated(true); // User is authenticated
+        const userString = await AsyncStorage.getItem("authData");
+        const data = JSON.parse(userString)
+        console.log(data, "user layout");
+
+        if(data.role == 'recipient') router.replace("/Hotlines")
       } else {
         setIsAuthenticated(false); // User is not authenticated
-        router.push('/authScreen'); // Redirect to login screen if not authenticated
+        router.replace('authScreen'); // Redirect to login screen if not authenticated
       }
     };
 
@@ -92,7 +97,7 @@ const TabIconTwo = () => {
     const checkTokenLogout = await AsyncStorage.getItem('authToken');
     console.log(checkTokenLogout); // Should be null after removal
     // Redirect to login screen
-    router.push('/authScreen');
+    router.replace('/authScreen');
   };
 
   // If authentication is not checked yet (isAuthenticated is null), show nothing or a loading state
@@ -175,8 +180,7 @@ const TabIconTwo = () => {
               <TabIcon name="SOS Reports" focused={focused} />
             ),
           }}
-        />
-        
+        />        
       </Tabs>
     </>
   );

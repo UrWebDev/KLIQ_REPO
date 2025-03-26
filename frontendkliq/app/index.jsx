@@ -22,7 +22,7 @@ export default function LandingPage() {
       speed: 50,
       bounciness: 8,
     }).start(() => {
-      router.push('/authScreen');
+      router.replace('/authScreen');
     });
   };
 
