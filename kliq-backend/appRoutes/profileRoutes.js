@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: "Profile not found." });
+      return  user;
     }
 
     // Construct response based on the role

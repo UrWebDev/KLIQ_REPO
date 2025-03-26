@@ -90,6 +90,52 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// Route to verify and get token data
+router.get('/token-data', async (req, res) => {
+    try {
+        // Get token from Authorization header
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'No token provided or invalid format' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Find user in database to get additional info
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Return token data and user info
+        res.json({
+            tokenData: decoded,
+            user: {
+                id: user._id,
+                username: user.username,
+                role: user.role,
+                recipientId: user.recipientId,
+                userId: user.userId,
+                age: user.age,
+                name: user.name,
+                bloodType: user.bloodType
+            }
+        });
+    } catch (error) {
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expired' });
+        }
+        console.error("Error verifying token: ", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 
 export default router;
