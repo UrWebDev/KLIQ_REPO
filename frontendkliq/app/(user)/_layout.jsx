@@ -1,16 +1,15 @@
-import { View, Text, Button, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Animated, useWindowDimensions } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Make sure to import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeWindStyleSheet } from 'nativewind';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
-import { API_URL } from '@env'; // Ensure your `.env` is set up correctly
-
+import { API_URL } from '@env';
 
 const TabIcon = ({ name, focused }) => {
   return (
     <View className="items-center">
-      {/* Tab text */}
       <Text
         className={`text-xs ${
           focused ? 'text-black font-bold' : 'text-gray-500'
@@ -18,7 +17,6 @@ const TabIcon = ({ name, focused }) => {
       >
         {name}
       </Text>
-      {/* Bottom underline for active tab */}
       <View
         className={`h-[2px] w-full ${
           focused ? 'bg-black' : 'bg-transparent'
@@ -30,38 +28,57 @@ const TabIcon = ({ name, focused }) => {
 
 const TabIconTwo = () => {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(null); // Initially null, to avoid rendering before auth check
+  const { width: screenWidth } = useWindowDimensions();
+  const tabCount = 2;
+  const tabWidth = screenWidth / tabCount;
+
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
 
-    // Fetch recipient profile data
-    useEffect(() => {
-      const fetchProfile = async () => {
-        try {
-          const uniqueId = await AsyncStorage.getItem('uniqueId');
-          if (!uniqueId) {
-            setError('Unique ID not found');
-            setLoading(false);
-            return;
-          }
-  
-          const response = await axios.get(`${API_URL}/profiles`, {
-            params: { uniqueId },
-          });
-  
-          setProfile(response.data);
-        } catch (err) {
-          setError(err.response?.data?.error || 'An error occurred');
-        } finally {
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  const rotateInterpolate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  useEffect(() => {
+    Animated.spring(translateX, {
+      toValue: activeTab * tabWidth,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 100,
+    }).start();
+  }, [activeTab, tabWidth]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const uniqueId = await AsyncStorage.getItem('uniqueId');
+        if (!uniqueId) {
+          setError('Unique ID not found');
           setLoading(false);
+          return;
         }
-      };
-  
-      fetchProfile();
-    }, []);
-  // Check authentication status
+        const response = await axios.get(`${API_URL}/profiles`, {
+          params: { uniqueId },
+        });
+        setProfile(response.data);
+      } catch (err) {
+        setError(err.response?.data?.error || 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   useEffect(() => {
     const checkAuthStatus = async () => {
       const token = await AsyncStorage.getItem('authToken');
@@ -77,19 +94,24 @@ const TabIconTwo = () => {
         router.replace('authScreen'); // Redirect to login screen if not authenticated
       }
     };
-
     checkAuthStatus();
   }, [router]);
 
-   //hanlde clear interval so its not fetching when logged out
-   const clearAllIntervals = () => {
-    // Add this function to clear intervals if necessary
+  useEffect(() => {
+    Animated.timing(rotateAnim, {
+      toValue: sidebarVisible ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [sidebarVisible]);
+
+  const clearAllIntervals = () => {
     let id = window.setTimeout(() => {}, 0);
     while (id--) {
-        window.clearTimeout(id); // Will clear timeouts and intervals
+      window.clearTimeout(id);
     }
   };
-  // Handle logout
+
   const handleLogout = async () => {
     setSidebarVisible(false);
     clearAllIntervals();
@@ -100,90 +122,169 @@ const TabIconTwo = () => {
     router.replace('/authScreen');
   };
 
-  // If authentication is not checked yet (isAuthenticated is null), show nothing or a loading state
   if (isAuthenticated === null) {
-    return <Text>Loading...</Text>; // You can show a loading spinner here
+    return <Text>Loading...</Text>;
   }
-
-  // If not authenticated, don't render the tabs
   if (!isAuthenticated) {
     return null;
   }
 
   return (
     <>
-            {/* Sidebar Modal */}
-            <Modal
-              animationType="slide"
-              transparent={true}
-              visible={sidebarVisible}
-              onRequestClose={() => setSidebarVisible(false)}
-            >
-              <View className="flex-1 bg-black bg-opacity-50 justify-center">
-                <View className="bg-white m-4 p-6 rounded-lg">
-                  {loading ? (
-                    <ActivityIndicator size="large" color="#0000ff" />
-                  ) : error ? (
-                    <Text className="text-red-500 text-center">{error}</Text>
-                  ) : (
-                    profile && (
-                      <View>
-                        <Text className="text-xl font-bold mb-4">Recipient Profile</Text>
-                        <Text className="text-lg">Name: {profile.name}</Text>
-                        <Text className="text-lg">Age: {profile.age}</Text>
-                        <Text className="text-lg">BloodType: {profile.bloodType}</Text>
-                      </View>
-                    )
-                  )}
-                  <Button title="Logout" onPress={handleLogout} color="red" />
-                  <Button title="Close" onPress={() => setSidebarVisible(false)} />
+      {/* Sidebar Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={sidebarVisible}
+        onRequestClose={() => setSidebarVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white w-4/5 rounded-2xl p-6 shadow-lg relative">
+            {/* Modal Header */}
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-extrabold text-black">
+                Recipient Profile
+              </Text>
+              <TouchableOpacity onPress={() => setSidebarVisible(false)}>
+                <Icon name="close" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Profile Content */}
+            {loading ? (
+              <ActivityIndicator size="large" color="#0000ff" />
+            ) : error ? (
+              <Text className="text-red-500 text-center">{error}</Text>
+            ) : (
+              profile && (
+                <View>
+                  <Text className="text-lg mb-2">Name: {profile.name}</Text>
+                  <Text className="text-lg mb-2">Age: {profile.age}</Text>
+                  <Text className="text-lg mb-4">
+                    BloodType: {profile.bloodType}
+                  </Text>
                 </View>
-              </View>
-            </Modal>
+              )
+            )}
 
-              {/* Hamburger Button */}
-                  <View className="absolute top-4 left-4 z-10">
-                    <TouchableOpacity onPress={() => setSidebarVisible(true)}>
-                      <Text className="text-2xl font-bold">≡</Text>
-                    </TouchableOpacity>
-                  </View>
+            {/* Logout Button */}
+            <TouchableOpacity
+              onPress={handleLogout}
+              className="w-full p-4 bg-red-600 rounded-xl mb-3 shadow-md"
+            >
+              <Text className="text-white text-center font-bold text-lg">
+                Logout
+              </Text>
+            </TouchableOpacity>
 
+            {/* Close Button */}
+            <TouchableOpacity
+              onPress={() => setSidebarVisible(false)}
+              className="w-full p-4 bg-gray-400 rounded-xl shadow"
+            >
+              <Text className="text-white text-center font-bold text-lg">
+                Close
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Hamburger Button */}
+      <View className="absolute top-[14vw] left-[5vw] z-10">
+        <TouchableOpacity onPress={() => setSidebarVisible(!sidebarVisible)}>
+          <Animated.Text
+            style={{
+              fontSize: screenWidth < 40 ? 24 : 50,
+              fontWeight: 'bold',
+              transform: [{ rotate: rotateInterpolate }],
+            }}
+          >
+            ≡
+          </Animated.Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Tabs */}
       <Tabs
         screenOptions={{
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: 'transparent', // Transparent background
-            borderBottomWidth: 1, // Bottom border
-            borderBottomColor: '#000000', // Black color for the border
-            height: 60, // Adjust the height
+            backgroundColor: '#ffffff',
+            borderTopWidth: 0,
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            height: screenWidth < 400 ? 55 : 65,
+            paddingBottom: 1,
+            position: 'relative',
+            flexDirection: 'row',
           },
+          tabBarActiveTintColor: '#000000',
+          tabBarInactiveTintColor: '#808080',
         }}
       >
-        {/* Tab 1: Add Device Contact */}
         <Tabs.Screen
           name="addDeviceContact"
           options={{
-            title: 'Contacts',
+            title: 'CONTACTS',
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon name="Contact Management" focused={focused} />
+              <TabIcon name="CONTACTS" focused={focused} />
             ),
+            tabBarItemStyle: { flex: 1 },
+          }}
+          listeners={{
+            focus: () => setActiveTab(0),
           }}
         />
-        {/* Tab 2: User SOS Reports */}
         <Tabs.Screen
           name="userSOSreports"
           options={{
-            title: 'SOS Reports',
+            title: 'REPORTS',
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon name="SOS Reports" focused={focused} />
+              <TabIcon name="REPORTS" focused={focused} />
             ),
+            tabBarItemStyle: { flex: 1 },
           }}
-        />        
+          listeners={{
+            focus: () => setActiveTab(1),
+          }}
+        />
       </Tabs>
+
+      {/* Animated underline */}
+      <View className="absolute bottom-0 w-full h-[3px] bg-transparent">
+        <Animated.View
+          style={{
+            height: 3,
+            width: tabWidth,
+            backgroundColor: 'black',
+            borderRadius: 9999,
+            transform: [{ translateX }],
+          }}
+        />
+      </View>
+
+      {/* Long underline */}
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          width: '100%',
+          height: 1,
+          backgroundColor: '#808080',
+        }}
+      />
     </>
   );
 };
 
 export default TabIconTwo;
+
+NativeWindStyleSheet.setOutput({
+  default: 'native',
+});
