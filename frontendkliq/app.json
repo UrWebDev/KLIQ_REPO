@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "KLIQ",
+    "name": "frontendkliq",
     "scheme": "KliqThesis",
-    "slug": "KLIQ",
+    "slug": "frontendkliq",
     "version": "1.0.0",
     "devClient": true,
     "orientation": "portrait",
