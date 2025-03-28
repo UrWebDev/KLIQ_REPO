@@ -134,9 +134,9 @@ const AuthScreen = () => {
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Header Text */}
+      {/* Header Text - Only show "Sign Up" in header */}
       <Text className="text-center text-3xl font-bold mt-20 mb-6">
-        {isLogin ? "Log in" : "Sign Up"}
+        {!isLogin ? "Sign Up" : ""}
       </Text>
 
       {/* Scrollable Content */}
@@ -145,7 +145,10 @@ const AuthScreen = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View className="px-6">
-          {/* Username Input */}
+          {/* Username Input with Login Title Above */}
+          {isLogin && (
+            <Text className="text-3xl font-bold mb-6 text-center">Log in</Text>
+          )}
           <TextInput
             placeholder="Username"
             value={username}
@@ -171,7 +174,7 @@ const AuthScreen = () => {
               placeholderTextColor="rgba(0, 0, 0, 0.5)"
             />
             <TouchableOpacity
-              className="absolute top-5 right-6"
+              className="absolute top-7 right-6"
               onPress={() => setPasswordVisible(!passwordVisible)}
             >
               <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={24} color="gray" />
@@ -195,7 +198,7 @@ const AuthScreen = () => {
                   placeholderTextColor="rgba(0, 0, 0, 0.5)"
                 />
                 <TouchableOpacity
-                  className="absolute top-5 right-6"
+                  className="absolute top-7 right-6"
                   onPress={() => setPasswordVisible(!passwordVisible)}
                 >
                   <Icon
@@ -239,7 +242,7 @@ const AuthScreen = () => {
 
               {/* Unique ID */}
               <TextInput
-                placeholder={`${role === "recipient" ? "Recipient" : "User"} Contact # (serves as unique ID)`}
+                placeholder={`${role === "recipient" ? "Recipient" : "Device User"} Contact # (serves as unique ID)`}
                 value={uniqueId}
                 onChangeText={setUniqueId}
                 onFocus={() => setFocusedInput("uniqueId")}
@@ -328,7 +331,7 @@ const AuthScreen = () => {
             <Text className="text-center text-sm text-gray-500">
               {isLogin ? (
                 <>
-                  don’t have an account?{" "}
+                  don't have an account?{" "}
                   <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Sign up</Text>
                 </>
               ) : (
