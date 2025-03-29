@@ -4,10 +4,12 @@ import {
 } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
+import { decode as atob } from 'react-native-quick-base64';
 
 
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+const CHARACTERISTIC_UUID_NVS = "d1b8b50f-3e27-482e-91af-4b74e0030c6e";  // NVS
 
 const bleManager = new BleManager();
 const Contactss = () => {
@@ -23,20 +25,25 @@ const Contactss = () => {
   const [NAME, setNamee] = useState('');
   const [phoneNum, setPhoneNum] = useState('');
   const [deviceId, setDeviceId] = useState('');
+  const [receivedContactNVS, setReceivedContactNVS] = useState([]);
 
   useEffect(() => {
     const subscription = manager.onStateChange((state) => {
-      if (state === 'PoweredOn') {
-        scanAndConnect();
-        subscription.remove();
-      }
+        if (state === 'PoweredOn') {
+            scanAndConnect();
+            subscription.remove();
+        }
     }, true);
 
-
     return () => {
-      manager.destroy();
+        console.log("🛑 Cleaning up BLE Manager...");
+        setConnected(false);  // Ensure UI updates on disconnect
+        setDevice(null);
+        manager.stopDeviceScan();
+        // Instead of destroying the manager, just stop scanning to avoid BleManager errors.
     };
-  }, [manager]);
+}, [manager]);
+
 
 
   const requestBluetoothPermissions = async () => {
@@ -123,88 +130,104 @@ const Contactss = () => {
   
 
 
+  // const debugBLEServices = async (device) => {
+  //   try {
+  //     console.log("🔍 Fetching all services and characteristics...");
+  //     const services = await device.services();
+  
+  //     for (const service of services) {
+  //       console.log("🛠 Found Service:", service.uuid);
+  
+  //       const characteristics = await service.characteristics();
+  //       for (const characteristic of characteristics) {
+  //         console.log("🔍 Found Characteristic:", characteristic.uuid);
+  //         console.log("   🔹 Notify:", characteristic.isNotifiable);
+  //         console.log("   🔹 Indicate:", characteristic.isIndicatable);
+  //         console.log("   🔹 Read:", characteristic.isReadable);
+  //         console.log("   🔹 Write:", characteristic.isWritableWithResponse);
+  //         console.log("   🔹 Write Without Response:", characteristic.isWritableWithoutResponse);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("❌ Error fetching services and characteristics:", error);
+  //   }
+  // };
+  
   const connectToDevice = async (scannedDevice) => {
     try {
         console.log("📡 Connecting to:", scannedDevice.id);
 
-
         const connectedDevice = await scannedDevice.connect();
         await connectedDevice.discoverAllServicesAndCharacteristics();
-
 
         console.log("✅ Device successfully connected:", connectedDevice.id);
         setDevice(connectedDevice);
         setConnected(true);
         Alert.alert("🎉 Success", "Connected to ESP32!");
 
-
-        // 🚀 Request higher MTU before anything else
         await connectedDevice.requestMTU(517);
         console.log("✅ MTU size increased to 512");
 
-
-        startListeningForNotifications(connectedDevice);
+        // Fetch stored contacts first
         fetchStoredContacts(connectedDevice);
+        fetchStoredContactsNVS(connectedDevice);
+
+        // Add a delay before subscribing to notifications
+        console.log("⏳ Waiting before subscribing...");
+        await new Promise(resolve => setTimeout(resolve, 2000));  
+
+        // Subscribe to notifications one at a time with delays
+        setTimeout(() => {
+          startListeningForNotifications(connectedDevice, CHARACTERISTIC_UUID);
+        }, 500);
+        setTimeout(() => {
+          startListeningForNotifications(connectedDevice, CHARACTERISTIC_UUID_NVS);
+        }, 1500);
+
     } catch (error) {
         console.error("❌ Connection error:", error);
         Alert.alert("Error", "Failed to connect. Please try again.");
     }
 };
 
-const startListeningForNotifications = async (connectedDevice) => {
+const startListeningForNotifications = async (device, characteristicUUID) => {
   try {
-    console.log("Checking if device is connected for notifications...");
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    console.log(`📡 Checking characteristic existence: ${characteristicUUID}`);
+    const services = await device.services();
+    for (const service of services) {
+      const characteristics = await service.characteristics();
+      for (const char of characteristics) {
+        console.log(`🔍 Found characteristic: ${char.uuid}`);
+      }
+    }
 
-    let isConnected = await connectedDevice.isConnected();
-    if (!isConnected) {
-      console.log("❌ Device lost connection, retrying...");
+    console.log(`📡 Subscribing to: ${characteristicUUID}`);
+    const characteristic = await device.readCharacteristicForService(
+      SERVICE_UUID,
+      characteristicUUID
+    );
+
+    if (!characteristic) {
+      console.error(`❌ Characteristic ${characteristicUUID} not found`);
       return;
     }
 
-    console.log("📡 Subscribing to notifications...");
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    device.monitorCharacteristicForService(SERVICE_UUID, characteristicUUID, (error, char) => {
+      if (error) {
+        console.error(`🚨 Notification error: ${error.message}`);
+        return;
+      }
+      console.log(`✅ Notification received: ${char?.value}`);
+    });
 
-    console.log("Service UUID:", SERVICE_UUID);
-    console.log("Characteristic UUID:", CHARACTERISTIC_UUID);
-
-    const transactionId = "monitor";
-    const subscriptionType = "all"; // or "notification" or "indication"
-
-    bleManager.monitorCharacteristicForDevice(
-      connectedDevice.id, // deviceIdentifier
-      SERVICE_UUID,
-      CHARACTERISTIC_UUID,
-      (error, characteristic) => {
-        if (error) {
-          console.error("❌ Notification error:", error);
-          return;
-        }
-
-        console.log("📩 Received characteristic:", characteristic);
-
-        try {
-          if (characteristic?.value) {
-            const decodedValue = Buffer.from(characteristic.value, "base64").toString("utf-8");
-            console.log("📩 Received Data:", decodedValue);
-          } else {
-            console.warn("⚠️ Received characteristic without a value!");
-          }
-        } catch (decodeError) {
-          console.error("❌ Error decoding Base64:", decodeError);
-        }
-      },
-      transactionId,
-      subscriptionType // ✅ Added subscriptionType
-    );
-
-    console.log("✅ Subscribed to notifications successfully!");
+    console.log(`✅ Successfully subscribed to ${characteristicUUID}`);
   } catch (error) {
-    console.error("❌ Failed to start notifications:", error);
+    console.error(`🚨 Error in startListeningForNotifications:`, error);
   }
 };
 
- 
+
+
  
 
   const fetchStoredContacts = async (connectedDevice) => {
@@ -219,6 +242,80 @@ const startListeningForNotifications = async (connectedDevice) => {
       console.error("❌ Failed to fetch stored contacts:", error);
     }
   };
+  const fetchStoredContactsNVS = async (connectedDevice) => {
+    try {
+        console.log("📡 Fetching stored contacts from NVS...");
+
+        const characteristic = await connectedDevice.readCharacteristicForService(
+            SERVICE_UUID,
+            CHARACTERISTIC_UUID_NVS
+        );
+
+        if (!characteristic?.value) {
+            console.warn("⚠️ No NVS data found.");
+            setReceivedContactNVS([]); // ✅ Ensure state is an empty array
+            return;
+        }
+
+        console.log("📩 Raw characteristic value (Base64):", characteristic.value);
+
+        let decodedValue;
+        try {
+            decodedValue = Buffer.from(characteristic.value, "base64").toString("utf-8").trim();
+        } catch (decodeError) {
+            console.error("❌ Error decoding Base64:", decodeError);
+            setReceivedContactNVS([]);
+            return;
+        }
+
+        console.log("📩 Decoded NVS Data:", decodedValue);
+
+        let parsedData;
+        try {
+            parsedData = JSON.parse(decodedValue); // ✅ Ensure JSON parsing
+            console.log("📩 Parsed NVS Data:", parsedData);
+        } catch (jsonError) {
+            console.error("❌ Failed to parse NVS JSON:", jsonError);
+            setReceivedContactNVS([]);
+            return;
+        }
+
+        if (!parsedData || typeof parsedData !== "object") {
+            console.error("❌ Parsed data is not a valid object:", parsedData);
+            setReceivedContactNVS([]);
+            return;
+        }
+
+        const formattedContacts = Object.entries(parsedData)
+            .map(([id, data]) => {
+                if (typeof data !== "string") {
+                    console.error(`❌ Data format error for ID ${id}:`, data);
+                    return null;
+                }
+
+                const parts = data.split(",");
+                if (parts.length !== 3) {
+                    console.error(`❌ Invalid contact format for ID ${id}:`, data);
+                    return null;
+                }
+
+                return { id, name: parts[0], number: parts[1], altNumber: parts[2] };
+            })
+            .filter(Boolean);
+
+        console.log("✅ Formatted Contacts Array:", formattedContacts);
+
+        setReceivedContactNVS(formattedContacts.length ? formattedContacts : []);
+
+    } catch (error) {
+        console.error("❌ Failed to fetch NVS contacts:", error);
+        setReceivedContactNVS([]);
+    }
+};
+
+
+
+
 
   const sendContact = async () => {
     if (!connected || !device) {
@@ -237,7 +334,7 @@ const startListeningForNotifications = async (connectedDevice) => {
     console.log("📨 Sending new contact:", contactData);
 
     // ✅ Now pass the contactData to the sendContactData function
-    await sendContactData(contactData);
+    await sendContactData(contactData, CHARACTERISTIC_UUID);
 };
 
   
@@ -278,9 +375,44 @@ const startListeningForNotifications = async (connectedDevice) => {
       Alert.alert('Error', 'Failed to delete contact. Check connection.');
     }
   };
+  const deleteContactNVS = async (contactId) => {
+    if (!device) {
+        Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
+        return;
+    }
+
+    try {
+        let isConnected = await device.isConnected();
+        if (!isConnected) {
+            console.log('Reconnecting...');
+            await connectToDevice(device);
+        }
+
+        const deleteCommand = `DELETE_NVS:${contactId}`;
+        const base64Data = Buffer.from(deleteCommand, 'utf-8').toString('base64');
+
+        await device.writeCharacteristicWithoutResponseForService(
+            SERVICE_UUID,
+            CHARACTERISTIC_UUID_NVS,
+            base64Data
+        );
+
+        console.log('✅ NVS Contact delete request sent successfully!');
+        Alert.alert("Success", "Contact deleted successfully!");
+
+        // ✅ Remove from local state
+        setReceivedContactNVS(prevContacts =>
+          prevContacts.filter(contact => contact.id !== contactId)
+      );
+    } catch (error) {
+        console.error('❌ Failed to send delete request:', error);
+        Alert.alert('Error', 'Failed to delete contact. Check connection.');
+    }
+};
+
   
   
-  const sendContactData = async (contactData) => {
+  const sendContactData = async (contactData, characteristicUUID) => {
     if (!device) {
         Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
         return;
@@ -304,7 +436,7 @@ const startListeningForNotifications = async (connectedDevice) => {
 
         await device.writeCharacteristicWithoutResponseForService(
             SERVICE_UUID,
-            CHARACTERISTIC_UUID,
+            characteristicUUID,
             base64Data
         );
 
@@ -330,6 +462,10 @@ const startListeningForNotifications = async (connectedDevice) => {
       if (!acc.some(c => c.id === contact.id)) acc.push(contact);
       return acc;
     }, []); // Ensure unique IDs
+    const formattedContactsNVS = Array.isArray(receivedContactNVS) ? receivedContactNVS : [];
+
+  
+
 
     const updateContact = () => {
       if (!selectedContact || !name || !number) {
@@ -339,7 +475,7 @@ const startListeningForNotifications = async (connectedDevice) => {
   
       // ✅ Send the updated contact data to ESP32
       const updatedData = `UPDATE:${selectedContact.id},${name},${number}`;
-      sendContactData(updatedData);
+      sendContactData(updatedData, CHARACTERISTIC_UUID);
       // ✅ Close the modal
       setModalVisible(false);
   
@@ -357,6 +493,42 @@ const startListeningForNotifications = async (connectedDevice) => {
               .join(",")
       );
   };
+  const updateContactNVS = async (contactId, newName, newPhoneNum, newDeviceId) => {
+    if (!device) {
+        Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
+        return;
+    }
+
+    if (!newName.trim() || !newPhoneNum.trim() || !newDeviceId.trim()) {
+        Alert.alert('Error', 'All fields are required.');
+        return;
+    }
+
+    try {
+        let isConnected = await device.isConnected();
+        if (!isConnected) {
+            console.log('Reconnecting...');
+            await connectToDevice(device);
+        }
+
+        const updateCommand = `UPDATE_NVS:${contactId},${newName},${newPhoneNum},${newDeviceId}`;
+        sendContactData(updateCommand, CHARACTERISTIC_UUID_NVS);
+
+        console.log('✅ NVS Contact update request sent successfully!');
+        Alert.alert("Success", "Contact updated successfully!");
+
+        // ✅ Update local state
+        setReceivedContactNVS(prev =>
+            prev.split(",")
+                .map(c => c.startsWith(`${contactId}:`) ? `${contactId}:${newName}:${newPhoneNum}:${newDeviceId}` : c)
+                .join(",")
+        );
+    } catch (error) {
+        console.error('❌ Failed to send update request:', error);
+        Alert.alert('Error', 'Failed to update contact. Check connection.');
+    }
+};
+
   
     
 const openEditModal = (contact) => {
@@ -365,6 +537,15 @@ const openEditModal = (contact) => {
   setNumber(contact.number);
   setModalVisible(true);
 };
+const openEditModalNVS = (contact) => {
+  setSelectedContact(contact);
+  setNamee(contact.name); // Use setNamee for NVS
+  setPhoneNum(contact.number); // Use setPhoneNum for NVS
+  setDeviceId(contact.deviceId); // Use setDeviceId for NVS (if applicable)
+  setModalVisible(true);
+};
+
+
 
 // 📡 Send New Contact (NVS)
 const sendContactNVS = async () => {
@@ -379,7 +560,7 @@ const sendContactNVS = async () => {
   }
 
   const contactData = `${NAME},${phoneNum},${deviceId}`;
-  await sendContactData(contactData);
+  await sendContactData(contactData, CHARACTERISTIC_UUID_NVS);
   setNamee('');
   setPhoneNum('');
   setDeviceId('');
@@ -393,13 +574,71 @@ const sendContactNVS = async () => {
       <TouchableOpacity style={styles.button} onPress={sendContactNVS} disabled={!connected}>
         <Text style={styles.buttonText}>Send to NVS</Text>
       </TouchableOpacity>
+      <FlatList
+  data={formattedContactsNVS} // Now an array of objects
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={({ item }) => (
+    <View style={styles.contactItem}>
+      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</Text>
+      <Text style={{ fontSize: 14, color: '#666' }}>{item.number}</Text>
+      <Text style={{ fontSize: 14, color: '#666' }}>{item.altNumber}</Text>
+
+      {item.id && item.name && item.number ? (
+        <>
+          <TouchableOpacity onPress={() => openEditModalNVS(item)}>
+            <Text style={{ color: "blue" }}>Edit</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => deleteContactNVS(item.id)}>
+            <Text style={{ color: "red" }}>Delete</Text>
+          </TouchableOpacity>
+        </>
+      ) : null}
+    </View>
+  )}
+/>
+
+
+<Modal visible={modalVisible} animationType="slide" transparent>
+    <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Contact</Text>
+            
+            <TextInput
+                style={styles.input}
+                placeholder="Enter Name"
+                value={NAME} // Use NAME state
+                onChangeText={setNamee} // Use setNamee for updates
+            />
+            
+            <TextInput
+                style={styles.input}
+                placeholder="Enter Number"
+                value={phoneNum} // Use phoneNum state
+                onChangeText={setPhoneNum} // Use setPhoneNum for updates
+                keyboardType="phone-pad"
+            />
+            
+            <TouchableOpacity style={styles.button} onPress={updateContactNVS}>
+                <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+        </View>
+    </View>
+</Modal>
+
+
+
       <Text style={styles.title}>Emergency Contacts</Text>
       <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setName} />
       <TextInput style={styles.input} placeholder="Enter Number" value={number} onChangeText={setNumber} keyboardType="phone-pad" />
 
 
       <TouchableOpacity style={styles.button} onPress={sendContact} disabled={!connected}>
-        <Text style={styles.buttonText}>Send Contact</Text>
+        <Text style={styles.buttonText}>Send Contact to eeprom</Text>
       </TouchableOpacity>
 
 
