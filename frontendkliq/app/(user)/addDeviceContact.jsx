@@ -219,9 +219,17 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
         return;
       }
       console.log(`✅ Notification received: ${char?.value}`);
+      if (char?.value) {
+        const decodedValue = Buffer.from(char.value, 'base64').toString('utf-8');
+        console.log(`✅ Notification received: ${decodedValue}`);
+    
+        // ✅ Ensure state updates and triggers a re-render
+        setReceivedContact(prev => decodedValue !== prev ? decodedValue : prev);
+      }
     });
 
     console.log(`✅ Successfully subscribed to ${characteristicUUID}`);
+    
   } catch (error) {
     console.error(`🚨 Error in startListeningForNotifications:`, error);
   }
@@ -326,25 +334,37 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
 
 
 
-  const sendContact = async () => {
-    if (!connected || !device) {
-        Alert.alert("Error", "Not connected to a device.");
-        return;
-    }
+const sendContact = async () => {
+  if (!connected || !device) {
+      Alert.alert("Error", "Not connected to a device.");
+      return;
+  }
 
-    if (!name || !number) {
-        Alert.alert("Error", "Please enter both name and number.");
-        return;
-    }
+  if (!name || !number) {
+      Alert.alert("Error", "Please enter both name and number.");
+      return;
+  }
 
-    // ✅ Create the contactData as a string (NO OBJECT)
-    const contactData = `${name},${number}`;
+  // ✅ Create the contactData string (INCLUDING the unique ID from ESP32)
+  const contactData = `${name},${number}`;
 
-    console.log("📨 Sending new contact:", contactData);
+  console.log("📨 Sending new contact:", contactData);
 
-    // ✅ Now pass the contactData to the sendContactData function
-    await sendContactData(contactData, CHARACTERISTIC_UUID);
+  // ✅ Send data to ESP32
+  await sendContactData(contactData, CHARACTERISTIC_UUID);
+
+  // ✅ Manually update the UI (REAL-TIME)
+  setReceivedContact(prev =>
+      prev ? `${prev},${contactData}` : contactData
+  );
+
+  // ✅ Clear input fields
+  setName('');
+  setNumber('');
+
+  Alert.alert("Success", "Contact added successfully!");
 };
+
 
   
   const deleteContact = async (contactId) => {
@@ -503,17 +523,13 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
       );
   };
   const updateContactNVS = async (contactId, newName, newPhoneNum, newDeviceId) => {
-    console.log("📩 Updating contact with values:");
-    console.log("Updating contact with ID:", contactId);
-    console.log("Name:", newName);
-    console.log("Phone:", newPhoneNum);
-    console.log("Device ID:", newDeviceId);
+    console.log("📩 Updating contact:", contactId, newName, newPhoneNum, newDeviceId);
+
     if (!device) {
         Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
         return;
     }
 
-    // ✅ Ensure values are not undefined or null before calling .trim()
     if (!newName?.trim() || !newPhoneNum?.trim() || !newDeviceId?.trim()) {
         Alert.alert('Error', 'All fields are required.');
         return;
@@ -528,24 +544,25 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
 
         const updateCommand = `UPDATE_NVS:${contactId},${newName},${newPhoneNum},${newDeviceId}`;
         sendContactData(updateCommand, CHARACTERISTIC_UUID_NVS);
+
+        
         setModalVisibleNVS(false);
         console.log('✅ NVS Contact update request sent successfully!');
         Alert.alert("Success", "Contact updated successfully!");
-
-        // ✅ Update local state
-        setReceivedContactNVS(prev =>
-            prev.map(contact => 
-                contact.id === contactId 
-                ? { ...contact, name: newName, number: newPhoneNum, deviceId: newDeviceId }
-                : contact
-            )
-        );
-
+                // ✅ Manually update the FlatList (REAL-TIME)
+                setReceivedContactNVS(prevContacts =>
+                  prevContacts.map(contact =>
+                      contact.id === contactId
+                          ? { ...contact, name: newName, number: newPhoneNum, deviceId: newDeviceId }
+                          : contact
+                  )
+              );
     } catch (error) {
         console.error('❌ Failed to send update request:', error);
         Alert.alert('Error', 'Failed to update contact. Check connection.');
     }
 };
+
 
 
   
@@ -579,14 +596,26 @@ const sendContactNVS = async () => {
   }
 
   const contactData = `${NAME},${phoneNum},${deviceId}`;
+  console.log("📨 Sending new contact:", contactData);
+
   await sendContactData(contactData, CHARACTERISTIC_UUID_NVS);
+
+  // ✅ Update state immediately
+  setReceivedContactNVS(prevContacts => [
+    ...prevContacts,
+    { id: prevContacts.length + 1, name: NAME, number: phoneNum, deviceId: deviceId }
+  ]);
+
+  // ✅ Clear input fields
   setNamee('');
   setPhoneNum('');
   setDeviceId('');
 };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>📩 Send Contact to NVS</Text>
+      <Text style={styles.title}>note: should only be one data since the device is 1 is to 1. dont add another data if you already have</Text>
       <TextInput style={styles.input} placeholder="Name" value={NAME} onChangeText={setNamee} />
       <TextInput style={styles.input} placeholder="Phone Number" value={phoneNum} onChangeText={setPhoneNum} keyboardType="phone-pad" />
       <TextInput style={styles.input} placeholder="Device ID" value={deviceId} onChangeText={setDeviceId} keyboardType="phone-pad"/>
