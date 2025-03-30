@@ -21,6 +21,7 @@ const Contactss = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [receivedContact, setReceivedContact] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisibleNVS, setModalVisibleNVS] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [NAME, setNamee] = useState('');
   const [phoneNum, setPhoneNum] = useState('');
@@ -264,7 +265,7 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
             decodedValue = Buffer.from(characteristic.value, "base64").toString("utf-8").trim();
         } catch (decodeError) {
             console.error("❌ Error decoding Base64:", decodeError);
-            setReceivedContactNVS([]);
+            setReceivedContactNVS([]); 
             return;
         }
 
@@ -294,12 +295,19 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
                 }
 
                 const parts = data.split(",");
-                if (parts.length !== 3) {
+                
+                // ✅ Handle cases where deviceId is missing
+                if (parts.length < 3) {
                     console.error(`❌ Invalid contact format for ID ${id}:`, data);
                     return null;
                 }
 
-                return { id, name: parts[0], number: parts[1], altNumber: parts[2] };
+                return { 
+                    id, 
+                    name: parts[0], 
+                    number: parts[1], 
+                    deviceId: parts[2] || "" // ✅ Defaults to empty string if missing
+                };
             })
             .filter(Boolean);
 
@@ -312,6 +320,7 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
         setReceivedContactNVS([]);
     }
 };
+
 
 
 
@@ -494,12 +503,18 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
       );
   };
   const updateContactNVS = async (contactId, newName, newPhoneNum, newDeviceId) => {
+    console.log("📩 Updating contact with values:");
+    console.log("Updating contact with ID:", contactId);
+    console.log("Name:", newName);
+    console.log("Phone:", newPhoneNum);
+    console.log("Device ID:", newDeviceId);
     if (!device) {
         Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
         return;
     }
 
-    if (!newName.trim() || !newPhoneNum.trim() || !newDeviceId.trim()) {
+    // ✅ Ensure values are not undefined or null before calling .trim()
+    if (!newName?.trim() || !newPhoneNum?.trim() || !newDeviceId?.trim()) {
         Alert.alert('Error', 'All fields are required.');
         return;
     }
@@ -513,21 +528,25 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
 
         const updateCommand = `UPDATE_NVS:${contactId},${newName},${newPhoneNum},${newDeviceId}`;
         sendContactData(updateCommand, CHARACTERISTIC_UUID_NVS);
-
+        setModalVisibleNVS(false);
         console.log('✅ NVS Contact update request sent successfully!');
         Alert.alert("Success", "Contact updated successfully!");
 
         // ✅ Update local state
         setReceivedContactNVS(prev =>
-            prev.split(",")
-                .map(c => c.startsWith(`${contactId}:`) ? `${contactId}:${newName}:${newPhoneNum}:${newDeviceId}` : c)
-                .join(",")
+            prev.map(contact => 
+                contact.id === contactId 
+                ? { ...contact, name: newName, number: newPhoneNum, deviceId: newDeviceId }
+                : contact
+            )
         );
+
     } catch (error) {
         console.error('❌ Failed to send update request:', error);
         Alert.alert('Error', 'Failed to update contact. Check connection.');
     }
 };
+
 
   
     
@@ -542,7 +561,7 @@ const openEditModalNVS = (contact) => {
   setNamee(contact.name); // Use setNamee for NVS
   setPhoneNum(contact.number); // Use setPhoneNum for NVS
   setDeviceId(contact.deviceId); // Use setDeviceId for NVS (if applicable)
-  setModalVisible(true);
+  setModalVisibleNVS(true);
 };
 
 
@@ -570,7 +589,7 @@ const sendContactNVS = async () => {
       <Text style={styles.title}>📩 Send Contact to NVS</Text>
       <TextInput style={styles.input} placeholder="Name" value={NAME} onChangeText={setNamee} />
       <TextInput style={styles.input} placeholder="Phone Number" value={phoneNum} onChangeText={setPhoneNum} keyboardType="phone-pad" />
-      <TextInput style={styles.input} placeholder="Device ID" value={deviceId} onChangeText={setDeviceId} />
+      <TextInput style={styles.input} placeholder="Device ID" value={deviceId} onChangeText={setDeviceId} keyboardType="phone-pad"/>
       <TouchableOpacity style={styles.button} onPress={sendContactNVS} disabled={!connected}>
         <Text style={styles.buttonText}>Send to NVS</Text>
       </TouchableOpacity>
@@ -581,16 +600,16 @@ const sendContactNVS = async () => {
     <View style={styles.contactItem}>
       <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</Text>
       <Text style={{ fontSize: 14, color: '#666' }}>{item.number}</Text>
-      <Text style={{ fontSize: 14, color: '#666' }}>{item.altNumber}</Text>
+      <Text style={{ fontSize: 14, color: '#666' }}>{item.deviceId}</Text>
 
       {item.id && item.name && item.number ? (
         <>
           <TouchableOpacity onPress={() => openEditModalNVS(item)}>
-            <Text style={{ color: "blue" }}>Edit</Text>
+            <Text style={{ color: "blue" }}>Edit NVS</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => deleteContactNVS(item.id)}>
-            <Text style={{ color: "red" }}>Delete</Text>
+            <Text style={{ color: "red" }}>Delete NVS</Text>
           </TouchableOpacity>
         </>
       ) : null}
@@ -599,10 +618,10 @@ const sendContactNVS = async () => {
 />
 
 
-<Modal visible={modalVisible} animationType="slide" transparent>
+<Modal visible={modalVisibleNVS} animationType="slide" transparent>
     <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Contact</Text>
+            <Text style={styles.modalTitle}>Edit Contact NVS</Text>
             
             <TextInput
                 style={styles.input}
@@ -618,12 +637,20 @@ const sendContactNVS = async () => {
                 onChangeText={setPhoneNum} // Use setPhoneNum for updates
                 keyboardType="phone-pad"
             />
+
+            <TextInput
+                style={styles.input}
+                placeholder="Enter Device Id"
+                value={deviceId} // Use phoneNum state
+                onChangeText={setDeviceId} // Use setPhoneNum for updates
+                keyboardType="phone-pad"
+            />
             
-            <TouchableOpacity style={styles.button} onPress={updateContactNVS}>
-                <Text style={styles.buttonText}>Save</Text>
+            <TouchableOpacity style={styles.button} onPress={() => updateContactNVS(selectedContact.id, NAME, phoneNum, deviceId)}>
+                <Text style={styles.buttonText}>SaveNVS</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisibleNVS(false)}>
                 <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
         </View>
@@ -654,11 +681,11 @@ const sendContactNVS = async () => {
       {item.id && item.name && item.number ? (
         <>
             <TouchableOpacity onPress={() => openEditModal(item)}>
-              <Text style={{ color: "blue" }}>Edit</Text>
+              <Text style={{ color: "blue" }}>Edit EEPROM</Text>
             </TouchableOpacity>
 
           <TouchableOpacity onPress={() => deleteContact(item.id)}>
-            <Text style={{ color: "red" }}>Delete</Text>
+            <Text style={{ color: "red" }}>Delete EEPROM</Text>
           </TouchableOpacity>
         </>
       ) : null}
@@ -668,11 +695,11 @@ const sendContactNVS = async () => {
 <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Contact</Text>
+            <Text style={styles.modalTitle}>Edit Contact EEPROM</Text>
             <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setName} />
             <TextInput style={styles.input} placeholder="Enter Number" value={number} onChangeText={setNumber} keyboardType="phone-pad" />
             <TouchableOpacity style={styles.button} onPress={updateContact}>
-              <Text style={styles.buttonText}>Save</Text>
+              <Text style={styles.buttonText}>Save EEPROM</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.buttonText}>Cancel</Text>
