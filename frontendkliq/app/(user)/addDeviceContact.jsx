@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, PermissionsAndroid, Platform, FlatList, Modal
+  View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, PermissionsAndroid, Platform, FlatList, Modal, ScrollView
 } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
 import { decode as atob } from 'react-native-quick-base64';
-
 
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
@@ -27,6 +26,8 @@ const Contactss = () => {
   const [phoneNum, setPhoneNum] = useState('');
   const [deviceId, setDeviceId] = useState('');
   const [receivedContactNVS, setReceivedContactNVS] = useState([]);
+  const [focusedInput, setFocusedInput] = useState(null);
+  const [addRecipientModalVisible, setAddRecipientModalVisible] = useState(false);
 
   useEffect(() => {
     const subscription = manager.onStateChange((state) => {
@@ -38,20 +39,16 @@ const Contactss = () => {
 
     return () => {
         console.log("🛑 Cleaning up BLE Manager...");
-        setConnected(false);  // Ensure UI updates on disconnect
+        setConnected(false);
         setDevice(null);
         manager.stopDeviceScan();
-        // Instead of destroying the manager, just stop scanning to avoid BleManager errors.
     };
 }, [manager]);
 
-
-
-  const requestBluetoothPermissions = async () => {
+const requestBluetoothPermissions = async () => {
     if (Platform.OS === 'android') {
       try {
         if (Platform.Version >= 31) {
-          // Android 12+ (API 31+)
           const granted = await PermissionsAndroid.requestMultiple([
             PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
             PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
@@ -68,7 +65,6 @@ const Contactss = () => {
             return false;
           }
         } else {
-          // Android 11 and below
           const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
           );
@@ -88,11 +84,9 @@ const Contactss = () => {
       }
     }
     return true;
-  };
-  
+};
 
-
-  const scanAndConnect = async () => {
+const scanAndConnect = async () => {
     const hasPermissions = await requestBluetoothPermissions();
     if (!hasPermissions) {
       console.log("🚫 Cannot scan, permissions not granted.");
@@ -127,34 +121,9 @@ const Contactss = () => {
       manager.stopDeviceScan();
       setIsScanning(false);
     }, 10000);
-  };
-  
+};
 
-
-  // const debugBLEServices = async (device) => {
-  //   try {
-  //     console.log("🔍 Fetching all services and characteristics...");
-  //     const services = await device.services();
-  
-  //     for (const service of services) {
-  //       console.log("🛠 Found Service:", service.uuid);
-  
-  //       const characteristics = await service.characteristics();
-  //       for (const characteristic of characteristics) {
-  //         console.log("🔍 Found Characteristic:", characteristic.uuid);
-  //         console.log("   🔹 Notify:", characteristic.isNotifiable);
-  //         console.log("   🔹 Indicate:", characteristic.isIndicatable);
-  //         console.log("   🔹 Read:", characteristic.isReadable);
-  //         console.log("   🔹 Write:", characteristic.isWritableWithResponse);
-  //         console.log("   🔹 Write Without Response:", characteristic.isWritableWithoutResponse);
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("❌ Error fetching services and characteristics:", error);
-  //   }
-  // };
-  
-  const connectToDevice = async (scannedDevice) => {
+const connectToDevice = async (scannedDevice) => {
     try {
         console.log("📡 Connecting to:", scannedDevice.id);
 
@@ -169,15 +138,12 @@ const Contactss = () => {
         await connectedDevice.requestMTU(517);
         console.log("✅ MTU size increased to 512");
 
-        // Fetch stored contacts first
         fetchStoredContacts(connectedDevice);
         fetchStoredContactsNVS(connectedDevice);
 
-        // Add a delay before subscribing to notifications
         console.log("⏳ Waiting before subscribing...");
         await new Promise(resolve => setTimeout(resolve, 2000));  
 
-        // Subscribe to notifications one at a time with delays
         setTimeout(() => {
           startListeningForNotifications(connectedDevice, CHARACTERISTIC_UUID);
         }, 500);
@@ -222,8 +188,6 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
       if (char?.value) {
         const decodedValue = Buffer.from(char.value, 'base64').toString('utf-8');
         console.log(`✅ Notification received: ${decodedValue}`);
-    
-        // ✅ Ensure state updates and triggers a re-render
         setReceivedContact(prev => decodedValue !== prev ? decodedValue : prev);
       }
     });
@@ -235,104 +199,94 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
   }
 };
 
-
-
- 
-
-  const fetchStoredContacts = async (connectedDevice) => {
-    try {
-      const characteristic = await connectedDevice.readCharacteristicForService(SERVICE_UUID, CHARACTERISTIC_UUID);
-      if (characteristic?.value) {
-        const decodedValue = Buffer.from(characteristic.value, 'base64').toString('utf-8');
-        setReceivedContact(decodedValue);
-        console.log("📩 Retrieved Stored Data:", decodedValue);
-      }
-    } catch (error) {
-      console.error("❌ Failed to fetch stored contacts:", error);
+const fetchStoredContacts = async (connectedDevice) => {
+  try {
+    const characteristic = await connectedDevice.readCharacteristicForService(SERVICE_UUID, CHARACTERISTIC_UUID);
+    if (characteristic?.value) {
+      const decodedValue = Buffer.from(characteristic.value, 'base64').toString('utf-8');
+      setReceivedContact(decodedValue);
+      console.log("📩 Retrieved Stored Data:", decodedValue);
     }
-  };
-  const fetchStoredContactsNVS = async (connectedDevice) => {
-    try {
-        console.log("📡 Fetching stored contacts from NVS...");
-
-        const characteristic = await connectedDevice.readCharacteristicForService(
-            SERVICE_UUID,
-            CHARACTERISTIC_UUID_NVS
-        );
-
-        if (!characteristic?.value) {
-            console.warn("⚠️ No NVS data found.");
-            setReceivedContactNVS([]); // ✅ Ensure state is an empty array
-            return;
-        }
-
-        console.log("📩 Raw characteristic value (Base64):", characteristic.value);
-
-        let decodedValue;
-        try {
-            decodedValue = Buffer.from(characteristic.value, "base64").toString("utf-8").trim();
-        } catch (decodeError) {
-            console.error("❌ Error decoding Base64:", decodeError);
-            setReceivedContactNVS([]); 
-            return;
-        }
-
-        console.log("📩 Decoded NVS Data:", decodedValue);
-
-        let parsedData;
-        try {
-            parsedData = JSON.parse(decodedValue); // ✅ Ensure JSON parsing
-            console.log("📩 Parsed NVS Data:", parsedData);
-        } catch (jsonError) {
-            console.error("❌ Failed to parse NVS JSON:", jsonError);
-            setReceivedContactNVS([]);
-            return;
-        }
-
-        if (!parsedData || typeof parsedData !== "object") {
-            console.error("❌ Parsed data is not a valid object:", parsedData);
-            setReceivedContactNVS([]);
-            return;
-        }
-
-        const formattedContacts = Object.entries(parsedData)
-            .map(([id, data]) => {
-                if (typeof data !== "string") {
-                    console.error(`❌ Data format error for ID ${id}:`, data);
-                    return null;
-                }
-
-                const parts = data.split(",");
-                
-                // ✅ Handle cases where deviceId is missing
-                if (parts.length < 3) {
-                    console.error(`❌ Invalid contact format for ID ${id}:`, data);
-                    return null;
-                }
-
-                return { 
-                    id, 
-                    name: parts[0], 
-                    number: parts[1], 
-                    deviceId: parts[2] || "" // ✅ Defaults to empty string if missing
-                };
-            })
-            .filter(Boolean);
-
-        console.log("✅ Formatted Contacts Array:", formattedContacts);
-
-        setReceivedContactNVS(formattedContacts.length ? formattedContacts : []);
-
-    } catch (error) {
-        console.error("❌ Failed to fetch NVS contacts:", error);
-        setReceivedContactNVS([]);
-    }
+  } catch (error) {
+    console.error("❌ Failed to fetch stored contacts:", error);
+  }
 };
 
+const fetchStoredContactsNVS = async (connectedDevice) => {
+  try {
+      console.log("📡 Fetching stored contacts from NVS...");
 
+      const characteristic = await connectedDevice.readCharacteristicForService(
+          SERVICE_UUID,
+          CHARACTERISTIC_UUID_NVS
+      );
 
+      if (!characteristic?.value) {
+          console.warn("⚠️ No NVS data found.");
+          setReceivedContactNVS([]);
+          return;
+      }
 
+      console.log("📩 Raw characteristic value (Base64):", characteristic.value);
 
+      let decodedValue;
+      try {
+          decodedValue = Buffer.from(characteristic.value, "base64").toString("utf-8").trim();
+      } catch (decodeError) {
+          console.error("❌ Error decoding Base64:", decodeError);
+          setReceivedContactNVS([]); 
+          return;
+      }
+
+      console.log("📩 Decoded NVS Data:", decodedValue);
+
+      let parsedData;
+      try {
+          parsedData = JSON.parse(decodedValue);
+          console.log("📩 Parsed NVS Data:", parsedData);
+      } catch (jsonError) {
+          console.error("❌ Failed to parse NVS JSON:", jsonError);
+          setReceivedContactNVS([]);
+          return;
+      }
+
+      if (!parsedData || typeof parsedData !== "object") {
+          console.error("❌ Parsed data is not a valid object:", parsedData);
+          setReceivedContactNVS([]);
+          return;
+      }
+
+      const formattedContacts = Object.entries(parsedData)
+          .map(([id, data]) => {
+              if (typeof data !== "string") {
+                  console.error(`❌ Data format error for ID ${id}:`, data);
+                  return null;
+              }
+
+              const parts = data.split(",");
+              
+              if (parts.length < 3) {
+                  console.error(`❌ Invalid contact format for ID ${id}:`, data);
+                  return null;
+              }
+
+              return { 
+                  id, 
+                  name: parts[0], 
+                  number: parts[1], 
+                  deviceId: parts[2] || ""
+              };
+          })
+          .filter(Boolean);
+
+      console.log("✅ Formatted Contacts Array:", formattedContacts);
+      setReceivedContactNVS(formattedContacts.length ? formattedContacts : []);
+
+  } catch (error) {
+      console.error("❌ Failed to fetch NVS contacts:", error);
+      setReceivedContactNVS([]);
+  }
+};
 
 const sendContact = async () => {
   if (!connected || !device) {
@@ -345,245 +299,206 @@ const sendContact = async () => {
       return;
   }
 
-  // ✅ Create the contactData string (INCLUDING the unique ID from ESP32)
   const contactData = `${name},${number}`;
-
   console.log("📨 Sending new contact:", contactData);
 
-  // ✅ Send data to ESP32
   await sendContactData(contactData, CHARACTERISTIC_UUID);
 
-  // ✅ Manually update the UI (REAL-TIME)
   setReceivedContact(prev =>
       prev ? `${prev},${contactData}` : contactData
   );
 
-  // ✅ Clear input fields
   setName('');
   setNumber('');
 
   Alert.alert("Success", "Contact added successfully!");
 };
 
+const deleteContact = async (contactId) => {
+  if (!device) {
+    Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
+    return;
+  }
 
-  
-  const deleteContact = async (contactId) => {
-    if (!device) {
+  try {
+    let isConnected = await device.isConnected();
+    if (!isConnected) {
+      console.log('Reconnecting...');
+      await connectToDevice(device);
+    }
+
+    const deleteCommand = `DELETE:${contactId}`;
+    const base64Data = Buffer.from(deleteCommand, 'utf-8').toString('base64');
+    console.log("🛠 Encoded Base64 Data:", base64Data);
+
+    await device.writeCharacteristicWithoutResponseForService(
+      SERVICE_UUID,
+      CHARACTERISTIC_UUID,
+      base64Data
+    );
+
+    console.log('✅ Contact delete request sent successfully!');
+    Alert.alert("Success", "Contact deleted successfully!");
+
+    setReceivedContact((prevContacts) =>
+      prevContacts.split(",").filter(c => !c.startsWith(`${contactId}:`)).join(",")
+    );
+
+  } catch (error) {
+    console.error('❌ Failed to send delete request:', error);
+    Alert.alert('Error', 'Failed to delete contact. Check connection.');
+  }
+};
+
+const deleteContactNVS = async (contactId) => {
+  if (!device) {
       Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
       return;
-    }
-  
-    try {
+  }
+
+  try {
       let isConnected = await device.isConnected();
       if (!isConnected) {
-        console.log('Reconnecting...');
-        await connectToDevice(device);
+          console.log('Reconnecting...');
+          await connectToDevice(device);
       }
-  
-      // ✅ Send delete request in proper format: "DELETE:ID"
-      const deleteCommand = `DELETE:${contactId}`;
+
+      const deleteCommand = `DELETE_NVS:${contactId}`;
       const base64Data = Buffer.from(deleteCommand, 'utf-8').toString('base64');
-      console.log("🛠 Encoded Base64 Data:", base64Data);
-  
+
       await device.writeCharacteristicWithoutResponseForService(
-        SERVICE_UUID,
-        CHARACTERISTIC_UUID,
-        base64Data
+          SERVICE_UUID,
+          CHARACTERISTIC_UUID_NVS,
+          base64Data
       );
-  
-      console.log('✅ Contact delete request sent successfully!');
+
+      console.log('✅ NVS Contact delete request sent successfully!');
       Alert.alert("Success", "Contact deleted successfully!");
-  
-      // ✅ Remove from local state to update UI
-      setReceivedContact((prevContacts) =>
-        prevContacts.split(",").filter(c => !c.startsWith(`${contactId}:`)).join(",")
+
+      setReceivedContactNVS(prevContacts =>
+        prevContacts.filter(contact => contact.id !== contactId)
       );
-  
-    } catch (error) {
+  } catch (error) {
       console.error('❌ Failed to send delete request:', error);
       Alert.alert('Error', 'Failed to delete contact. Check connection.');
-    }
-  };
-  const deleteContactNVS = async (contactId) => {
-    if (!device) {
-        Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
-        return;
-    }
-
-    try {
-        let isConnected = await device.isConnected();
-        if (!isConnected) {
-            console.log('Reconnecting...');
-            await connectToDevice(device);
-        }
-
-        const deleteCommand = `DELETE_NVS:${contactId}`;
-        const base64Data = Buffer.from(deleteCommand, 'utf-8').toString('base64');
-
-        await device.writeCharacteristicWithoutResponseForService(
-            SERVICE_UUID,
-            CHARACTERISTIC_UUID_NVS,
-            base64Data
-        );
-
-        console.log('✅ NVS Contact delete request sent successfully!');
-        Alert.alert("Success", "Contact deleted successfully!");
-
-        // ✅ Remove from local state
-        setReceivedContactNVS(prevContacts =>
-          prevContacts.filter(contact => contact.id !== contactId)
-      );
-    } catch (error) {
-        console.error('❌ Failed to send delete request:', error);
-        Alert.alert('Error', 'Failed to delete contact. Check connection.');
-    }
+  }
 };
 
-  
-  
-  const sendContactData = async (contactData, characteristicUUID) => {
-    if (!device) {
-        Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
-        return;
-    }
+const sendContactData = async (contactData, characteristicUUID) => {
+  if (!device) {
+      Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
+      return;
+  }
 
-    if (typeof contactData !== 'string') {
-        console.error('❌ contactData must be a string. Received:', contactData);
-        Alert.alert('Error', 'Invalid contact data.');
-        return;
-    }
+  if (typeof contactData !== 'string') {
+      console.error('❌ contactData must be a string. Received:', contactData);
+      Alert.alert('Error', 'Invalid contact data.');
+      return;
+  }
 
-    try {
-        let isConnected = await device.isConnected();
-        if (!isConnected) {
-            console.log('Reconnecting...');
-            await connectToDevice(device);
-        }
-
-        const base64Data = Buffer.from(contactData, 'utf-8').toString('base64');
-        console.log("🛠 Encoded Base64 Data:", base64Data);
-
-        await device.writeCharacteristicWithoutResponseForService(
-            SERVICE_UUID,
-            characteristicUUID,
-            base64Data
-        );
-
-        console.log('✅ Contact data sent successfully!');
-        Alert.alert("Success", "Contact added successfully!");
-    } catch (error) {
-        console.error('❌ Failed to send contact data:', error);
-        Alert.alert('Error', 'Failed to send contact data. Check connection.');
-    }
-};
-
-  
-  
-  // ✅ Fix duplicate key issue
-  const formattedContacts = receivedContact
-    .split(",")
-    .map(contact => {
-        const parts = contact.split(":");
-        return parts.length === 3 ? { id: parts[0], name: parts[1], number: parts[2] } : null;
-    })
-    .filter(Boolean) // Remove invalid entries
-    .reduce((acc, contact) => {
-      if (!acc.some(c => c.id === contact.id)) acc.push(contact);
-      return acc;
-    }, []); // Ensure unique IDs
-    const formattedContactsNVS = Array.isArray(receivedContactNVS) ? receivedContactNVS : [];
-
-  
-
-
-    const updateContact = () => {
-      if (!selectedContact || !name || !number) {
-          Alert.alert("Error", "Please enter both name and number.");
-          return;
+  try {
+      let isConnected = await device.isConnected();
+      if (!isConnected) {
+          console.log('Reconnecting...');
+          await connectToDevice(device);
       }
-  
-      // ✅ Send the updated contact data to ESP32
-      const updatedData = `UPDATE:${selectedContact.id},${name},${number}`;
-      sendContactData(updatedData, CHARACTERISTIC_UUID);
-      // ✅ Close the modal
-      setModalVisible(false);
-  
-      // ✅ Manually update the FlatList (REAL-TIME)
-      setReceivedContact(prev =>
-          prev
-              .split(",")
-              .map(contact => {
-                  const parts = contact.split(":");
-                  if (parts[0] === selectedContact.id) {
-                      return `${selectedContact.id}:${name}:${number}`;
-                  }
-                  return contact;
-              })
-              .join(",")
+
+      const base64Data = Buffer.from(contactData, 'utf-8').toString('base64');
+      console.log("🛠 Encoded Base64 Data:", base64Data);
+
+      await device.writeCharacteristicWithoutResponseForService(
+          SERVICE_UUID,
+          characteristicUUID,
+          base64Data
       );
-  };
-  const updateContactNVS = async (contactId, newName, newPhoneNum, newDeviceId) => {
-    console.log("📩 Updating contact:", contactId, newName, newPhoneNum, newDeviceId);
 
-    if (!device) {
-        Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
-        return;
-    }
-
-    if (!newName?.trim() || !newPhoneNum?.trim() || !newDeviceId?.trim()) {
-        Alert.alert('Error', 'All fields are required.');
-        return;
-    }
-
-    try {
-        let isConnected = await device.isConnected();
-        if (!isConnected) {
-            console.log('Reconnecting...');
-            await connectToDevice(device);
-        }
-
-        const updateCommand = `UPDATE_NVS:${contactId},${newName},${newPhoneNum},${newDeviceId}`;
-        sendContactData(updateCommand, CHARACTERISTIC_UUID_NVS);
-
-        
-        setModalVisibleNVS(false);
-        console.log('✅ NVS Contact update request sent successfully!');
-        Alert.alert("Success", "Contact updated successfully!");
-                // ✅ Manually update the FlatList (REAL-TIME)
-                setReceivedContactNVS(prevContacts =>
-                  prevContacts.map(contact =>
-                      contact.id === contactId
-                          ? { ...contact, name: newName, number: newPhoneNum, deviceId: newDeviceId }
-                          : contact
-                  )
-              );
-    } catch (error) {
-        console.error('❌ Failed to send update request:', error);
-        Alert.alert('Error', 'Failed to update contact. Check connection.');
-    }
+      console.log('✅ Contact data sent successfully!');
+      Alert.alert("Success", "Contact added successfully!");
+  } catch (error) {
+      console.error('❌ Failed to send contact data:', error);
+      Alert.alert('Error', 'Failed to send contact data. Check connection.');
+  }
 };
 
+const updateContact = () => {
+  if (!selectedContact || !name || !number) {
+      Alert.alert("Error", "Please enter both name and number.");
+      return;
+  }
 
+  const updatedData = `UPDATE:${selectedContact.id},${name},${number}`;
+  sendContactData(updatedData, CHARACTERISTIC_UUID);
+  setModalVisible(false);
 
-  
-    
+  setReceivedContact(prev =>
+      prev
+          .split(",")
+          .map(contact => {
+              const parts = contact.split(":");
+              if (parts[0] === selectedContact.id) {
+                  return `${selectedContact.id}:${name}:${number}`;
+              }
+              return contact;
+          })
+          .join(",")
+  );
+};
+
+const updateContactNVS = async (contactId, newName, newPhoneNum, newDeviceId) => {
+  console.log("📩 Updating contact:", contactId, newName, newPhoneNum, newDeviceId);
+
+  if (!device) {
+      Alert.alert('Connection Error', 'Device not found. Try reconnecting.');
+      return;
+  }
+
+  if (!newName?.trim() || !newPhoneNum?.trim() || !newDeviceId?.trim()) {
+      Alert.alert('Error', 'All fields are required.');
+      return;
+  }
+
+  try {
+      let isConnected = await device.isConnected();
+      if (!isConnected) {
+          console.log('Reconnecting...');
+          await connectToDevice(device);
+      }
+
+      const updateCommand = `UPDATE_NVS:${contactId},${newName},${newPhoneNum},${newDeviceId}`;
+      sendContactData(updateCommand, CHARACTERISTIC_UUID_NVS);
+
+      setModalVisibleNVS(false);
+      console.log('✅ NVS Contact update request sent successfully!');
+      Alert.alert("Success", "Contact updated successfully!");
+      
+      setReceivedContactNVS(prevContacts =>
+        prevContacts.map(contact =>
+            contact.id === contactId
+                ? { ...contact, name: newName, number: newPhoneNum, deviceId: newDeviceId }
+                : contact
+        )
+      );
+  } catch (error) {
+      console.error('❌ Failed to send update request:', error);
+      Alert.alert('Error', 'Failed to update contact. Check connection.');
+  }
+};
+
 const openEditModal = (contact) => {
   setSelectedContact(contact);
   setName(contact.name);
   setNumber(contact.number);
   setModalVisible(true);
 };
+
 const openEditModalNVS = (contact) => {
   setSelectedContact(contact);
-  setNamee(contact.name); // Use setNamee for NVS
-  setPhoneNum(contact.number); // Use setPhoneNum for NVS
-  setDeviceId(contact.deviceId); // Use setDeviceId for NVS (if applicable)
+  setNamee(contact.name);
+  setPhoneNum(contact.number);
+  setDeviceId(contact.deviceId);
   setModalVisibleNVS(true);
 };
 
-
-
-// 📡 Send New Contact (NVS)
 const sendContactNVS = async () => {
   if (!connected || !device) {
     Alert.alert("Error", "Not connected to ESP32.");
@@ -600,269 +515,296 @@ const sendContactNVS = async () => {
 
   await sendContactData(contactData, CHARACTERISTIC_UUID_NVS);
 
-  // ✅ Update state immediately
   setReceivedContactNVS(prevContacts => [
     ...prevContacts,
     { id: prevContacts.length + 1, name: NAME, number: phoneNum, deviceId: deviceId }
   ]);
 
-  // ✅ Clear input fields
   setNamee('');
   setPhoneNum('');
   setDeviceId('');
 };
 
+const formattedContacts = receivedContact
+    .split(",")
+    .map(contact => {
+        const parts = contact.split(":");
+        return parts.length === 3 ? { id: parts[0], name: parts[1], number: parts[2] } : null;
+    })
+    .filter(Boolean)
+    .reduce((acc, contact) => {
+      if (!acc.some(c => c.id === contact.id)) acc.push(contact);
+      return acc;
+    }, []);
+
+  const formattedContactsNVS = Array.isArray(receivedContactNVS) ? receivedContactNVS : [];
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>📩 Send Contact to NVS</Text>
-      <Text style={styles.title}>note: should only be one data since the device is 1 is to 1. dont add another data if you already have</Text>
-      <TextInput style={styles.input} placeholder="Name" value={NAME} onChangeText={setNamee} />
-      <TextInput style={styles.input} placeholder="Phone Number" value={phoneNum} onChangeText={setPhoneNum} keyboardType="phone-pad" />
-      <TextInput style={styles.input} placeholder="Device ID" value={deviceId} onChangeText={setDeviceId} keyboardType="phone-pad"/>
-      <TouchableOpacity style={styles.button} onPress={sendContactNVS} disabled={!connected}>
-        <Text style={styles.buttonText}>Send to NVS</Text>
-      </TouchableOpacity>
-      <FlatList
-  data={formattedContactsNVS} // Now an array of objects
-  keyExtractor={(item) => item.id.toString()}
-  renderItem={({ item }) => (
-    <View style={styles.contactItem}>
-      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</Text>
-      <Text style={{ fontSize: 14, color: '#666' }}>{item.number}</Text>
-      <Text style={{ fontSize: 14, color: '#666' }}>{item.deviceId}</Text>
+    <View className="flex-1 justify-start items-center p-8 bg-white">
+      <Text className="text-2xl font-extrabold mb-5 text-gray-800 mt-10 mr-40">Connectivity:</Text>
 
-      {item.id && item.name && item.number ? (
-        <>
-          <TouchableOpacity onPress={() => openEditModalNVS(item)}>
-            <Text style={{ color: "blue" }}>Edit NVS</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => deleteContactNVS(item.id)}>
-            <Text style={{ color: "red" }}>Delete NVS</Text>
-          </TouchableOpacity>
-        </>
-      ) : null}
+        {/* NOTE Container */}
+        <View className="bg-gray-300 border border-black rounded-lg p-6 mb-4 w-full shadow-md">
+      <Text className="text-base italic">
+        <Text className="text-red-600 font-bold">*</Text>
+        <Text className="text-black">NOTE: </Text>
+        <Text className="text-black">A single device should be linked to a single data entry (1:1). Please prevent any duplicate records.</Text>
+      </Text>
     </View>
-  )}
-/>
+        
+        {/* Bluetooth Status indicator */}
+        <Text className="text-base mb-4">
+          <Text className="text-red-600">*</Text>
+          <Text className="italic text-black">STATUS: </Text>
+          <Text className={`italic ${connected ? 'text-green-600' : 'text-red-600'}`}>
+            {connected ? "Connected." : "Not Connected."}
+          </Text>
+        </Text>
 
+        <TextInput 
+          className={`border ${focusedInput === 'NAME' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
+          placeholder="Name" 
+          value={NAME} 
+          onChangeText={setNamee}
+          onFocus={() => setFocusedInput('NAME')}
+          onBlur={() => setFocusedInput(null)}
+        />
+        <TextInput 
+          className={`border ${focusedInput === 'phoneNum' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
+          placeholder="Phone Number" 
+          value={phoneNum} 
+          onChangeText={setPhoneNum}
+          onFocus={() => setFocusedInput('phoneNum')}
+          onBlur={() => setFocusedInput(null)}
+          keyboardType="phone-pad" 
+        />
+        <TextInput 
+          className={`border ${focusedInput === 'deviceId' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
+          placeholder="Device ID" 
+          value={deviceId} 
+          onChangeText={setDeviceId}
+          onFocus={() => setFocusedInput('deviceId')}
+          onBlur={() => setFocusedInput(null)}
+          keyboardType="phone-pad"
+        />
+        
+        <TouchableOpacity 
+          className={`bg-green-600 p-4 rounded-full mb-3 w-full items-center ${!connected ? 'opacity-500' : ''}`}
+          onPress={sendContactNVS} 
+          disabled={!connected}
+        >
+          <Text className="text-white text-base font-semibold">Register</Text>
+        </TouchableOpacity>
 
-<Modal visible={modalVisibleNVS} animationType="slide" transparent>
-    <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Contact NVS</Text>
-            
-            <TextInput
-                style={styles.input}
+        <FlatList
+          data={formattedContactsNVS}
+          keyExtractor={(item) => item.id.toString()}
+          className="w-full"
+          renderItem={({ item }) => (
+            <View className="p-4 border-b border-gray-200 w-full bg-white mb-2 rounded">
+              <Text className="text-base font-bold mb-1 text-gray-800">{item.name}</Text>
+              <Text className="text-sm text-gray-600 mb-1">{item.number}</Text>
+              <Text className="text-sm text-gray-600 mb-1">{item.deviceId}</Text>
+
+              {item.id && item.name && item.number ? (
+                <View className="mt-2">
+                  <TouchableOpacity onPress={() => openEditModalNVS(item)}>
+                    <Text className="text-blue-500 mt-2 font-semibold">Edit NVS</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteContactNVS(item.id)}>
+                    <Text className="text-red-500 mt-1 font-semibold">Delete NVS</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </View>
+          )}
+        />
+
+        <Modal visible={modalVisibleNVS} animationType="slide" transparent>
+          <View className="flex-1 justify-center items-center bg-black/50">
+            <View className="bg-white p-5 rounded-lg w-11/12 max-w-md items-center">
+              <Text className="text-xl font-bold mb-4 text-gray-800">Edit Contact NVS</Text>
+              
+              <TextInput
+                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
                 placeholder="Enter Name"
-                value={NAME} // Use NAME state
-                onChangeText={setNamee} // Use setNamee for updates
-            />
-            
-            <TextInput
-                style={styles.input}
+                value={NAME}
+                onChangeText={setNamee}
+              />
+              
+              <TextInput
+                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
                 placeholder="Enter Number"
-                value={phoneNum} // Use phoneNum state
-                onChangeText={setPhoneNum} // Use setPhoneNum for updates
+                value={phoneNum}
+                onChangeText={setPhoneNum}
                 keyboardType="phone-pad"
-            />
+              />
 
-            <TextInput
-                style={styles.input}
+              <TextInput
+                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
                 placeholder="Enter Device Id"
-                value={deviceId} // Use phoneNum state
-                onChangeText={setDeviceId} // Use setPhoneNum for updates
+                value={deviceId}
+                onChangeText={setDeviceId}
                 keyboardType="phone-pad"
-            />
-            
-            <TouchableOpacity style={styles.button} onPress={() => updateContactNVS(selectedContact.id, NAME, phoneNum, deviceId)}>
-                <Text style={styles.buttonText}>SaveNVS</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisibleNVS(false)}>
-                <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
+              />
+              
+              <TouchableOpacity 
+                className="bg-green-600 p-4 rounded mb-3 w-full items-center"
+                onPress={() => updateContactNVS(selectedContact.id, NAME, phoneNum, deviceId)}
+              >
+                <Text className="text-white text-base font-semibold">Save NVS</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                className="bg-red-600 p-4 rounded mb-3 w-full items-center"
+                onPress={() => setModalVisibleNVS(false)}
+              >
+                <Text className="text-white text-base font-semibold">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <Text className="text-2xl font-extrabold mb-5 text-gray-800 mt-6">Add Recipients(10):</Text>
+        
+        {/* Add Recipient Card Trigger */}
+        <View className="bg-gray-300 border border-black rounded-xl p-4 w-full mb-4 items-center justify-center">
+      <TouchableOpacity 
+        onPress={() => setAddRecipientModalVisible(true)}
+        className="w-12 h-12 border-4 border-black rounded-full items-center justify-center bg-gray-200"
+      >
+        <View className="relative w-full h-full items-center justify-center">
+          <View className="absolute w-4 h-1 bg-black rounded-full"></View>
+          <View className="absolute w-1 h-4 bg-black rounded-full"></View>
         </View>
-    </View>
-</Modal>
-
-
-
-      <Text style={styles.title}>Emergency Contacts</Text>
-      <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setName} />
-      <TextInput style={styles.input} placeholder="Enter Number" value={number} onChangeText={setNumber} keyboardType="phone-pad" />
-
-
-      <TouchableOpacity style={styles.button} onPress={sendContact} disabled={!connected}>
-        <Text style={styles.buttonText}>Send Contact to eeprom</Text>
       </TouchableOpacity>
-
-
-      <Text>Status: {connected ? "Connected" : "Not Connected"}</Text>
-      <FlatList
-  data={formattedContacts}
-  keyExtractor={(item) => item.id.toString()}
-  renderItem={({ item }) => (
-    <View style={styles.contactItem}>
-      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.name}</Text>
-      <Text style={{ fontSize: 14, color: '#666' }}>{item.number}</Text>
-
-      {item.id && item.name && item.number ? (
-        <>
-            <TouchableOpacity onPress={() => openEditModal(item)}>
-              <Text style={{ color: "blue" }}>Edit EEPROM</Text>
-            </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => deleteContact(item.id)}>
-            <Text style={{ color: "red" }}>Delete EEPROM</Text>
-          </TouchableOpacity>
-        </>
-      ) : null}
     </View>
-  )}
-/>
-<Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Contact EEPROM</Text>
-            <TextInput style={styles.input} placeholder="Enter Name" value={name} onChangeText={setName} />
-            <TextInput style={styles.input} placeholder="Enter Number" value={number} onChangeText={setNumber} keyboardType="phone-pad" />
-            <TouchableOpacity style={styles.button} onPress={updateContact}>
-              <Text style={styles.buttonText}>Save EEPROM</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.buttonText}>Cancel</Text>
+
+
+        {/* Add Recipient Modal */}
+        <Modal
+      animationType="fade"
+      transparent={true}
+      visible={addRecipientModalVisible}
+      onRequestClose={() => setAddRecipientModalVisible(false)}
+    >
+      <View className="flex-1 justify-center items-center bg-black/50">
+        <View className="bg-white w-4/5 rounded-2xl p-6 shadow-lg">
+          {/* Modal Header */}
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="text-xl font-extrabold text-black">
+              Add Trusted Recipient
+            </Text>
+            <TouchableOpacity 
+              onPress={() => setAddRecipientModalVisible(false)}
+              className="p-2"
+            >
+              <View className="w-6 h-6 items-center justify-center">
+                <View className="absolute w-5 h-0.5 bg-black rotate-45"></View>
+                <View className="absolute w-5 h-0.5 bg-black -rotate-45"></View>
+              </View>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
 
+              {/* Name Input */}
+              <TextInput
+                placeholder="Enter Name (e.g. Guardian, Friend, etc.)" 
+                value={name}
+                onChangeText={setName}
+                className="border border-gray-300 rounded-xl p-4 mb-4 bg-white text-gray-800 shadow-sm"
+              />
+              
+              {/* Phone Number Input */}
+              <TextInput
+                placeholder="Enter Phone #"
+                value={number}
+                onChangeText={setNumber}
+                className="border border-gray-300 rounded-xl p-4 mb-5 bg-white text-gray-800 shadow-sm"
+                keyboardType="phone-pad"
+              />
+
+              {/* Add Button */}
+              <TouchableOpacity
+                onPress={() => {
+                  sendContact();
+                  setAddRecipientModalVisible(false);
+                }}
+                className={`w-full p-4 bg-green-600 rounded-xl mb-3 shadow-md ${!connected ? 'opacity-500' : ''}`}
+                disabled={!connected}
+              >
+                <Text className="text-white text-center font-bold text-lg">
+                  Send Contact to EEPROM
+                </Text>
+              </TouchableOpacity>
+
+              {/* Cancel Button */}
+              <TouchableOpacity
+                onPress={() => setAddRecipientModalVisible(false)}
+                className="w-full p-4 bg-gray-400 rounded-xl shadow"
+              >
+                <Text className="text-white text-center font-bold text-lg">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <FlatList
+          data={formattedContacts}
+          keyExtractor={(item) => item.id.toString()}
+          className="w-full"
+          renderItem={({ item }) => (
+            <View className="p-4 border-b border-gray-200 w-full bg-white mb-2 rounded">
+              <Text className="text-base font-bold mb-1 text-gray-800">{item.name}</Text>
+              <Text className="text-sm text-gray-600 mb-1">{item.number}</Text>
+
+              {item.id && item.name && item.number ? (
+                <View className="mt-2">
+                  <TouchableOpacity onPress={() => openEditModal(item)}>
+                    <Text className="text-blue-500 mt-2 font-semibold">Edit EEPROM</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteContact(item.id)}>
+                    <Text className="text-red-500 mt-1 font-semibold">Delete EEPROM</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </View>
+          )}
+        />
+
+        <Modal visible={modalVisible} animationType="slide" transparent>
+          <View className="flex-1 justify-center items-center bg-black/50">
+            <View className="bg-white p-5 rounded-lg w-11/12 max-w-md items-center">
+              <Text className="text-xl font-bold mb-4 text-gray-800">Edit Contact EEPROM</Text>
+              <TextInput 
+                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
+                placeholder="Enter Name" 
+                value={name} 
+                onChangeText={setName} 
+              />
+              <TextInput 
+                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
+                placeholder="Enter Number" 
+                value={number} 
+                onChangeText={setNumber} 
+                keyboardType="phone-pad" 
+              />
+              <TouchableOpacity 
+                className="bg-green-600 p-4 rounded mb-3 w-full items-center"
+                onPress={updateContact}
+              >
+                <Text className="text-white text-base font-semibold">Save EEPROM</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                className="bg-red-600 p-4 rounded mb-3 w-full items-center"
+                onPress={() => setModalVisible(false)}
+              >
+                <Text className="text-white text-base font-semibold">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
     </View>
   );
 };
-
-
-const styles = StyleSheet.create({
-  contactItem: { fontSize: 10, padding: 5, borderBottomWidth: 1, borderBottomColor: '#ccc', display: 'flex' },
-  
-  deleteButton: {
-    backgroundColor: '#e74c3c',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 5,
-    alignItems: 'center',
-},
-updateButton: {
-    backgroundColor: '#f1c40f',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 5,
-    alignItems: 'center',
-},contactItem: {
-  fontSize: 10,
-  padding: 5,
-  borderBottomWidth: 1,
-  borderBottomColor: '#ccc',
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  width: '100%'
-},
-modalContainer: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-},
-modalContent: {
-  backgroundColor: 'white',
-  padding: 20,
-  borderRadius: 10,
-  width: '80%',
-  alignItems: 'center',
-},
-modalTitle: {
-  fontSize: 20,
-  fontWeight: 'bold',
-  marginBottom: 10,
-},
-input: {
-  borderWidth: 1,
-  borderColor: '#ccc',
-  borderRadius: 5,
-  padding: 10,
-  width: 250,
-  marginBottom: 10,
-},
-button: {
-  backgroundColor: '#4CAF50',
-  padding: 15,
-  borderRadius: 5,
-  marginBottom: 10,
-},
-cancelButton: {
-  backgroundColor: 'red',
-  padding: 15,
-  borderRadius: 5,
-  marginBottom: 10,
-},
-buttonText: {
-  color: 'white',
-  fontSize: 16,
-},
-//main
-container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    width: 250,
-    marginBottom: 10,
-  },
-  button: {
-    backgroundColor: '#4CAF50',
-    padding: 15,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  status: {
-    marginTop: 20,
-    fontSize: 16,
-  },
-  receivedContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#f2f2f2',
-    borderRadius: 5,
-    width: '80%',
-    alignItems: 'center',
-  },
-  receivedTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  receivedText: {
-    fontSize: 16,
-    color: '#333',
-  },
-});
-
 
 export default Contactss;
