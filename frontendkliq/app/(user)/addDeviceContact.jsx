@@ -604,9 +604,10 @@ const formattedContacts = receivedContact
         <FlatList
           data={formattedContactsNVS}
           keyExtractor={(item) => item.id.toString()}
-          className="w-full"
+          className="w-full mb-10s"
+          scrollEnabled={false}
           renderItem={({ item }) => (
-            <View className="bg-gray-300 rounded-lg px-4 py-3 mb-3 flex-row justify-between items-center border border-black shadow-sm">
+            <View className="bg-gray-300 rounded-lg px-4 py-3 mb-20 flex-row justify-between items-center border border-black shadow-sm">
               <Text className="text-base font-bold text-black">{item.name}</Text>
               <Text className="text-sm italic text-gray-800">{item.number}</Text>
               <Text className="text-sm italic text-gray-800">{item.deviceId}</Text>
