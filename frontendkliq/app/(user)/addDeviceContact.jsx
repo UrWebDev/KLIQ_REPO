@@ -560,59 +560,67 @@ const formattedContacts = receivedContact
             {connected ? "Connected." : "Not Connected."}
           </Text>
         </Text>
+{/* NVS */}
+{formattedContactsNVS.length === 0 && (
+  <>
+    <TextInput 
+      className={`border ${focusedInput === 'NAME' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
+      placeholder="Name" 
+      value={NAME} 
+      onChangeText={setNamee}
+      onFocus={() => setFocusedInput('NAME')}
+      onBlur={() => setFocusedInput(null)}
+    />
+    <TextInput 
+      className={`border ${focusedInput === 'phoneNum' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
+      placeholder="Phone Number" 
+      value={phoneNum} 
+      onChangeText={setPhoneNum}
+      onFocus={() => setFocusedInput('phoneNum')}
+      onBlur={() => setFocusedInput(null)}
+      keyboardType="phone-pad" 
+    />
+    <TextInput 
+      className={`border ${focusedInput === 'deviceId' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
+      placeholder="Device ID" 
+      value={deviceId} 
+      onChangeText={setDeviceId}
+      onFocus={() => setFocusedInput('deviceId')}
+      onBlur={() => setFocusedInput(null)}
+      keyboardType="phone-pad"
+    />
+    
+    <TouchableOpacity 
+      className={`bg-green-600 p-4 rounded-full mb-3 w-full items-center ${!connected ? 'opacity-50' : ''}`}
+      onPress={sendContactNVS} 
+      disabled={!connected}
+    >
+      <Text className="text-white text-base font-semibold">Register</Text>
+    </TouchableOpacity>
+  </>
+)}
 
-        <TextInput 
-          className={`border ${focusedInput === 'NAME' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
-          placeholder="Name" 
-          value={NAME} 
-          onChangeText={setNamee}
-          onFocus={() => setFocusedInput('NAME')}
-          onBlur={() => setFocusedInput(null)}
-        />
-        <TextInput 
-          className={`border ${focusedInput === 'phoneNum' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
-          placeholder="Phone Number" 
-          value={phoneNum} 
-          onChangeText={setPhoneNum}
-          onFocus={() => setFocusedInput('phoneNum')}
-          onBlur={() => setFocusedInput(null)}
-          keyboardType="phone-pad" 
-        />
-        <TextInput 
-          className={`border ${focusedInput === 'deviceId' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
-          placeholder="Device ID" 
-          value={deviceId} 
-          onChangeText={setDeviceId}
-          onFocus={() => setFocusedInput('deviceId')}
-          onBlur={() => setFocusedInput(null)}
-          keyboardType="phone-pad"
-        />
-        
-        <TouchableOpacity 
-          className={`bg-green-600 p-4 rounded-full mb-3 w-full items-center ${!connected ? 'opacity-500' : ''}`}
-          onPress={sendContactNVS} 
-          disabled={!connected}
-        >
-          <Text className="text-white text-base font-semibold">Register</Text>
-        </TouchableOpacity>
 
         <FlatList
           data={formattedContactsNVS}
           keyExtractor={(item) => item.id.toString()}
           className="w-full"
           renderItem={({ item }) => (
-            <View className="p-4 border-b border-gray-200 w-full bg-white mb-2 rounded">
-              <Text className="text-base font-bold mb-1 text-gray-800">{item.name}</Text>
-              <Text className="text-sm text-gray-600 mb-1">{item.number}</Text>
-              <Text className="text-sm text-gray-600 mb-1">{item.deviceId}</Text>
+            <View className="bg-gray-300 rounded-lg px-4 py-3 mb-3 flex-row justify-between items-center border border-black shadow-sm">
+              <Text className="text-base font-bold text-black">{item.name}</Text>
+              <Text className="text-sm italic text-gray-800">{item.number}</Text>
+              <Text className="text-sm italic text-gray-800">{item.deviceId}</Text>
 
               {item.id && item.name && item.number ? (
-                <View className="mt-2">
-                  <TouchableOpacity onPress={() => openEditModalNVS(item)}>
-                    <Text className="text-blue-500 mt-2 font-semibold">Edit NVS</Text>
+                <View className="flex-row items-center">
+                  <TouchableOpacity onPress={() => openEditModalNVS(item)} className="pr-4">
+                  <Text className="text-xl text-black">✏️</Text>
                   </TouchableOpacity>
+                  
+                  <View className="w-px h-6 bg-black mr-4" />
+                  
                   <TouchableOpacity onPress={() => deleteContactNVS(item.id)}>
-                    <Text className="text-red-500 mt-1 font-semibold">Delete NVS</Text>
+                    <Text className="text-xl text-black">🗑️</Text>
                   </TouchableOpacity>
                 </View>
               ) : null}
@@ -665,7 +673,7 @@ const formattedContacts = receivedContact
           </View>
         </Modal>
 
-        <Text className="text-2xl font-extrabold mb-5 text-gray-800 mt-6">Add Recipients(10):</Text>
+        <Text className="text-2xl font-extrabold mb-5 text-gray-800 mt-5">Add Recipients(10):</Text>
         
         {/* Add Recipient Card Trigger */}
         <View className="bg-gray-300 border border-black rounded-xl p-4 w-full mb-4 items-center justify-center">
@@ -681,7 +689,7 @@ const formattedContacts = receivedContact
     </View>
 
 
-        {/* Add Recipient Modal */}
+        {/* Add Recipient Modal eeprom*/}
         <Modal
       animationType="fade"
       transparent={true}
@@ -753,17 +761,20 @@ const formattedContacts = receivedContact
           keyExtractor={(item) => item.id.toString()}
           className="w-full"
           renderItem={({ item }) => (
-            <View className="p-4 border-b border-gray-200 w-full bg-white mb-2 rounded">
-              <Text className="text-base font-bold mb-1 text-gray-800">{item.name}</Text>
-              <Text className="text-sm text-gray-600 mb-1">{item.number}</Text>
+            <View className="bg-gray-300 rounded-lg px-4 py-3 mb-3 flex-row justify-between items-center border border-black shadow-sm">
+              <Text className="text-base font-bold text-black">{item.name}</Text>
+              <Text className="text-sm italic text-gray-800">{item.number}</Text>
 
               {item.id && item.name && item.number ? (
-                <View className="mt-2">
-                  <TouchableOpacity onPress={() => openEditModal(item)}>
-                    <Text className="text-blue-500 mt-2 font-semibold">Edit EEPROM</Text>
+                <View className="flex-row items-center">
+                  <TouchableOpacity onPress={() => openEditModal(item)} className="pr-4">
+                  <Text className="text-xl text-black">✏️</Text>
                   </TouchableOpacity>
+
+                  <View className="w-px h-6 bg-black mr-4" />
+
                   <TouchableOpacity onPress={() => deleteContact(item.id)}>
-                    <Text className="text-red-500 mt-1 font-semibold">Delete EEPROM</Text>
+                  <Text className="text-xl text-black">🗑️</Text>
                   </TouchableOpacity>
                 </View>
               ) : null}
