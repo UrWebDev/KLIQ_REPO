@@ -91,11 +91,11 @@ const Hotlines = () => {
   
         setDeviceList(devices);
         setAllMessages(response.data);
-  
+        
         if (devices.length > 0) {
           setSelectedDevice(devices[0].deviceId);
-          handleDeviceChange(devices[0].deviceId);
-        }
+          handleDeviceChange(devices[0].deviceId, response.data);
+        }        
       }
     } catch (error) {
       console.error("Error fetching user phone number:", error);
@@ -103,11 +103,11 @@ const Hotlines = () => {
     }
   };
   
-  const handleDeviceChange = (deviceId) => {
+  const handleDeviceChange = (deviceId, messages = allMessages) => {
     setSelectedDevice(deviceId);
     setDropdownVisible(false);
   
-    const filteredByDevice = allMessages.filter(
+    const filteredByDevice = messages.filter(
       (sos) => sos.deviceId === deviceId
     );
   
@@ -118,6 +118,7 @@ const Hotlines = () => {
       setUserPhoneNumber("N/A");
     }
   };
+  
 
   const resetForm = () => {
     setName("");
