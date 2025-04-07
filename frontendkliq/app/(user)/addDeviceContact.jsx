@@ -149,7 +149,7 @@ const connectToDevice = async (scannedDevice) => {
         }, 500);
         setTimeout(() => {
           startListeningForNotifications(connectedDevice, CHARACTERISTIC_UUID_NVS);
-        }, 1500);
+        }, 500);
 
     } catch (error) {
         console.error("❌ Connection error:", error);
@@ -160,7 +160,9 @@ const connectToDevice = async (scannedDevice) => {
 const startListeningForNotifications = async (device, characteristicUUID) => {
   try {
     console.log(`📡 Checking characteristic existence: ${characteristicUUID}`);
+
     const services = await device.services();
+
     for (const service of services) {
       const characteristics = await service.characteristics();
       for (const char of characteristics) {
@@ -169,33 +171,44 @@ const startListeningForNotifications = async (device, characteristicUUID) => {
     }
 
     console.log(`📡 Subscribing to: ${characteristicUUID}`);
-    const characteristic = await device.readCharacteristicForService(
-      SERVICE_UUID,
-      characteristicUUID
-    );
-
-    if (!characteristic) {
-      console.error(`❌ Characteristic ${characteristicUUID} not found`);
-      return;
-    }
 
     device.monitorCharacteristicForService(SERVICE_UUID, characteristicUUID, (error, char) => {
       if (error) {
         console.error(`🚨 Notification error: ${error.message}`);
         return;
       }
-      console.log(`✅ Notification received: ${char?.value}`);
+
       if (char?.value) {
         const decodedValue = Buffer.from(char.value, 'base64').toString('utf-8');
-        console.log(`✅ Notification received: ${decodedValue}`);
-        setReceivedContact(prev => decodedValue !== prev ? decodedValue : prev);
+        console.log(`✅ Notification received from ${characteristicUUID}: ${decodedValue}`);
+
+        if (characteristicUUID === CHARACTERISTIC_UUID_NVS) {
+          // Update only NVS-related state
+          try {
+            const parsed = JSON.parse(decodedValue);
+            const formatted = Object.entries(parsed)
+              .map(([id, data]) => {
+                const parts = data.split(',');
+                if (parts.length >= 3) {
+                  return { id, name: parts[0], number: parts[1], deviceId: parts[2] };
+                }
+                return null;
+              })
+              .filter(Boolean);
+            setReceivedContactNVS(formatted);
+          } catch (e) {
+            console.error("❌ Error parsing NVS contact JSON:", e);
+          }
+        } else if (characteristicUUID === CHARACTERISTIC_UUID) {
+          // EEPROM notification
+          setReceivedContact(decodedValue);
+        }
       }
     });
 
     console.log(`✅ Successfully subscribed to ${characteristicUUID}`);
-    
   } catch (error) {
-    console.error(`🚨 Error in startListeningForNotifications:`, error);
+    console.error("🚨 Error in startListeningForNotifications:", error);
   }
 };
 
@@ -288,31 +301,6 @@ const fetchStoredContactsNVS = async (connectedDevice) => {
   }
 };
 
-const sendContact = async () => {
-  if (!connected || !device) {
-      Alert.alert("Error", "Not connected to a device.");
-      return;
-  }
-
-  if (!name || !number) {
-      Alert.alert("Error", "Please enter both name and number.");
-      return;
-  }
-
-  const contactData = `${name},${number}`;
-  console.log("📨 Sending new contact:", contactData);
-
-  await sendContactData(contactData, CHARACTERISTIC_UUID);
-
-  setReceivedContact(prev =>
-      prev ? `${prev},${contactData}` : contactData
-  );
-
-  setName('');
-  setNumber('');
-
-  Alert.alert("Success", "Contact added successfully!");
-};
 
 const deleteContact = async (contactId) => {
   if (!device) {
@@ -497,6 +485,32 @@ const openEditModalNVS = (contact) => {
   setPhoneNum(contact.number);
   setDeviceId(contact.deviceId);
   setModalVisibleNVS(true);
+};
+
+const sendContact = async () => {
+  if (!connected || !device) {
+      Alert.alert("Error", "Not connected to a device.");
+      return;
+  }
+
+  if (!name || !number) {
+      Alert.alert("Error", "Please enter both name and number.");
+      return;
+  }
+
+  const contactData = `${name},${number}`;
+  console.log("📨 Sending new contact:", contactData);
+
+  await sendContactData(contactData, CHARACTERISTIC_UUID);
+
+  setReceivedContact(prev =>
+      prev ? `${prev},${contactData}` : contactData
+  );
+
+  setName('');
+  setNumber('');
+
+  Alert.alert("Success", "Contact added successfully!");
 };
 
 const sendContactNVS = async () => {
@@ -756,6 +770,11 @@ const formattedContacts = receivedContact
             </View>
           </View>
         </Modal>
+
+{/* for debugging */}
+        {/* <Text className="text-red-500 text-xs">
+  EEPROM raw: {receivedContact}
+</Text> */}
 
         <FlatList
           data={formattedContacts}
