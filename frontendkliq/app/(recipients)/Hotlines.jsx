@@ -15,6 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { API_URL } from "@env";
 import { NativeWindStyleSheet } from "nativewind";
+import { useRef } from 'react'; // Add this with your other imports
 
 const BASE_URL = `${API_URL}/recipients`;
 
@@ -30,8 +31,28 @@ const Hotlines = () => {
   const [userPhoneNumber, setUserPhoneNumber] = useState("N/A");
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const [allMessages, setAllMessages] = useState([]);
+  const [isInfoPressed, setIsInfoPressed] = useState(false);
+  const infoAnim = useRef(new Animated.Value(0)).current;
+  const [isPhoneInfoPressed, setIsPhoneInfoPressed] = useState(false);
+const phoneInfoAnim = useRef(new Animated.Value(0)).current;
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
+
+  useEffect(() => {
+    Animated.timing(phoneInfoAnim, {
+      toValue: isPhoneInfoPressed ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isPhoneInfoPressed, phoneInfoAnim]);
+  
+  useEffect(() => {
+    Animated.timing(infoAnim, {
+      toValue: isInfoPressed ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isInfoPressed, infoAnim]); // Added infoAnim to dependencies
 
   useEffect(() => {
     if (isDropdownVisible) {
@@ -280,9 +301,54 @@ const Hotlines = () => {
 </View>
 
       {/* Render Phone Number */}
-      <Text className="text-lg font-extrabold mb-3">
-        User’s Personal Numbers: {selectedDevice}
-      </Text>
+          <View className="relative mb-3">
+      <View className="flex-row items-center">
+        <Text className="text-lg font-extrabold">
+          User's Personal Numbers: {selectedDevice}
+        </Text>
+        <TouchableOpacity
+          onPressIn={() => setIsPhoneInfoPressed(true)}
+          onPressOut={() => setIsPhoneInfoPressed(false)}
+          activeOpacity={0.7}
+          className="ml-1"
+        >
+          <Icon name="help" size={17} color="#007bff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Hidden Phone Info Panel */}
+      <Animated.View 
+        style={{
+          position: 'absolute',
+          top: 50,
+          right: 70,
+          backgroundColor: 'white',
+          padding: 12,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: '#ddd',
+          zIndex: 100,
+          opacity: phoneInfoAnim,
+          transform: [{
+            translateY: phoneInfoAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-10, 0],
+            }),
+          }],
+          elevation: 5,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          width: '80%',
+        }}
+        pointerEvents="none"
+      >
+        <Text style={{ fontSize: 14, lineHeight: 20 }}>
+        This section provides the phone number of the selected device user accessible for a one-tap call.
+        </Text>
+      </Animated.View>
+    </View>
       <View className="flex-row justify-between items-center w-full px-6 py-5 mb-4 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
         <View>
           <Text className="text-xl font-extrabold text-black">
@@ -309,10 +375,55 @@ const Hotlines = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Emergency Hotlines Header */}
-      <Text className="text-2xl font-extrabold italic text-center mb-4">
-        Emergency Hotlines
-      </Text>
+      
+          {/* Emergency Hotlines Header with Info Icon */}
+      <View className="flex-row justify-center items-center mb-4 relative">
+        <Text className="text-2xl font-extrabold italic text-center mr-2">
+          Emergency Hotlines
+        </Text>
+        <TouchableOpacity
+          onPressIn={() => setIsInfoPressed(true)}
+          onPressOut={() => setIsInfoPressed(false)}
+          activeOpacity={0.7}
+          className="ml-0"
+        >
+          <Icon name="help" size={17} color="#007bff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Hidden Info Panel - Now with better positioning */}
+      <Animated.View 
+        style={{
+          position: 'absolute',
+          top: 120, // Better default position
+          alignSelf: 'center',
+          backgroundColor: 'white',
+          padding: 12,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: '#ddd',
+          zIndex: 100,
+          opacity: infoAnim,
+          transform: [{
+            translateY: infoAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-10, 0],
+            }),
+          }],
+          elevation: 5,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          width: '80%',
+          maxWidth: 300,
+        }}
+        pointerEvents="none" // Allows taps to pass through
+      >
+        <Text style={{ fontSize: 14, lineHeight: 20 }}>
+        Emergency hotlines can be added and updated with a one-tap dialing capability, including contacts for local authorities, medical services, or trusted individuals.
+        </Text>
+      </Animated.View>
 
       {/* Add Button */}
           <View className="justify-center items-center w-full px-5 py-4 mb-3 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
