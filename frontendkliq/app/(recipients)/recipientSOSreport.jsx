@@ -421,8 +421,8 @@ const RecipientSOSReports = () => {
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Icon
-                    name={expandedDates[date] ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-                    size={20}
+                    name={expandedDates[date] ? "arrow-drop-up" : "arrow-drop-down"}
+                    size={25}
                     color="black"
                   />
                   <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'black' }}>{date}</Text>
