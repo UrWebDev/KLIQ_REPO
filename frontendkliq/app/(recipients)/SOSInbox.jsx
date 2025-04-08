@@ -159,23 +159,23 @@ const SOSMessage = () => {
             .map((sos, index) => (
               <View key={index} className="mb-4">
                 {/* Timestamp with Red Triangle Exclamation Point */}
-                <View className="flex-row items-center ml-5 mb-2">
-                  <Icon name="error" size={20} color="red" />
-                  <Text className="text-lg font-black ml-1">
-                    {sos.receivedAt
-                      ? new Date(sos.receivedAt).toLocaleString()
-                      : "Date not available"}
-                  </Text>
-                </View>
+                  <View className="flex-row items-center ml-5 mb-2">
+                    <Text className="text-lg font-black ml-1">
+                      {sos.receivedAt
+                        ? new Date(sos.receivedAt).toLocaleString()
+                        : "Date not available"}
+                    </Text>
+                    <Icon name="error" size={23} color="red" style={{ marginLeft: 5 }} />
+                  </View>
 
                 {/* SOS Message Container */}
                 <View
-                  className={`bg-gray-300 p-4 rounded-3xl border ${
+                  className={`bg-gray-300 p-5 rounded-3xl border ${
                     sos.message && sos.message.toLowerCase().includes("last")
                       ? "border-red-500"
                       : sos.message && sos.message.toLowerCase().includes("safe")
                       ? "border-green-500"
-                      : "border-black-300"
+                      : "border-black-500"
                   }`}
                   style={{
                     shadowColor: "#000",
@@ -187,10 +187,10 @@ const SOSMessage = () => {
                 >
                   <View className="flex-row justify-between items-center">
                     <View>
-                      <Text className="text-lg font-bold ml-2 tracking-wider">
+                      <Text className="text-xl font-extrabold ml-2 tracking-wider">
                         {sos.phoneNUM || "+63 9765 786 665"}
                       </Text>
-                      <Text className="text-gray-600 ml-2 italic">
+                      <Text className="text-gray-600 ml-3 italic">
                         {sos.name || "Juan Dela Cruz"}
                       </Text>
                     </View>
@@ -217,7 +217,7 @@ const SOSMessage = () => {
                     {sos.message}
                   </Text>
                   <View className="mt-3">
-                    <Text className="text-lg font-bold ml-2 text-gray-600">
+                    <Text className="font-extrabold ml-2 text-gray-600">
                       User's Location:
                     </Text>
                     <TouchableOpacity
