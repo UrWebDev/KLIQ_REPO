@@ -155,13 +155,13 @@ const AuthScreen = () => {
             onChangeText={setUsername}
             onFocus={() => setFocusedInput("username")}
             onBlur={() => setFocusedInput(null)}
-            className={`w-full px-7 py-6 mb-4 rounded-full border ${focusedInput === "username" ? "border-[2px] border-black" : "border border-black"
+            className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "username" ? "border-[2px] border-black" : "border border-black"
               } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
             placeholderTextColor="rgba(0, 0, 0, 0.5)"
           />
 
           {/* Password Input */}
-          <View className="relative w-full mb-4">
+          <View className="relative w-auto mb-4">
             <TextInput
               placeholder="Password"
               value={password}
@@ -169,7 +169,7 @@ const AuthScreen = () => {
               onChangeText={setPassword}
               onFocus={() => setFocusedInput("password")}
               onBlur={() => setFocusedInput(null)}
-              className={`w-full px-7 py-6 rounded-full border ${focusedInput === "password" ? "border-[2px] border-black" : "border border-black"
+              className={`w-auto px-7 py-6 rounded-full border ${focusedInput === "password" ? "border-[2px] border-black" : "border border-black"
                 } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
               placeholderTextColor="rgba(0, 0, 0, 0.5)"
             />
@@ -185,7 +185,7 @@ const AuthScreen = () => {
           {!isLogin && (
             <>
               {/* Confirm Password */}
-              <View className="relative w-full mb-4">
+              <View className="relative w-auto mb-4">
                 <TextInput
                   placeholder="Confirm Password"
                   value={confirmPassword}
@@ -193,7 +193,7 @@ const AuthScreen = () => {
                   onChangeText={setConfirmPassword}
                   onFocus={() => setFocusedInput("confirmPassword")}
                   onBlur={() => setFocusedInput(null)}
-                  className={`w-full px-7 py-6 rounded-full border ${focusedInput === "confirmPassword" ? "border-[2px] border-black" : "border border-black"
+                  className={`w-auto px-7 py-6 rounded-full border ${focusedInput === "confirmPassword" ? "border-[2px] border-black" : "border border-black"
                     } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
                   placeholderTextColor="rgba(0, 0, 0, 0.5)"
                 />
@@ -211,7 +211,7 @@ const AuthScreen = () => {
 
               {/* Role Dropdown */}
               <TouchableOpacity
-                className="w-full px-7 py-5 mb-4 flex-row justify-between rounded-t-xl border-b border-black bg-gray-300 shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
+                className="w-auto px-7 py-5 mb-4 flex-row justify-between rounded-t-xl border-b border-black bg-gray-300 shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
                 onPress={() => setDropdownVisible(!dropdownVisible)}
               >
                 <View className="flex-row items-center">
@@ -224,7 +224,7 @@ const AuthScreen = () => {
               </TouchableOpacity>
 
               {dropdownVisible && (
-                <View className="w-full mb-4 border border-black rounded-xl bg-gray-100 shadow-lg shadow-black/20">
+                <View className="w-auto mb-4 border border-black rounded-xl bg-gray-100 shadow-lg shadow-black/20">
                   {roles.map((item) => (
                     <TouchableOpacity
                       key={item.value}
@@ -247,7 +247,7 @@ const AuthScreen = () => {
                 onChangeText={setUniqueId}
                 onFocus={() => setFocusedInput("uniqueId")}
                 onBlur={() => setFocusedInput(null)}
-                className={`w-full px-7 py-6 mb-4 rounded-full border ${focusedInput === "uniqueId" ? "border-[2px] border-black" : "border border-black"
+                className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "uniqueId" ? "border-[2px] border-black" : "border border-black"
                   } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
                 placeholderTextColor="rgba(0, 0, 0, 0.5)"
               />
@@ -261,7 +261,7 @@ const AuthScreen = () => {
                     keyboardType="numeric"
                     onFocus={() => setFocusedInput("age")}
                     onBlur={() => setFocusedInput(null)}
-                    className={`w-full px-7 py-6 mb-4 rounded-full border ${focusedInput === "age" ? "border-[2px] border-black" : "border border-black"
+                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "age" ? "border-[2px] border-black" : "border border-black"
                       } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                   />
@@ -271,7 +271,7 @@ const AuthScreen = () => {
                     onChangeText={setName}
                     onFocus={() => setFocusedInput("name")}
                     onBlur={() => setFocusedInput(null)}
-                    className={`w-full px-7 py-6 mb-4 rounded-full border ${focusedInput === "name" ? "border-[2px] border-black" : "border border-black"
+                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "name" ? "border-[2px] border-black" : "border border-black"
                       } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                   />
@@ -281,7 +281,7 @@ const AuthScreen = () => {
                     onChangeText={setBloodType}
                     onFocus={() => setFocusedInput("bloodType")}
                     onBlur={() => setFocusedInput(null)}
-                    className={`w-full px-7 py-6 mb-4 rounded-full border ${focusedInput === "bloodType" ? "border-[2px] border-black" : "border border-black"
+                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "bloodType" ? "border-[2px] border-black" : "border border-black"
                       } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                   />
@@ -297,7 +297,7 @@ const AuthScreen = () => {
                     keyboardType="numeric"
                     onFocus={() => setFocusedInput("age")}
                     onBlur={() => setFocusedInput(null)}
-                    className={`w-full px-7 py-6 mb-4 rounded-full border ${focusedInput === "age" ? "border-[2px] border-black" : "border border-black"
+                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "age" ? "border-[2px] border-black" : "border border-black"
                       } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                   />
@@ -307,7 +307,7 @@ const AuthScreen = () => {
                     onChangeText={setName}
                     onFocus={() => setFocusedInput("name")}
                     onBlur={() => setFocusedInput(null)}
-                    className={`w-full px-7 py-6 mb-4 rounded-full border ${focusedInput === "name" ? "border-[2px] border-black" : "border border-black"
+                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "name" ? "border-[2px] border-black" : "border border-black"
                       } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                   />
@@ -327,21 +327,16 @@ const AuthScreen = () => {
           </TouchableOpacity>
 
           {/* Toggle between login/sign up */}
-          <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
-            <Text className="text-center text-sm text-gray-500">
-              {isLogin ? (
-                <>
-                  don't have an account?{" "}
-                  <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Sign up</Text>
-                </>
-              ) : (
-                <>
-                  already have an account?{" "}
-                  <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>Log in</Text>
-                </>
-              )}
+          <View className="flex-row justify-center">
+            <Text className="text-center text-sm text-gray-800">
+              {isLogin ? "don't have an account? " : "already have an account? "}
             </Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+              <Text className="text-sm font-bold italic text-gray-800">
+                {isLogin ? "Sign up" : "Log in"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </View>
