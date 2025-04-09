@@ -209,7 +209,7 @@ const UserSOSReports = () => {
           pointerEvents="none"
         >
           <Text style={{ fontSize: 14, lineHeight: 20 }}>
-          This section displays your registered profile info for identification during emergencies, ensuring responders have critical details.
+          Minor details of your registered profile information, which are also visible to the recipients you have added.
           </Text>
         </Animated.View>
 

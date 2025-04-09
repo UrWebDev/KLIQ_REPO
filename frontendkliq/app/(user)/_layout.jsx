@@ -143,7 +143,7 @@ const TabIconTwo = () => {
             {/* Modal Header */}
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-xl font-extrabold text-black">
-                Recipient Profile
+                Device User Profile
               </Text>
               <TouchableOpacity onPress={() => setSidebarVisible(false)}>
                 <Icon name="close" size={24} color="black" />
