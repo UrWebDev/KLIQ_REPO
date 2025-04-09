@@ -558,11 +558,11 @@ const formattedContacts = receivedContact
       <Text className="text-2xl font-extrabold mb-5 text-gray-800 mt-10 mr-40">Connectivity:</Text>
 
         {/* NOTE Container */}
-        <View className="bg-gray-300 border border-black rounded-lg p-6 mb-4 w-full shadow-md">
-      <Text className="text-base italic">
+        <View className="bg-gray-300 border border-black rounded-lg p-5 mb-4 w-full shadow-md">
+      <Text className="text-base italic" style={{ textAlign: 'center' }}>
         <Text className="text-red-600 font-bold">*</Text>
         <Text className="text-black">NOTE: </Text>
-        <Text className="text-black">A single device should be linked to a single data entry (1:1). Please prevent any duplicate records.</Text>
+        <Text className="text-black">A single device should be linked to a single data entry (1:1). Please prevent any duplicate records. Connect via Bluetooth to manage accounts.</Text>
       </Text>
     </View>
         
@@ -605,7 +605,7 @@ const formattedContacts = receivedContact
     />
     
     <TouchableOpacity 
-      className={`bg-green-600 p-4 rounded-full mb-3 w-full items-center ${!connected ? 'opacity-50' : ''}`}
+      className={`bg-green-600 p-4 rounded-full mb-3 w-full items-center ${!connected ? 'opacity-100' : ''}`}
       onPress={sendContactNVS} 
       disabled={!connected}
     >
@@ -613,7 +613,6 @@ const formattedContacts = receivedContact
     </TouchableOpacity>
   </>
 )}
-
 
         <FlatList
           data={formattedContactsNVS}
