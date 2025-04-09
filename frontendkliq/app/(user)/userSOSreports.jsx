@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Linking, FlatList, ActivityIndicator, Modal, Pressable, Animated, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Ensure this is installed
 import axios from 'axios';
@@ -19,7 +19,17 @@ const UserSOSReports = () => {
 
   const screenHeight = Dimensions.get('window').height;
   const dynamicPaddingTop = screenHeight * 0.08; // 5% of screen height as top padding
+  const [isUserDetailsHelpPressed, setIsUserDetailsHelpPressed] = useState(false);
+  const userDetailsHelpAnim = useRef(new Animated.Value(0)).current;
 
+  useEffect(() => {
+    Animated.timing(userDetailsHelpAnim, {
+      toValue: isUserDetailsHelpPressed ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isUserDetailsHelpPressed, userDetailsHelpAnim]);
+  
   useEffect(() => {
     if (isMonthDropdownVisible) {
       Animated.timing(dropdownAnim, {
@@ -155,9 +165,55 @@ const UserSOSReports = () => {
           elevation: 5,
           alignSelf: 'flex-end',
           width: '88%'
-          
         }}
       >
+        {/* Help Icon - Placed in top-right corner inside the card */}
+        <View style={{ 
+          position: 'absolute', 
+          top: 20, 
+          right: 30,
+          zIndex: 1 
+        }}>
+          <TouchableOpacity
+            onPressIn={() => setIsUserDetailsHelpPressed(true)}
+            onPressOut={() => setIsUserDetailsHelpPressed(false)}
+            activeOpacity={0.7}
+          >
+            <Icon name="help" size={17} color="#007bff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Hidden Info Panel */}
+        <Animated.View 
+          style={{
+            position: 'absolute',
+            top: 50, // Appears below the help icon
+            right: 60,
+            backgroundColor: 'white',
+            padding: 12,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: '#ddd',
+            zIndex: 100,
+            opacity: userDetailsHelpAnim,
+            transform: [{
+              translateY: userDetailsHelpAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-5, 0], // Smooth slide up
+              }),
+            }],
+            elevation: 5,
+            width: '85%',
+            maxWidth: 300,
+          }}
+          pointerEvents="none"
+        >
+          <Text style={{ fontSize: 14, lineHeight: 20 }}>
+          This section displays your registered profile info for identification during emergencies, ensuring responders have critical details.
+          </Text>
+        </Animated.View>
+
+        {/* Keep all your existing user details content */}
         <View style={{ flexDirection: 'row', marginBottom: 8, paddingHorizontal: 16, paddingVertical: 1.5 }}>
           <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
             Name:{' '}
@@ -186,7 +242,7 @@ const UserSOSReports = () => {
             </View>
           </>
         )}
-      </View>
+    </View>
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={true}>
       {/* TOTAL Message */}
       <View style={{ marginBottom: 16, alignItems: 'center' }}>
@@ -316,8 +372,8 @@ const UserSOSReports = () => {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Icon
-                name={expandedDates[date] ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-                size={20}
+                name={expandedDates[date] ? "arrow-drop-up" : "arrow-drop-down"}
+                size={25}
                 color="black"
               />
               <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'black' }}>{date}</Text>

@@ -558,7 +558,7 @@ const formattedContacts = receivedContact
       <Text className="text-2xl font-extrabold mb-5 text-gray-800 mt-10 mr-40">Connectivity:</Text>
 
         {/* NOTE Container */}
-        <View className="bg-gray-300 border border-black rounded-lg p-5 mb-4 w-full shadow-md">
+        <View className="bg-gray-300 border border-black rounded-lg p-4 mb-4 w-full shadow-md">
       <Text className="text-base italic" style={{ textAlign: 'center' }}>
         <Text className="text-red-600 font-bold">*</Text>
         <Text className="text-black">NOTE: </Text>
