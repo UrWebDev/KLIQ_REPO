@@ -16,6 +16,7 @@ import axios from 'axios';
 import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart } from 'react-native-gifted-charts';
+import { useRef } from 'react';
 
 const RecipientSOSReports = () => {
   const [sosMessages, setSOSMessages] = useState([]);
@@ -28,8 +29,18 @@ const RecipientSOSReports = () => {
   const [weeklyData, setWeeklyData] = useState([0, 0, 0, 0]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [isMonthDropdownVisible, setIsMonthDropdownVisible] = useState(false);
+  const [isUserDetailsHelpPressed, setIsUserDetailsHelpPressed] = useState(false);
+  const userDetailsHelpAnim = useRef(new Animated.Value(0)).current;
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
+
+  useEffect(() => {
+    Animated.timing(userDetailsHelpAnim, {
+      toValue: isUserDetailsHelpPressed ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isUserDetailsHelpPressed, userDetailsHelpAnim]);
 
   useEffect(() => {
     if (isDropdownVisible) {
@@ -247,21 +258,62 @@ const RecipientSOSReports = () => {
       </View>
 
       {/* User Details Section */}
-      <View
-        style={{
-          backgroundColor: '#D1D5DB',
-          padding: 16,
-          borderRadius: 16,
+      <View style={{ 
+        backgroundColor: '#D1D5DB',
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#000',
+        marginBottom: 25,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+      }}>
+        {/* Help Icon Container - absolute positioned */}
+        <View style={{ 
+          position: 'absolute', 
+          top: 20, 
+          right: 30,
+          zIndex: 1 // Ensure it stays above other elements
+        }}>
+          <TouchableOpacity
+            onPressIn={() => setIsUserDetailsHelpPressed(true)}
+            onPressOut={() => setIsUserDetailsHelpPressed(false)}
+            activeOpacity={0.7}
+          >
+            <Icon name="help" size={17} color="#007bff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Info Panel - absolute positioned */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: 50, // Adjusted to appear below the icon
+          right: 60,
+          backgroundColor: 'white',
+          padding: 12,
+          borderRadius: 8,
           borderWidth: 1,
-          borderColor: '#000',
-          marginBottom: 25,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
+          borderColor: '#ddd',
+          zIndex: 100,
+          opacity: userDetailsHelpAnim,
+          transform: [{
+            translateY: userDetailsHelpAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-5, 0], // Smoother slide
+            }),
+          }],
           elevation: 5,
-        }}
-      >
+          width: '85%',
+          maxWidth: 300,
+        }}>
+          <Text style={{ fontSize: 14, lineHeight: 20 }}>
+            Device user details helps identify the user during emergencies and will
+            automatically appear when you select a device from the dropdown above.
+          </Text>
+        </Animated.View>
         <View style={{ flexDirection: 'row', marginBottom: 8, paddingHorizontal: 16, paddingVertical: 1.5 }}>
           <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
             Name:{' '}
