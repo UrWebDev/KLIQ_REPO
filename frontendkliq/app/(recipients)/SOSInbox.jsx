@@ -21,6 +21,7 @@ const SOSMessage = () => {
   const [newMessagesMap, setNewMessagesMap] = useState({});
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const lastSeenTimestampsRef = useRef({});
+  
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
 
@@ -75,7 +76,7 @@ const SOSMessage = () => {
 
   useEffect(() => {
     if (!recipientId) return;
-
+  
     const fetchSOSMessages = async () => {
       try {
         const response = await axios.get(
@@ -84,9 +85,9 @@ const SOSMessage = () => {
         const sortedMessages = response.data.sort(
           (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
         );
-
+  
         setSOSMessages(sortedMessages);
-
+  
         const devices = sortedMessages.reduce((acc, msg) => {
           if (!acc.some((d) => d.deviceId === msg.deviceId)) {
             acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
@@ -94,26 +95,31 @@ const SOSMessage = () => {
           return acc;
         }, []);
         setDeviceList(devices);
-
+  
         if (devices.length > 0 && !selectedDevice) {
           setSelectedDevice(devices[0].deviceId);
         }
-
+  
         const updatedNewMessagesMap = { ...newMessagesMap };
         devices.forEach((device) => {
-          const latestMessage = sortedMessages.find(
+          const deviceMessages = sortedMessages.filter(
             (msg) => msg.deviceId === device.deviceId
           );
-          const latestTime = new Date(latestMessage?.receivedAt).getTime();
-          const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
-
-          if (initialFetchDone && latestTime > lastSeen) {
-            updatedNewMessagesMap[device.deviceId] = true;
+          const newMessages = deviceMessages.filter((msg) => {
+            const latestTime = new Date(msg.receivedAt).getTime();
+            const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
+            return latestTime > lastSeen;
+          });
+  
+          if (newMessages.length > 0) {
+            updatedNewMessagesMap[device.deviceId] = newMessages.length;
+          } else {
+            updatedNewMessagesMap[device.deviceId] = 0;
           }
         });
-
+  
         setNewMessagesMap(updatedNewMessagesMap);
-
+  
         if (!initialFetchDone) {
           setInitialFetchDone(true);
         }
@@ -121,7 +127,7 @@ const SOSMessage = () => {
         console.error("Error fetching SOS messages:", error.response || error.message);
       }
     };
-
+  
     fetchSOSMessages();
     const intervalId = setInterval(fetchSOSMessages, 1000);
     return () => clearInterval(intervalId);
@@ -155,66 +161,74 @@ const SOSMessage = () => {
     <View className="flex-1 p-5" style={{ backgroundColor: "white" }}>
       {/* Dropdown Selection Button */}
       <View className="relative mt-10 ml-[11%] mr-0 pr-1 mb-4">
+  <TouchableOpacity
+    onPress={() => setDropdownVisible(!isDropdownVisible)}
+    className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
+  >
+    <View className="flex-row items-center space-x-2">
+      <Icon name="person-outline" size={20} color="black" />
+      <Text className="font-extrabold text-base text-black">
+        {String(
+          deviceList.find((d) => d.deviceId === selectedDevice)?.name ||
+            "Unknown Device"
+        )}
+      </Text>
+    </View>
+    <View className="flex-row items-center space-x-2">
+      {newMessagesMap[selectedDevice] > 0 && (
+        <View className="relative w-5 h-5 rounded-full bg-red-500 mr-1 flex justify-center items-center">
+          <Text className="text-xs text-white font-bold">
+            {newMessagesMap[selectedDevice]}
+          </Text>
+        </View>
+      )}
+      <Icon
+        name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+        size={20}
+        color="black"
+      />
+    </View>
+  </TouchableOpacity>
+
+  {isDropdownVisible && (
+    <Animated.View
+      className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
+      style={{
+        top: "120%",
+        opacity: dropdownAnim,
+        transform: [
+          {
+            translateY: dropdownAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-10, 0],
+            }),
+          },
+        ],
+      }}
+    >
+      {deviceList.map((device, index) => (
         <TouchableOpacity
-          onPress={() => setDropdownVisible(!isDropdownVisible)}
-          className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
+          key={index}
+          onPress={() => handleDeviceSelect(device.deviceId)}
+          className="p-3 border-b border-gray-200 last:border-b-0"
         >
-          <View className="flex-row items-center space-x-2">
-            <Icon name="person-outline" size={20} color="black" />
-            <Text className="font-extrabold text-base text-black">
-              {String(
-                deviceList.find((d) => d.deviceId === selectedDevice)?.name ||
-                  "Unknown Device"
-              )}
+          <View className="flex-row justify-between items-center">
+            <Text className="text-black">
+              {String(device.name || "Unknown Device")}
             </Text>
-          </View>
-          <View className="flex-row items-center space-x-2">
-            {newMessagesMap[selectedDevice] && (
-              <View className="w-3 h-3 rounded-full bg-red-500 mr-1" />
+            {newMessagesMap[device.deviceId] > 0 && (
+              <View className="relative w-5 h-5 rounded-full bg-red-500 ml-2 flex justify-center items-center">
+                <Text className="text-xs text-white font-bold">
+                  {newMessagesMap[device.deviceId]}
+                </Text>
+              </View>
             )}
-            <Icon
-              name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-              size={20}
-              color="black"
-            />
           </View>
         </TouchableOpacity>
-
-        {isDropdownVisible && (
-          <Animated.View
-            className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
-            style={{
-              top: "120%",
-              opacity: dropdownAnim,
-              transform: [
-                {
-                  translateY: dropdownAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-10, 0],
-                  }),
-                },
-              ],
-            }}
-          >
-            {deviceList.map((device, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleDeviceSelect(device.deviceId)}
-                className="p-3 border-b border-gray-200 last:border-b-0"
-              >
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-black">
-                    {String(device.name || "Unknown Device")}
-                  </Text>
-                  {newMessagesMap[device.deviceId] && (
-                    <View className="w-3 h-3 rounded-full bg-red-500 ml-2" />
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </Animated.View>
-        )}
-      </View>
+      ))}
+    </Animated.View>
+  )}
+</View>
 
       {/* SOS Messages */}
       <ScrollView className="flex-1 p-4 -mt-2">
