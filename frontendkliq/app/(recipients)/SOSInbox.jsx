@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,9 @@ const SOSMessage = () => {
   const [selectedDevice, setSelectedDevice] = useState("");
   const [deviceList, setDeviceList] = useState([]);
   const [isDropdownVisible, setDropdownVisible] = useState(false);
+  const [newMessagesMap, setNewMessagesMap] = useState({});
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const lastSeenTimestampsRef = useRef({});
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
 
@@ -54,7 +57,7 @@ const SOSMessage = () => {
 
   useEffect(() => {
     if (!recipientId) return;
-
+  
     const fetchSOSMessages = async () => {
       try {
         const response = await axios.get(
@@ -63,34 +66,68 @@ const SOSMessage = () => {
         const sortedMessages = response.data.sort(
           (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
         );
-
+  
         setSOSMessages(sortedMessages);
-
+  
         const devices = sortedMessages.reduce((acc, msg) => {
           if (!acc.some((d) => d.deviceId === msg.deviceId)) {
             acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
           }
           return acc;
         }, []);
-
         setDeviceList(devices);
-
+  
         if (devices.length > 0 && !selectedDevice) {
-          setSelectedDevice(devices[0].deviceId); // Set the first deviceId instead of "Unknown Device"
+          setSelectedDevice(devices[0].deviceId);
+        }
+  
+        const updatedNewMessagesMap = { ...newMessagesMap };
+        devices.forEach((device) => {
+          const latestMessage = sortedMessages.find(
+            (msg) => msg.deviceId === device.deviceId
+          );
+          const latestTime = new Date(latestMessage?.receivedAt).getTime();
+          const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
+  
+          if (initialFetchDone && latestTime > lastSeen) {
+            updatedNewMessagesMap[device.deviceId] = true;
+          }
+        });
+  
+        setNewMessagesMap(updatedNewMessagesMap);
+  
+        if (!initialFetchDone) {
+          setInitialFetchDone(true);
         }
       } catch (error) {
-        console.error(
-          "Error fetching SOS messages:",
-          error.response || error.message
-        );
+        console.error("Error fetching SOS messages:", error.response || error.message);
       }
     };
-
+  
     fetchSOSMessages();
     const intervalId = setInterval(fetchSOSMessages, 1000);
-
     return () => clearInterval(intervalId);
-  }, [recipientId, selectedDevice]);
+  }, [recipientId, initialFetchDone]);
+  
+
+  const handleDeviceSelect = (deviceId) => {
+    setSelectedDevice(deviceId);
+    setDropdownVisible(false);
+  
+    // Mark the device as seen and remove red dot
+    setNewMessagesMap((prev) => ({ ...prev, [deviceId]: false }));
+  
+    // Store the latest timestamp as last seen for this device
+    const latestMessage = sosMessages.find(
+      (msg) => msg.deviceId === deviceId
+    );
+    if (latestMessage) {
+      lastSeenTimestampsRef.current[deviceId] = new Date(
+        latestMessage.receivedAt
+      ).getTime();
+    }
+  };
+  
 
   return (
     <View className="flex-1 p-5" style={{ backgroundColor: "white" }}>
@@ -109,14 +146,18 @@ const SOSMessage = () => {
               )}
             </Text>
           </View>
-          <Icon
-            name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-            size={20}
-            color="black"
-          />
+          <View className="flex-row items-center space-x-2">
+            {newMessagesMap[selectedDevice] && (
+              <View className="w-3 h-3 rounded-full bg-red-500 mr-1" />
+            )}
+            <Icon
+              name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+              size={20}
+              color="black"
+            />
+          </View>
         </TouchableOpacity>
 
-        {/* Animated Dropdown List */}
         {isDropdownVisible && (
           <Animated.View
             className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
@@ -127,7 +168,7 @@ const SOSMessage = () => {
                 {
                   translateY: dropdownAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [-10, 0], // Slide down effect
+                    outputRange: [-10, 0],
                   }),
                 },
               ],
@@ -136,15 +177,17 @@ const SOSMessage = () => {
             {deviceList.map((device, index) => (
               <TouchableOpacity
                 key={index}
-                onPress={() => {
-                  setSelectedDevice(device.deviceId);
-                  setDropdownVisible(false);
-                }}
+                onPress={() => handleDeviceSelect(device.deviceId)}
                 className="p-3 border-b border-gray-200 last:border-b-0"
               >
-                <Text className="text-black">
-                  {String(device.name || "Unknown Device")}
-                </Text>
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-black">
+                    {String(device.name || "Unknown Device")}
+                  </Text>
+                  {newMessagesMap[device.deviceId] && (
+                    <View className="w-3 h-3 rounded-full bg-red-500 ml-2" />
+                  )}
+                </View>
               </TouchableOpacity>
             ))}
           </Animated.View>
@@ -158,17 +201,15 @@ const SOSMessage = () => {
             .filter((sos) => sos.deviceId === selectedDevice)
             .map((sos, index) => (
               <View key={index} className="mb-4">
-                {/* Timestamp with Red Triangle Exclamation Point */}
-                  <View className="flex-row items-center ml-5 mb-2">
-                    <Text className="text-lg font-black ml-1">
-                      {sos.receivedAt
-                        ? new Date(sos.receivedAt).toLocaleString()
-                        : "Date not available"}
-                    </Text>
-                    <Icon name="error" size={23} color="red" style={{ marginLeft: 5 }} />
-                  </View>
+                <View className="flex-row items-center ml-5 mb-2">
+                  <Text className="text-lg font-black ml-1">
+                    {sos.receivedAt
+                      ? new Date(sos.receivedAt).toLocaleString()
+                      : "Date not available"}
+                  </Text>
+                  <Icon name="error" size={23} color="red" style={{ marginLeft: 5 }} />
+                </View>
 
-                {/* SOS Message Container */}
                 <View
                   className={`bg-gray-300 p-5 rounded-3xl border ${
                     sos.message && sos.message.toLowerCase().includes("last")
@@ -182,7 +223,7 @@ const SOSMessage = () => {
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.1,
                     shadowRadius: 4,
-                    elevation: 4, // For Android
+                    elevation: 4,
                   }}
                 >
                   <View className="flex-row justify-between items-center">
