@@ -24,6 +24,7 @@ const SOSMessage = () => {
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
 
+  // Load dropdown animation
   useEffect(() => {
     if (isDropdownVisible) {
       Animated.timing(dropdownAnim, {
@@ -40,6 +41,7 @@ const SOSMessage = () => {
     }
   }, [isDropdownVisible]);
 
+  // Get user ID on mount
   useEffect(() => {
     const getRecipientId = async () => {
       try {
@@ -55,9 +57,25 @@ const SOSMessage = () => {
     getRecipientId();
   }, []);
 
+  // Restore last seen timestamps from AsyncStorage on mount
+  useEffect(() => {
+    const loadLastSeenTimestamps = async () => {
+      try {
+        const data = await AsyncStorage.getItem("lastSeenTimestamps");
+        if (data) {
+          lastSeenTimestampsRef.current = JSON.parse(data);
+        }
+      } catch (error) {
+        console.error("Failed to load lastSeenTimestamps:", error);
+      }
+    };
+
+    loadLastSeenTimestamps();
+  }, []);
+
   useEffect(() => {
     if (!recipientId) return;
-  
+
     const fetchSOSMessages = async () => {
       try {
         const response = await axios.get(
@@ -66,9 +84,9 @@ const SOSMessage = () => {
         const sortedMessages = response.data.sort(
           (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
         );
-  
+
         setSOSMessages(sortedMessages);
-  
+
         const devices = sortedMessages.reduce((acc, msg) => {
           if (!acc.some((d) => d.deviceId === msg.deviceId)) {
             acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
@@ -76,11 +94,11 @@ const SOSMessage = () => {
           return acc;
         }, []);
         setDeviceList(devices);
-  
+
         if (devices.length > 0 && !selectedDevice) {
           setSelectedDevice(devices[0].deviceId);
         }
-  
+
         const updatedNewMessagesMap = { ...newMessagesMap };
         devices.forEach((device) => {
           const latestMessage = sortedMessages.find(
@@ -88,14 +106,14 @@ const SOSMessage = () => {
           );
           const latestTime = new Date(latestMessage?.receivedAt).getTime();
           const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
-  
+
           if (initialFetchDone && latestTime > lastSeen) {
             updatedNewMessagesMap[device.deviceId] = true;
           }
         });
-  
+
         setNewMessagesMap(updatedNewMessagesMap);
-  
+
         if (!initialFetchDone) {
           setInitialFetchDone(true);
         }
@@ -103,31 +121,35 @@ const SOSMessage = () => {
         console.error("Error fetching SOS messages:", error.response || error.message);
       }
     };
-  
+
     fetchSOSMessages();
     const intervalId = setInterval(fetchSOSMessages, 1000);
     return () => clearInterval(intervalId);
   }, [recipientId, initialFetchDone]);
-  
 
-  const handleDeviceSelect = (deviceId) => {
+  // Save last seen when selecting a device
+  const handleDeviceSelect = async (deviceId) => {
     setSelectedDevice(deviceId);
     setDropdownVisible(false);
-  
-    // Mark the device as seen and remove red dot
+
     setNewMessagesMap((prev) => ({ ...prev, [deviceId]: false }));
-  
-    // Store the latest timestamp as last seen for this device
-    const latestMessage = sosMessages.find(
-      (msg) => msg.deviceId === deviceId
-    );
+
+    const latestMessage = sosMessages.find((msg) => msg.deviceId === deviceId);
     if (latestMessage) {
       lastSeenTimestampsRef.current[deviceId] = new Date(
         latestMessage.receivedAt
       ).getTime();
+
+      try {
+        await AsyncStorage.setItem(
+          "lastSeenTimestamps",
+          JSON.stringify(lastSeenTimestampsRef.current)
+        );
+      } catch (error) {
+        console.error("Failed to save lastSeenTimestamps:", error);
+      }
     }
   };
-  
 
   return (
     <View className="flex-1 p-5" style={{ backgroundColor: "white" }}>
