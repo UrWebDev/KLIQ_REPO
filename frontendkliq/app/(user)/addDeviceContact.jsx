@@ -5,6 +5,7 @@ import {
 import { BleManager } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
 import { decode as atob } from 'react-native-quick-base64';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
@@ -133,7 +134,7 @@ const connectToDevice = async (scannedDevice) => {
         console.log("✅ Device successfully connected:", connectedDevice.id);
         setDevice(connectedDevice);
         setConnected(true);
-        Alert.alert("🎉 Success", "Connected to ESP32!");
+        Alert.alert("Success!", "Connected to ESP32!");
 
         await connectedDevice.requestMTU(517);
         console.log("✅ MTU size increased to 512");
@@ -614,78 +615,112 @@ const formattedContacts = receivedContact
   </>
 )}
 
-        <FlatList
-          data={formattedContactsNVS}
-          keyExtractor={(item) => item.id.toString()}
-          className="w-full mb-10s"
-          scrollEnabled={false}
-          renderItem={({ item }) => (
-            <View className="bg-gray-300 rounded-lg px-4 py-3 mb-20 flex-row justify-between items-center border border-black shadow-sm">
-              <Text className="text-base font-bold text-black">{item.name}</Text>
-              <Text className="text-sm italic text-gray-800">{item.number}</Text>
-              <Text className="text-sm italic text-gray-800">{item.deviceId}</Text>
+<FlatList
+  data={formattedContactsNVS}
+  keyExtractor={(item) => item.id.toString()}
+  className="w-full mb-10s"
+  scrollEnabled={false}
+  renderItem={({ item }) => (
+    <View className="bg-gray-300 rounded-lg p-5 mb-20 flex-row justify-between items-center border border-black shadow-sm">
+      <View className="flex-1">
+        <Text className="text-base font-bold text-black">{item.name}</Text>
+        <Text className="text-sm italic text-gray-800">{item.number}</Text>
+      </View>
 
-              {item.id && item.name && item.number ? (
-                <View className="flex-row items-center">
-                  <TouchableOpacity onPress={() => openEditModalNVS(item)} className="pr-4">
-                  <Text className="text-xl text-black">✏️</Text>
-                  </TouchableOpacity>
-                  
-                  <View className="w-px h-6 bg-black mr-4" />
-                  
-                  <TouchableOpacity onPress={() => deleteContactNVS(item.id)}>
-                    <Text className="text-xl text-black">🗑️</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : null}
-            </View>
-          )}
-        />
+      {item.id && item.name && item.number ? (
+        <View className="flex-row items-center">
+          <TouchableOpacity onPress={() => openEditModalNVS(item)} className="pr-4">
+            <Icon name="edit" size={25} color="black" />
+          </TouchableOpacity>
+          
+          <View className="w-px h-6 bg-black mr-4" />
+          
+          <TouchableOpacity onPress={() => 
+            Alert.alert(
+              'Delete Contact',
+              `Are you sure you want to delete your contact?`,
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Delete', 
+                  onPress: () => deleteContactNVS(item.id),
+                  style: 'destructive'
+                },
+              ]
+            )
+          }>
+            <Icon name="delete" size={25} color="black" />
+          </TouchableOpacity>
+        </View>
+      ) : null}
+    </View>
+  )}
+/>
 
-        <Modal visible={modalVisibleNVS} animationType="slide" transparent>
-          <View className="flex-1 justify-center items-center bg-black/50">
-            <View className="bg-white p-5 rounded-lg w-11/12 max-w-md items-center">
-              <Text className="text-xl font-bold mb-4 text-gray-800">Edit Contact NVS</Text>
-              
-              <TextInput
-                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
-                placeholder="Enter Name"
-                value={NAME}
-                onChangeText={setNamee}
-              />
-              
-              <TextInput
-                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
-                placeholder="Enter Number"
-                value={phoneNum}
-                onChangeText={setPhoneNum}
-                keyboardType="phone-pad"
-              />
-
-              <TextInput
-                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
-                placeholder="Enter Device Id"
-                value={deviceId}
-                onChangeText={setDeviceId}
-                keyboardType="phone-pad"
-              />
-              
+      <Modal visible={modalVisibleNVS} animationType="fade" transparent>
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white w-4/5 rounded-2xl p-6 shadow-lg">
+            {/* Replicated Modal Header */}
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-extrabold text-black">
+                Edit Your Contact
+              </Text>
               <TouchableOpacity 
-                className="bg-green-600 p-4 rounded mb-3 w-full items-center"
-                onPress={() => updateContactNVS(selectedContact.id, NAME, phoneNum, deviceId)}
-              >
-                <Text className="text-white text-base font-semibold">Save NVS</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                className="bg-red-600 p-4 rounded mb-3 w-full items-center"
                 onPress={() => setModalVisibleNVS(false)}
+                className="p-2"
               >
-                <Text className="text-white text-base font-semibold">Cancel</Text>
+                <View className="w-6 h-6 items-center justify-center">
+                  <View className="absolute w-5 h-0.5 bg-black rotate-45"></View>
+                  <View className="absolute w-5 h-0.5 bg-black -rotate-45"></View>
+                </View>
               </TouchableOpacity>
             </View>
+
+            {/* REST OF THE MODAL CONTENT REMAINS EXACTLY THE SAME */}
+            <TextInput
+              placeholder="Enter Name"
+              value={NAME}
+              onChangeText={setNamee}
+              className="border border-gray-300 rounded-xl p-4 mb-4 bg-white text-gray-800 shadow-sm"
+            />
+            
+            <TextInput
+              placeholder="Enter Number"
+              value={phoneNum}
+              onChangeText={setPhoneNum}
+              className="border border-gray-300 rounded-xl p-4 mb-4 bg-white text-gray-800 shadow-sm"
+              keyboardType="phone-pad"
+            />
+
+            <TextInput
+              placeholder="Enter Device Id"
+              value={deviceId}
+              onChangeText={setDeviceId}
+              className="border border-gray-300 rounded-xl p-4 mb-5 bg-white text-gray-800 shadow-sm"
+              keyboardType="phone-pad"
+            />
+            
+            <TouchableOpacity
+              onPress={() => updateContactNVS(selectedContact.id, NAME, phoneNum, deviceId)}
+              className="w-full p-4 bg-green-600 rounded-xl mb-3 shadow-md"
+            >
+              <Text className="text-white text-center font-bold text-lg">
+                Save NVS
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => setModalVisibleNVS(false)}
+              className="w-full p-4 bg-gray-400 rounded-xl shadow"
+            >
+              <Text className="text-white text-center font-bold text-lg">Cancel</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
+        </View>
+      </Modal>
 
         <Text className="text-2xl font-extrabold mb-5 text-gray-800 mt-5">Add Recipients(10):</Text>
         
@@ -770,69 +805,103 @@ const formattedContacts = receivedContact
           </View>
         </Modal>
 
-{/* for debugging */}
-        {/* <Text className="text-red-500 text-xs">
-  EEPROM raw: {receivedContact}
-</Text> */}
+      {/* for debugging */}
+              {/* <Text className="text-red-500 text-xs">
+        EEPROM raw: {receivedContact}
+      </Text> */}
 
-        <FlatList
-          data={formattedContacts}
-          keyExtractor={(item) => item.id.toString()}
-          className="w-full"
-          renderItem={({ item }) => (
-            <View className="bg-gray-300 rounded-lg px-4 py-3 mb-3 flex-row justify-between items-center border border-black shadow-sm">
+      <FlatList
+        data={formattedContacts}
+        keyExtractor={(item) => item.id.toString()}
+        className="w-full"
+        renderItem={({ item }) => (
+          <View className="bg-gray-300 rounded-lg p-5 mb-3 flex-row justify-between items-center border border-black shadow-sm">
+            <View className="flex-1">
               <Text className="text-base font-bold text-black">{item.name}</Text>
               <Text className="text-sm italic text-gray-800">{item.number}</Text>
-
-              {item.id && item.name && item.number ? (
-                <View className="flex-row items-center">
-                  <TouchableOpacity onPress={() => openEditModal(item)} className="pr-4">
-                  <Text className="text-xl text-black">✏️</Text>
-                  </TouchableOpacity>
-
-                  <View className="w-px h-6 bg-black mr-4" />
-
-                  <TouchableOpacity onPress={() => deleteContact(item.id)}>
-                  <Text className="text-xl text-black">🗑️</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : null}
             </View>
-          )}
-        />
 
-        <Modal visible={modalVisible} animationType="slide" transparent>
-          <View className="flex-1 justify-center items-center bg-black/50">
-            <View className="bg-white p-5 rounded-lg w-11/12 max-w-md items-center">
-              <Text className="text-xl font-bold mb-4 text-gray-800">Edit Contact EEPROM</Text>
-              <TextInput 
-                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
-                placeholder="Enter Name" 
-                value={name} 
-                onChangeText={setName} 
-              />
-              <TextInput 
-                className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
-                placeholder="Enter Number" 
-                value={number} 
-                onChangeText={setNumber} 
-                keyboardType="phone-pad" 
-              />
-              <TouchableOpacity 
-                className="bg-green-600 p-4 rounded mb-3 w-full items-center"
-                onPress={updateContact}
-              >
-                <Text className="text-white text-base font-semibold">Save EEPROM</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                className="bg-red-600 p-4 rounded mb-3 w-full items-center"
-                onPress={() => setModalVisible(false)}
-              >
-                <Text className="text-white text-base font-semibold">Cancel</Text>
-              </TouchableOpacity>
-            </View>
+            {item.id && item.name && item.number ? (
+              <View className="flex-row items-center">
+                <TouchableOpacity onPress={() => openEditModal(item)} className="pr-4">
+                  <Icon name="edit" size={25} color="black" />
+                </TouchableOpacity>
+
+                <View className="w-px h-6 bg-black mr-4" />
+
+                <TouchableOpacity onPress={() => 
+                  Alert.alert(
+                    'Delete Contact',
+                    `Are you sure you want to delete ${item.name} from your recipient contacts?`,
+                    [
+                      {
+                        text: 'Cancel',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'Delete', 
+                        onPress: () => deleteContact(item.id),
+                        style: 'destructive'
+                      },
+                    ]
+                  )
+                }>
+                  <Icon name="delete" size={25} color="black" />
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </View>
-        </Modal>
+        )}
+      />
+
+      <Modal visible={modalVisible} animationType="fade" transparent>
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white w-4/5 rounded-2xl p-6 shadow-lg">
+            {/* Replicated Modal Header */}
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-extrabold text-black">
+                Edit Recipient Contact
+              </Text>
+              <TouchableOpacity 
+                onPress={() => setModalVisible(false)}
+                className="p-2"
+              >
+                <View className="w-6 h-6 items-center justify-center">
+                  <View className="absolute w-5 h-0.5 bg-black rotate-45"></View>
+                  <View className="absolute w-5 h-0.5 bg-black -rotate-45"></View>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* Rest of the modal content remains EXACTLY the same */}
+            <TextInput 
+              className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
+              placeholder="Enter Name" 
+              value={name} 
+              onChangeText={setName} 
+            />
+            <TextInput 
+              className="border border-gray-300 rounded p-3 w-full mb-3 bg-white"
+              placeholder="Enter Number" 
+              value={number} 
+              onChangeText={setNumber} 
+              keyboardType="phone-pad" 
+            />
+            <TouchableOpacity 
+              className="bg-green-600 p-4 rounded-xl mb-3 w-full items-center"
+              onPress={updateContact}
+            >
+              <Text className="text-white text-base font-semibold">Save EEPROM</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              className="bg-gray-400 p-4 rounded-xl mb-3 w-full items-center"
+              onPress={() => setModalVisible(false)}
+            >
+              <Text className="text-white text-base font-semibold">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
