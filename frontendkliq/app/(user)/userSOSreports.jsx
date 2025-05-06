@@ -187,8 +187,8 @@ const UserSOSReports = () => {
         <Animated.View 
           style={{
             position: 'absolute',
-            top: 50, // Appears below the help icon
-            right: 60,
+            top: 10, // Appears below the help icon
+            right: 70,
             backgroundColor: 'white',
             padding: 12,
             borderRadius: 8,
