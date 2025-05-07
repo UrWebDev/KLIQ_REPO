@@ -149,11 +149,11 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
 
   const handleAddContact = async () => {
     if (!name.trim() || !phoneNumber.trim()) {
-      Alert.alert("Validation", "Name and phone number are required.");
+      Alert.alert("Missing", "Name and phone number are required.");
       return;
     }
     if (!/^\d+$/.test(phoneNumber.trim())) {
-      Alert.alert("Validation", "Please enter a valid numeric phone number.");
+      Alert.alert("Missing", "Please enter a valid numeric phone number.");
       return;
     }
     try {
@@ -170,7 +170,7 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
 
   const handleUpdateContact = async () => {
     if (!name.trim() || !phoneNumber.trim()) {
-      Alert.alert("Validation", "Name and phone number are required.");
+      Alert.alert("Missing", "Name and phone number are required.");
       return;
     }
     try {
@@ -372,7 +372,7 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
             if (userPhoneNumber !== "N/A") {
               Linking.openURL(`tel:${userPhoneNumber}`);
             } else {
-              Alert.alert("No phone number found.");
+              Alert.alert("Unavailable", "No phone number found.");
             }
           }}
         >
@@ -443,7 +443,12 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
               <Icon name="add" size={30} color="black" />
             </TouchableOpacity>
           </View>
-
+      {/* Conditional message when no available hotlines */}
+      {contacts.length === 0 && (
+        <Text className="text-center text-gray-500 mt-3">
+          No emergency contact available.
+        </Text>
+      )}
       {/* Emergency Contacts List */}
       <FlatList
         data={contacts}
