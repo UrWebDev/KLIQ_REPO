@@ -37,7 +37,7 @@ const TabIconTwo = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(1);
 
   const translateX = useRef(new Animated.Value(0)).current;
 
@@ -83,15 +83,19 @@ const TabIconTwo = () => {
     const checkAuthStatus = async () => {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
-        setIsAuthenticated(true); // User is authenticated
+        setIsAuthenticated(true);
         const userString = await AsyncStorage.getItem("authData");
-        const data = JSON.parse(userString)
-        console.log(data, "user layout");
-
-        if(data.role == 'recipient') router.replace("/Hotlines")
+        const data = JSON.parse(userString);
+        
+        if(data.role == 'recipient') {
+          router.replace("/Hotlines");
+        } else {
+          // Ensure underline matches initial tab
+          setTimeout(() => setActiveTab(1), 100); 
+        }
       } else {
-        setIsAuthenticated(false); // User is not authenticated
-        router.replace('authScreen'); // Redirect to login screen if not authenticated
+        setIsAuthenticated(false);
+        router.replace('authScreen');
       }
     };
     checkAuthStatus();
