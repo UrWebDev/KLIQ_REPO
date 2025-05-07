@@ -133,7 +133,7 @@ const UserSOSReports = () => {
 
     const words = message.toLowerCase().split(/\s+/);
     if (words.includes('last')) return '#EF4444'; // Red for "last"
-    if (words.includes('safe')) return '#00FF00'; // Green for "safe"
+    if (words.includes('safe')) return '#22C55E'; // Green for "safe"
 
     return '#000'; // Default black
   };
@@ -346,7 +346,29 @@ const UserSOSReports = () => {
           yAxisLabelTexts={['0', '10', '20', '30', '40', '50']} // Custom Y-axis labels
         />
       </View>
-
+    {totalAlerts === 0 && (
+      <View style={{
+        padding: 30,
+        borderRadius: 16,
+        marginTop: 5,
+        backgroundColor: '#D1D5DB',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 2,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10
+      }}>
+        <Icon name="info" size={20} color="#007bff" />
+        <Text style={{ fontSize: 16, fontStyle: 'italic' }}>
+          No available messages for {months[selectedMonth]}
+        </Text>
+      </View>
+    )}  
       {/* SOS Reports Section */}
       {Object.keys(groupedMessages).map((date) => (
         <View key={date} style={{ marginBottom: 8 }}>
