@@ -149,11 +149,11 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
 
   const handleAddContact = async () => {
     if (!name.trim() || !phoneNumber.trim()) {
-      Alert.alert("Missing", "Name and phone number are required.");
+      Alert.alert("Invalid", "Name and phone number are required.");
       return;
     }
     if (!/^\d+$/.test(phoneNumber.trim())) {
-      Alert.alert("Missing", "Please enter a valid numeric phone number.");
+      Alert.alert("Invalid", "Please enter a valid numeric phone number.");
       return;
     }
     try {
@@ -170,7 +170,7 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
 
   const handleUpdateContact = async () => {
     if (!name.trim() || !phoneNumber.trim()) {
-      Alert.alert("Missing", "Name and phone number are required.");
+      Alert.alert("Invalid", "Name and phone number are required.");
       return;
     }
     try {
