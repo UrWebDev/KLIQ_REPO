@@ -4,6 +4,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { register, login, getTokenData } from "./api";
 import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 const roles = [
   { label: "Device User", value: "user" },
@@ -35,9 +36,6 @@ const AuthScreen = () => {
 
           const userString = await AsyncStorage.getItem("authData");
           const data = JSON.parse(userString)
-
-          console.log(data, "nigg");
-
 
           console.log("Auth validation success:", {
             role: data.role,
@@ -110,6 +108,9 @@ const AuthScreen = () => {
       }
 
       const response = isLogin ? await login(data) : await register(data);
+      console.log(response, response.data, "logging");
+      getTokenData();
+      
 
       Alert.alert("Success", response.data.message || "Login Successful");
 
@@ -128,6 +129,8 @@ const AuthScreen = () => {
         router.replace("/SOSInbox");
       }
     } catch (error) {
+      console.log(error);
+      
       Alert.alert("Error", error.response?.data?.message || "Something went wrong.");
     }
   };

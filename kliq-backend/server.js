@@ -8,7 +8,11 @@ dotenv.config()
 const app = express();
 // Middleware to parse application/x-www-form-urlencoded data
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
+}));
 app.use(bodyParser.json());
 app.use(express.json());
 // Connect to MongoDB

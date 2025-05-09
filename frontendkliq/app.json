@@ -26,7 +26,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.kliqApp",
-      "permissions": ["BLUETOOTH", "BLUETOOTH_ADMIN", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "permissions": ["BLUETOOTH", "BLUETOOTH_ADMIN", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "INTERNET"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
