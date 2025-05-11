@@ -25,7 +25,7 @@ const RecipientSOSReports = () => {
   const [deviceList, setDeviceList] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState('');
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [weeklyData, setWeeklyData] = useState([0, 0, 0, 0]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [isMonthDropdownVisible, setIsMonthDropdownVisible] = useState(false);
@@ -107,7 +107,7 @@ const RecipientSOSReports = () => {
         const devices = [];
         sortedMessages.forEach((msg) => {
           if (!devices.some((device) => device.deviceId === msg.deviceId)) {
-            devices.push({ deviceId: msg.deviceId, name: msg.name || 'Unknown Device' });
+            devices.push({ deviceId: msg.deviceId, name: msg.name || 'No Device Yet' });
           }
         });
 
@@ -120,8 +120,6 @@ const RecipientSOSReports = () => {
         calculateWeeklyData(sortedMessages);
       } catch (error) {
         console.error('Error fetching SOS messages:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -190,9 +188,9 @@ const RecipientSOSReports = () => {
       bloodType: '',
     };
 
-  if (loading) {
-    return <ActivityIndicator size="large" />;
-  }
+  // if (loading) {
+  //   return <ActivityIndicator size="large" />;
+  // }
 
   const totalAlerts = weeklyData.reduce((sum, count) => sum + count, 0);
 
@@ -213,7 +211,7 @@ const RecipientSOSReports = () => {
           <View className="flex-row items-center space-x-2">
             <Icon name="person-outline" size={20} color="black" />
             <Text className="font-extrabold text-base text-black">
-              {String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device")}
+              {String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "No Device Yet")}
             </Text>
           </View>
           <Icon
@@ -250,7 +248,7 @@ const RecipientSOSReports = () => {
                 }}
                 className="p-3 border-b border-gray-200 last:border-b-0"
               >
-                <Text className="text-black">{String(device.name || "Unknown Device")}</Text>
+                <Text className="text-black">{String(device.name || "No Device Yet")}</Text>
               </TouchableOpacity>
             ))}
           </Animated.View>
