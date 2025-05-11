@@ -350,7 +350,7 @@ const UserSOSReports = () => {
       <View style={{
         padding: 30,
         borderRadius: 16,
-        marginTop: 5,
+        marginTop: 3,
         backgroundColor: '#D1D5DB',
         borderWidth: 1,
         borderColor: '#000',
