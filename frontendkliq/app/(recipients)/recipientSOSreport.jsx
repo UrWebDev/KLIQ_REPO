@@ -107,7 +107,7 @@ const RecipientSOSReports = () => {
         const devices = [];
         sortedMessages.forEach((msg) => {
           if (!devices.some((device) => device.deviceId === msg.deviceId)) {
-            devices.push({ deviceId: msg.deviceId, name: msg.name || 'No Device Yet' });
+            devices.push({ deviceId: msg.deviceId, name: msg.name || 'Unknown Device' });
           }
         });
 
@@ -202,43 +202,45 @@ const RecipientSOSReports = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', padding: 20 }}>
+      
       {/* Device Selection Button */}
-      <View className="relative mt-10 ml-[11%] mr-0 pr-1 mb-4">
-        <TouchableOpacity
-          onPress={() => setIsDropdownVisible(!isDropdownVisible)}
-          className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
-        >
-          <View className="flex-row items-center space-x-2">
-            <Icon name="person-outline" size={20} color="black" />
-            <Text className="font-extrabold text-base text-black">
-              {String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "No Device Yet")}
-            </Text>
-          </View>
-          <Icon
-            name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-            size={20}
-            color="black"
-          />
-        </TouchableOpacity>
+    <View className="relative mt-10 ml-[11%] mr-0 pr-1 mb-4">
+      <TouchableOpacity
+        onPress={() => setIsDropdownVisible(!isDropdownVisible)}
+        className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
+      >
+        <View className="flex-row items-center space-x-2">
+          <Icon name="person-outline" size={20} color="black" />
+          <Text className="font-extrabold text-base text-black">
+            {String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device")}
+          </Text>
+        </View>
+        <Icon
+          name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+          size={20}
+          color="black"
+        />
+      </TouchableOpacity>
 
-        {/* Animated Dropdown List */}
-        {isDropdownVisible && (
-          <Animated.View
-            className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
-            style={{
-              top: '120%',
-              opacity: dropdownAnim,
-              transform: [
-                {
-                  translateY: dropdownAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-10, 0], // Slide down effect
-                  }),
-                },
-              ],
-            }}
-          >
-            {deviceList.map((device, index) => (
+      {/* Animated Dropdown List */}
+      {isDropdownVisible && (
+        <Animated.View
+          className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
+          style={{
+            top: '120%',
+            opacity: dropdownAnim,
+            transform: [
+              {
+                translateY: dropdownAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-10, 0], // Slide down effect
+                }),
+              },
+            ],
+          }}
+        >
+          {deviceList.length > 0 ? (
+            deviceList.map((device, index) => (
               <TouchableOpacity
                 key={index}
                 onPress={() => {
@@ -248,12 +250,17 @@ const RecipientSOSReports = () => {
                 }}
                 className="p-3 border-b border-gray-200 last:border-b-0"
               >
-                <Text className="text-black">{String(device.name || "No Device Yet")}</Text>
+                <Text className="text-black">{String(device.name || "Unknown Device")}</Text>
               </TouchableOpacity>
-            ))}
-          </Animated.View>
-        )}
-      </View>
+            ))
+          ) : (
+            <View className="p-3">
+              <Text className="text-black italic">No users found.</Text>
+            </View>
+          )}
+        </Animated.View>
+      )}
+    </View>
 
       {/* User Details Section */}
       <View style={{ 
@@ -288,7 +295,7 @@ const RecipientSOSReports = () => {
         {/* Info Panel - absolute positioned */}
         <Animated.View style={{
           position: 'absolute',
-          top: 50, // Adjusted to appear below the icon
+          top: 10, // Adjusted to appear below the icon
           right: 60,
           backgroundColor: 'white',
           padding: 12,
@@ -308,8 +315,7 @@ const RecipientSOSReports = () => {
           maxWidth: 300,
         }}>
           <Text style={{ fontSize: 14, lineHeight: 20 }}>
-            Device user details helps identify the user during emergencies and will
-            automatically appear when you select a device from the dropdown above.
+            User details help identify who sent the SOS and show up automatically when you pick a device above.
           </Text>
         </Animated.View>
         <View style={{ flexDirection: 'row', marginBottom: 8, paddingHorizontal: 16, paddingVertical: 1.5 }}>
