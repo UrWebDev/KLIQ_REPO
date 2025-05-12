@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TextInput, Alert, TouchableOpacity, ScrollView, BackHandler } from "react-native";
+import { View, Text, TextInput, Alert, TouchableOpacity, ScrollView, BackHandler, Modal, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { register, login, getTokenData } from "./api";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -24,6 +24,7 @@ const AuthScreen = () => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [focusedInput, setFocusedInput] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   // Check authentication status when the screen is focused
@@ -31,11 +32,15 @@ const AuthScreen = () => {
     useCallback(() => {
       const checkAuthStatus = async () => {
         try {
+          setIsLoading(true);
           const token = await AsyncStorage.getItem("authToken");
-          if (!token) return;
+          if (!token) {
+            setIsLoading(false);
+            return;
+          }
 
           const userString = await AsyncStorage.getItem("authData");
-          const data = JSON.parse(userString)
+          const data = JSON.parse(userString);
 
           console.log("Auth validation success:", {
             role: data.role,
@@ -46,8 +51,9 @@ const AuthScreen = () => {
             if (data.role == 'recipient') router.replace('/Hotlines')
             else if (data.role == 'user') router.replace('/userSOSreports');
           }
-
+          setIsLoading(false);
         } catch (error) {
+          setIsLoading(false);
           console.error("Auth Check Error:", {
             error: error.message,
             stack: error.stack
@@ -66,32 +72,39 @@ const AuthScreen = () => {
     }, [router])
   );
 
-
   const handleAuth = async () => {
     try {
+      setIsLoading(true);
+      
       if (!username.trim() || !password.trim()) {
         Alert.alert("Error", "Username and Password are required.");
+        setIsLoading(false);
         return;
       }
       if (!isLogin) {
         if (password !== confirmPassword) {
           Alert.alert("Error", "Passwords do not match.");
+          setIsLoading(false);
           return;
         }
         if (!role) {
           Alert.alert("Error", "Please select a role.");
+          setIsLoading(false);
           return;
         }
         if (!uniqueId.trim()) {
           Alert.alert("Error", `${role === "recipient" ? "Recipient" : "User"} ID is required.`);
+          setIsLoading(false);
           return;
         }
         if (role === "user" && (!age.trim() || !name.trim() || !bloodType.trim())) {
           Alert.alert("Error", "Age, Name, and Blood Type are required for users.");
+          setIsLoading(false);
           return;
         }
         if (role === "recipient" && (!age.trim() || !name.trim())) {
           Alert.alert("Error", "Age and Name are required for recipients.");
+          setIsLoading(false);
           return;
         }
       }
@@ -111,7 +124,6 @@ const AuthScreen = () => {
       console.log(response, response.data, "logging");
       getTokenData();
       
-
       Alert.alert("Success", response.data.message || "Login Successful");
 
       if (response.data.token) {
@@ -129,14 +141,29 @@ const AuthScreen = () => {
         router.replace("/SOSInbox");
       }
     } catch (error) {
+      setIsLoading(false);
       console.log(error);
-      
       Alert.alert("Error", error.response?.data?.message || "Something went wrong.");
     }
   };
 
   return (
     <View className="flex-1 bg-gray-50">
+      {/* Full-screen loading modal */}
+      <Modal
+        transparent={true}
+        animationType="fade"
+        visible={isLoading}
+        onRequestClose={() => {}}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white p-6 rounded-lg items-center">
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text className="mt-4 text-lg font-semibold">Loading...</Text>
+          </View>
+        </View>
+      </Modal>
+
       {/* Header Text - Only show "Sign Up" in header */}
       <Text className="text-center text-3xl font-bold mt-20 mb-6">
         {!isLogin ? "Sign Up" : ""}
