@@ -122,7 +122,6 @@ const AuthScreen = () => {
 
       const response = isLogin ? await login(data) : await register(data);
       console.log(response, response.data, "logging");
-      getTokenData();
       
       Alert.alert("Success", response.data.message || "Login Successful");
 
@@ -134,7 +133,7 @@ const AuthScreen = () => {
           await AsyncStorage.setItem("uniqueId", response.data.uniqueId);
         }
       }
-
+      setIsLoading(false);
       if (response.data.role == "user") {
         router.replace("/userSOSreports");
       } else if (response.data.role == "recipient") {
