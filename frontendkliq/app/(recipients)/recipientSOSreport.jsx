@@ -329,10 +329,20 @@ const RecipientSOSReports = () => {
         {kliqUserDetails.name && (
           <>
             <View style={{ flexDirection: 'row', marginBottom: 8, paddingHorizontal: 16, paddingVertical: 1.5 }}>
-              
+              <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
+                Age:{' '}
+              </Text>
+              <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#111827' }}>
+                {kliqUserDetails.age}
+              </Text>
             </View>
             <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 16, paddingVertical: 1.5 }}>
-
+              <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
+                Blood Type:{' '}
+              </Text>
+              <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#4b5563' }}>
+                {kliqUserDetails.bloodType}
+              </Text>
             </View>
           </>
         )}
