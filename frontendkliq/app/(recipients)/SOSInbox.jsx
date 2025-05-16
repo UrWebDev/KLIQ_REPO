@@ -158,9 +158,9 @@ const SOSMessage = () => {
   };
 
   return (
-    <View className="flex-1 p-5" style={{ backgroundColor: "white" }}>
+    <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>
     {/* Dropdown Selection Button */}
-        <View className="relative mt-10 ml-[11%] mr-0 pr-1 mb-4">
+        <View className="relative ml-[11%] mr-0 pr-1 mb-4">
           <TouchableOpacity
             onPress={() => setDropdownVisible(!isDropdownVisible)}
             className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"

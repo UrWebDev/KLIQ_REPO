@@ -147,7 +147,7 @@ const UserSOSReports = () => {
   }));
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'white', padding: 20, paddingTop: dynamicPaddingTop }}>
+    <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>
       
       {/* User Details Section */}
       <View
