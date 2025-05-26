@@ -21,6 +21,7 @@ const SOSMessage = () => {
   const [newMessagesMap, setNewMessagesMap] = useState({});
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const lastSeenTimestampsRef = useRef({});
+  const lastFetchedTimestampRef = useRef(0); // holds last fetched message timestamp
   
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
@@ -77,56 +78,63 @@ const SOSMessage = () => {
   useEffect(() => {
     if (!recipientId) return;
   
-    const fetchSOSMessages = async () => {
-      try {
-        const response = await axios.get(
-          `${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`
-        );
-        const sortedMessages = response.data.sort(
-          (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
-        );
-  
-        setSOSMessages(sortedMessages);
-  
-        const devices = sortedMessages.reduce((acc, msg) => {
-          if (!acc.some((d) => d.deviceId === msg.deviceId)) {
-            acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
-          }
-          return acc;
-        }, []);
-        setDeviceList(devices);
-  
-        if (devices.length > 0 && !selectedDevice) {
-          setSelectedDevice(devices[0].deviceId);
-        }
-  
-        const updatedNewMessagesMap = { ...newMessagesMap };
-        devices.forEach((device) => {
-          const deviceMessages = sortedMessages.filter(
-            (msg) => msg.deviceId === device.deviceId
-          );
-          const newMessages = deviceMessages.filter((msg) => {
-            const latestTime = new Date(msg.receivedAt).getTime();
-            const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
-            return latestTime > lastSeen;
-          });
-  
-          if (newMessages.length > 0) {
-            updatedNewMessagesMap[device.deviceId] = newMessages.length;
-          } else {
-            updatedNewMessagesMap[device.deviceId] = 0;
-          }
-        });
-  
-        setNewMessagesMap(updatedNewMessagesMap);
-  
-        if (!initialFetchDone) {
-          setInitialFetchDone(true);
-        }
-      } catch (error) {
-        console.error("Error fetching SOS messages:", error.response || error.message);
+
+const fetchSOSMessages = async () => {
+  if (!recipientId) return;
+
+  try {
+    const response = await axios.get(
+      `${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`
+    );
+
+    const sortedMessages = response.data.sort(
+      (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
+    );
+
+    const latestMessage = sortedMessages[0];
+    const latestTimestamp = new Date(latestMessage?.receivedAt || 0).getTime();
+
+    if (latestTimestamp <= lastFetchedTimestampRef.current) {
+      // 🔁 No new message — skip update
+      return;
+    }
+
+    // ✅ New message — update state
+    lastFetchedTimestampRef.current = latestTimestamp;
+    setSOSMessages(sortedMessages);
+
+    const devices = sortedMessages.reduce((acc, msg) => {
+      if (!acc.some((d) => d.deviceId === msg.deviceId)) {
+        acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
       }
-    };
+      return acc;
+    }, []);
+    setDeviceList(devices);
+
+    if (devices.length > 0 && !selectedDevice) {
+      setSelectedDevice(devices[0].deviceId);
+    }
+
+    const updatedMap = { ...newMessagesMap };
+    devices.forEach((device) => {
+      const deviceMessages = sortedMessages.filter(
+        (msg) => msg.deviceId === device.deviceId
+      );
+      const newMessages = deviceMessages.filter((msg) => {
+        const latestTime = new Date(msg.receivedAt).getTime();
+        const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
+        return latestTime > lastSeen;
+      });
+      updatedMap[device.deviceId] = newMessages.length || 0;
+    });
+
+    setNewMessagesMap(updatedMap);
+    setInitialFetchDone(true);
+  } catch (error) {
+    console.error("Error fetching SOS messages:", error.response || error.message);
+  }
+};
+
   
     fetchSOSMessages();
     const intervalId = setInterval(fetchSOSMessages, 1000);
@@ -315,6 +323,20 @@ const SOSMessage = () => {
                       </Text>
                     </TouchableOpacity>
                   </View>
+                                    <TouchableOpacity
+  onPress={async () => {
+    try {
+      await axios.delete(`${API_URL}/delete/${sos._id}`);
+      setSOSMessages(prev => prev.filter(msg => msg._id !== sos._id));
+    } catch (err) {
+      console.error("Failed to delete message:", err);
+    }
+  }}
+  className="mt-4 bg-red-600 px-4 py-2 rounded-2xl self-start ml-2"
+>
+  <Text className="text-white font-bold">Delete</Text>
+</TouchableOpacity>
+
                 </View>
               </View>
             ))
