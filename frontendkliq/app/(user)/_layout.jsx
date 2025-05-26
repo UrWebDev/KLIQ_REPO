@@ -116,15 +116,28 @@ const TabIconTwo = () => {
     }
   };
 
-  const handleLogout = async () => {
-    setSidebarVisible(false);
-    clearAllIntervals();
-    await AsyncStorage.removeItem('authToken');
-    const checkTokenLogout = await AsyncStorage.getItem('authToken');
-    console.log(checkTokenLogout); // Should be null after removal
-    // Redirect to login screen
-    router.replace('/authScreen');
-  };
+const handleLogout = async () => {
+  setSidebarVisible(false);
+  clearAllIntervals();
+
+  // Clear all stored user data
+  await AsyncStorage.removeItem('authToken');
+  await AsyncStorage.removeItem('authData');
+  await AsyncStorage.removeItem('uniqueId');
+
+  // Optional: confirm token was cleared
+  const checkTokenLogout = await AsyncStorage.getItem('authToken');
+  console.log("After logout, authToken:", checkTokenLogout); // Should be null
+
+  // // Optional: reset form state if it's in this scope
+  // if (typeof resetForm === 'function') {
+  //   resetForm();
+  // }
+
+  // Navigate to login screen
+  router.replace('/authScreen');
+};
+
 
   if (isAuthenticated === null) {
     return <Text>Loading...</Text>;

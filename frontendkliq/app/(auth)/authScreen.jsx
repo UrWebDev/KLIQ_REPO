@@ -1,5 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TextInput, Alert, TouchableOpacity, ScrollView, BackHandler, Modal, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Alert,
+  TouchableOpacity,
+  ScrollView,
+  BackHandler,
+  Modal,
+  ActivityIndicator,
+} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { register, login, getTokenData } from "./api";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -27,13 +37,30 @@ const AuthScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  // Check authentication status when the screen is focused
+  // ✅ FIX: Reset state to prevent stale input and stuck loading
+  const resetForm = () => {
+    setUsername("");
+    setPassword("");
+    setConfirmPassword("");
+    setRole("");
+    setUniqueId("");
+    setAge("");
+    setName("");
+    setBloodType("");
+    setPasswordVisible(false);
+    setDropdownVisible(false);
+    setFocusedInput(null);
+  };
+
+  // ✅ FIX: Run on screen focus to avoid stale auth or stuck modal
   useFocusEffect(
     useCallback(() => {
       const checkAuthStatus = async () => {
         try {
+          resetForm(); // ✅ clear stale inputs
           setIsLoading(true);
           const token = await AsyncStorage.getItem("authToken");
+
           if (!token) {
             setIsLoading(false);
             return;
@@ -44,19 +71,19 @@ const AuthScreen = () => {
 
           console.log("Auth validation success:", {
             role: data.role,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
 
           if (data) {
-            if (data.role == 'recipient') router.replace('/Hotlines')
-            else if (data.role == 'user') router.replace('/userSOSreports');
+            if (data.role == "recipient") router.replace("/Hotlines");
+            else if (data.role == "user") router.replace("/userSOSreports");
           }
           setIsLoading(false);
         } catch (error) {
           setIsLoading(false);
           console.error("Auth Check Error:", {
             error: error.message,
-            stack: error.stack
+            stack: error.stack,
           });
         }
       };
@@ -75,7 +102,7 @@ const AuthScreen = () => {
   const handleAuth = async () => {
     try {
       setIsLoading(true);
-      
+
       if (!username.trim() || !password.trim()) {
         Alert.alert("Error", "Username and Password are required.");
         setIsLoading(false);
@@ -93,12 +120,21 @@ const AuthScreen = () => {
           return;
         }
         if (!uniqueId.trim()) {
-          Alert.alert("Error", `${role === "recipient" ? "Recipient" : "User"} ID is required.`);
+          Alert.alert(
+            "Error",
+            `${role === "recipient" ? "Recipient" : "User"} ID is required.`
+          );
           setIsLoading(false);
           return;
         }
-        if (role === "user" && (!age.trim() || !name.trim() || !bloodType.trim())) {
-          Alert.alert("Error", "Age, Name, and Blood Type are required for users.");
+        if (
+          role === "user" &&
+          (!age.trim() || !name.trim() || !bloodType.trim())
+        ) {
+          Alert.alert(
+            "Error",
+            "Age, Name, and Blood Type are required for users."
+          );
           setIsLoading(false);
           return;
         }
@@ -114,38 +150,61 @@ const AuthScreen = () => {
         data = { username, password };
       } else {
         if (role === "recipient") {
-          data = { username, password, role, recipientId: uniqueId, name, age };
+          data = {
+            username,
+            password,
+            role,
+            recipientId: uniqueId,
+            name,
+            age,
+          };
         } else if (role === "user") {
-          data = { username, password, role, userId: uniqueId, age, name, bloodType };
+          data = {
+            username,
+            password,
+            role,
+            userId: uniqueId,
+            age,
+            name,
+            bloodType,
+          };
         }
       }
 
       const response = isLogin ? await login(data) : await register(data);
       console.log(response, response.data, "logging");
-      
+
       Alert.alert("Success", response.data.message || "Login Successful");
 
       if (response.data.token) {
         await AsyncStorage.setItem("authToken", response.data.token);
         const authData = await getTokenData();
-        await AsyncStorage.setItem('authData', JSON.stringify(authData))
+        await AsyncStorage.setItem("authData", JSON.stringify(authData));
         if (response.data.uniqueId) {
           await AsyncStorage.setItem("uniqueId", response.data.uniqueId);
         }
       }
-      setIsLoading(false);
-      if (response.data.role == "user") {
-        router.replace("/userSOSreports");
-      } else if (response.data.role == "recipient") {
-        router.replace("/SOSInbox");
-      }
+
+      resetForm(); // ✅ clear input state after login
+
+      setTimeout(() => {
+        setIsLoading(false);
+        if (response.data.role == "user") {
+          router.replace("/userSOSreports");
+        } else if (response.data.role == "recipient") {
+          router.replace("/SOSInbox");
+        }
+      }, 200); // ✅ short delay ensures clean UI transition
     } catch (error) {
       setIsLoading(false);
       console.log(error);
-      Alert.alert("Error", error.response?.data?.message || "Something went wrong.");
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Something went wrong."
+      );
     }
   };
-
+  
   return (
     <View className="flex-1 bg-gray-50">
       {/* Full-screen loading modal */}
