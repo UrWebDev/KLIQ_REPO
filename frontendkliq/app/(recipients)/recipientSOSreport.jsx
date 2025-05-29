@@ -124,7 +124,7 @@ const RecipientSOSReports = () => {
     };
 
     fetchSOSMessages();
-    const intervalId = setInterval(fetchSOSMessages, 1000);
+    const intervalId = setInterval(fetchSOSMessages, 5000);
 
     return () => clearInterval(intervalId);
   }, [recipientId, selectedDevice, selectedMonth]);

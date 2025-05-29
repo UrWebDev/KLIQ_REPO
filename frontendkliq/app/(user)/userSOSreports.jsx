@@ -89,7 +89,7 @@ const UserSOSReports = () => {
     };
   
     fetchSOSMessages(); // Initial fetch
-    const intervalId = setInterval(fetchSOSMessages, 1000); // Refresh every 1s
+    const intervalId = setInterval(fetchSOSMessages, 5000); // Refresh every 1s
   
     return () => clearInterval(intervalId);
   }, [deviceId, selectedMonth]); // Dependency on selectedMonth
