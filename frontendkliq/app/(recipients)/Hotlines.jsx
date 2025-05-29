@@ -307,19 +307,7 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
 
       {/* Render Phone Number */}
           <View className="relative mb-3">
-      <View className="flex-row items-center">
-        <Text className="text-lg font-extrabold">
-          User's Personal Numbers: {selectedDevice}
-        </Text>
-        <TouchableOpacity
-          onPressIn={() => setIsPhoneInfoPressed(true)}
-          onPressOut={() => setIsPhoneInfoPressed(false)}
-          activeOpacity={0.7}
-          className="ml-1"
-        >
-          <Icon name="help" size={17} color="#007bff" />
-        </TouchableOpacity>
-      </View>
+
 
       {/* Hidden Phone Info Panel */}
       <Animated.View 
@@ -522,3 +510,19 @@ export default Hotlines;
 NativeWindStyleSheet.setOutput({
   default: "native",
 });
+
+
+      // <View className="flex-row items-center">
+      //   <Text className="text-lg font-extrabold">
+      //     User's Personal Numbers: {userPhoneNumber} 
+      //     {/* seleredDevkce */}
+      //   </Text>
+      //   <TouchableOpacity
+      //     onPressIn={() => setIsPhoneInfoPressed(true)}
+      //     onPressOut={() => setIsPhoneInfoPressed(false)}
+      //     activeOpacity={0.7}
+      //     className="ml-1"
+      //   >
+      //     <Icon name="help" size={17} color="#007bff" />
+      //   </TouchableOpacity>
+      // </View>
