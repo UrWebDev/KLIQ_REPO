@@ -119,7 +119,7 @@ const RecipientSOSReports = () => {
 
         calculateWeeklyData(sortedMessages);
       } catch (error) {
-        console.error('Error fetching SOS messages:', error);
+        console.error('RECIPIENTSOSREPORT ERROR: ', error?.message, error?.response?.data);
       }
     };
 
@@ -196,7 +196,7 @@ const RecipientSOSReports = () => {
 
   const barData = weeklyData.map((value, index) => ({
     value,
-    label: `${index + 1}${['st', 'nd', 'rd', 'th'][index]} week`,
+    label: `${index + 1}${['st', 'nd', 'rd'][index] || 'th'} week`,
     frontColor: '#FF0000',
   }));
 

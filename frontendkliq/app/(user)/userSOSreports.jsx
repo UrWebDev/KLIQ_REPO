@@ -142,7 +142,7 @@ const UserSOSReports = () => {
 
   const barData = weeklyData.map((value, index) => ({
     value,
-    label: `${index + 1}${['st', 'nd', 'rd', 'th'][index]} week`,
+    label: `${index + 1}${['st', 'nd', 'rd'][index] || 'th'} week`,
     frontColor: '#FF0000',
   }));
 
