@@ -160,7 +160,7 @@ const handleLogout = async () => {
             {/* Modal Header */}
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-xl font-extrabold text-black">
-                Device User Profile
+                Exit Account?
               </Text>
               <TouchableOpacity onPress={() => setSidebarVisible(false)}>
                 <Icon name="close" size={24} color="black" />
@@ -168,21 +168,7 @@ const handleLogout = async () => {
             </View>
 
             {/* Profile Content */}
-            {loading ? (
-              <ActivityIndicator size="large" color="#0000ff" />
-            ) : error ? (
-              <Text className="text-red-500 text-center">{error}</Text>
-            ) : (
-              profile && (
-                <View>
-                  <Text className="text-lg mb-2">Name: {profile.name}</Text>
-                  <Text className="text-lg mb-2">Age: {profile.age}</Text>
-                  <Text className="text-lg mb-4">
-                    BloodType: {profile.bloodType}
-                  </Text>
-                </View>
-              )
-            )}
+
 
             {/* Logout Button */}
             <TouchableOpacity
