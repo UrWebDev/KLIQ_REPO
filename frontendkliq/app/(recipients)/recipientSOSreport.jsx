@@ -184,8 +184,8 @@ const RecipientSOSReports = () => {
   const kliqUserDetails =
     sosMessages.find((msg) => msg.deviceId === selectedDevice) || {
       name: '',
-      age: '',
-      bloodType: '',
+      phoneNUM: '',
+      deviceId: '',
     };
 
   // if (loading) {
@@ -330,24 +330,40 @@ const RecipientSOSReports = () => {
           <>
             <View style={{ flexDirection: 'row', marginBottom: 8, paddingHorizontal: 16, paddingVertical: 1.5 }}>
               <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
-                Age:{' '}
+                {`${kliqUserDetails.name}'s Number`}:{' '}
               </Text>
               <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#111827' }}>
-                {kliqUserDetails.age}
+                {kliqUserDetails.phoneNUM}
               </Text>
             </View>
             <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 16, paddingVertical: 1.5 }}>
               <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
-                Blood Type:{' '}
+                Device Number:{' '}
               </Text>
               <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#4b5563' }}>
-                {kliqUserDetails.bloodType}
+                {kliqUserDetails.deviceId}
               </Text>
             </View>
           </>
+          
         )}
       </View>
-
+            {/* <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 16, paddingVertical: 1.5 }}>
+              <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
+                Phone Number:{' '}
+              </Text>
+              <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#4b5563' }}>
+                {kliqUserDetails.phoneNUM}
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 16, paddingVertical: 1.5 }}>
+              <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
+                Kliq Sim Number:{' '}
+              </Text>
+              <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#4b5563' }}>
+                {kliqUserDetails.deviceId}
+              </Text>
+            </View> */}
       <ScrollView>
         {/* TOTAL Message */}
             <View style={{ marginBottom: 16, alignItems: 'center' }}>
