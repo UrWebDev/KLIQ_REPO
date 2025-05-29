@@ -234,10 +234,10 @@ const UserSOSReports = () => {
             </View>
             <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 16, paddingVertical: 1.5 }}>
               <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
-                Blood Type:{' '}
+                Device ID:{' '}
               </Text>
               <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#4b5563' }}>
-                {userDetails.bloodType}
+                {userDetails.userId}
               </Text>
             </View>
           </>

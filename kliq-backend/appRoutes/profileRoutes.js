@@ -27,11 +27,16 @@ router.get("/", async (req, res) => {
         name: user.name,
         age: user.age,
         bloodType: user.bloodType,
+        userId: user.userId,
+        
+
       });
     } else if (user.role === "recipient") {
       return res.json({
         name: user.name,
         age: user.age,
+        role: user.role,
+        recipientId: user.recipientId,
       });
     }
   } catch (error) {

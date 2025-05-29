@@ -328,20 +328,20 @@ const RecipientSOSReports = () => {
         </View>
         {kliqUserDetails.name && (
           <>
-            <View style={{ flexDirection: 'row', marginBottom: 8, paddingHorizontal: 16, paddingVertical: 1.5 }}>
+            <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 16, paddingVertical: 1.5 }}>
+              <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
+                Device ID:{' '}
+              </Text>
+              <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#4b5563' }}>
+                {kliqUserDetails.deviceId}
+              </Text>
+            </View>
+                        <View style={{ flexDirection: 'row', marginBottom: 8, paddingHorizontal: 16, paddingVertical: 1.5 }}>
               <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
                 {`${kliqUserDetails.name}'s Number`}:{' '}
               </Text>
               <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#111827' }}>
                 {kliqUserDetails.phoneNUM}
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 16, paddingVertical: 1.5 }}>
-              <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
-                Device Number:{' '}
-              </Text>
-              <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#4b5563' }}>
-                {kliqUserDetails.deviceId}
               </Text>
             </View>
           </>

@@ -199,6 +199,9 @@ const handleLogout = async () => {
                 <View>
                   <Text className="text-lg mb-2">Name: {profile.name}</Text>
                   <Text className="text-lg mb-4">Age: {profile.age}</Text>
+                  <Text className="text-lg mb-4">Role: {profile.role}</Text>
+                  <Text className="text-lg mb-4">ID: {profile.recipientId}</Text>
+
                 </View>
               )
             )}
