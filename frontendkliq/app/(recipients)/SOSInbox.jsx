@@ -6,11 +6,13 @@ import {
   Linking,
   TouchableOpacity,
   Animated,
+  Platform,
 } from "react-native";
 import axios from "axios";
 import { API_URL } from "@env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { Audio } from "expo-av";
 
 const SOSMessage = () => {
   const [sosMessages, setSOSMessages] = useState([]);
@@ -21,10 +23,17 @@ const SOSMessage = () => {
   const [newMessagesMap, setNewMessagesMap] = useState({});
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const lastSeenTimestampsRef = useRef({});
-  const lastFetchedTimestampRef = useRef(0); // holds last fetched message timestamp
-  
-
+  const lastFetchedTimestampRef = useRef(0);
   const dropdownAnim = useState(new Animated.Value(0))[0];
+  const soundRef = useRef(null);
+
+  useEffect(() => {
+  return () => {
+    if (soundRef.current) {
+      soundRef.current.unloadAsync();
+    }
+  };
+}, []);
 
   // Load dropdown animation
   useEffect(() => {
@@ -43,7 +52,6 @@ const SOSMessage = () => {
     }
   }, [isDropdownVisible]);
 
-  // Get user ID on mount
   useEffect(() => {
     const getRecipientId = async () => {
       try {
@@ -55,11 +63,9 @@ const SOSMessage = () => {
         console.error("Error retrieving uniqueId from AsyncStorage:", error);
       }
     };
-
     getRecipientId();
   }, []);
 
-  // Restore last seen timestamps from AsyncStorage on mount
   useEffect(() => {
     const loadLastSeenTimestamps = async () => {
       try {
@@ -71,81 +77,90 @@ const SOSMessage = () => {
         console.error("Failed to load lastSeenTimestamps:", error);
       }
     };
-
     loadLastSeenTimestamps();
   }, []);
 
-  useEffect(() => {
-    if (!recipientId) return;
-  
 
-const fetchSOSMessages = async () => {
+useEffect(() => {
   if (!recipientId) return;
 
-  try {
-    const response = await axios.get(
-      `${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`
-    );
-
-    const sortedMessages = response.data.sort(
-      (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
-    );
-
-    const latestMessage = sortedMessages[0];
-    const latestTimestamp = new Date(latestMessage?.receivedAt || 0).getTime();
-
-    if (latestTimestamp <= lastFetchedTimestampRef.current) {
-      // 🔁 No new message — skip update
-      return;
-    }
-
-    // ✅ New message — update state
-    lastFetchedTimestampRef.current = latestTimestamp;
-    setSOSMessages(sortedMessages);
-
-    const devices = sortedMessages.reduce((acc, msg) => {
-      if (!acc.some((d) => d.deviceId === msg.deviceId)) {
-        acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
-      }
-      return acc;
-    }, []);
-    setDeviceList(devices);
-
-    if (devices.length > 0 && !selectedDevice) {
-      setSelectedDevice(devices[0].deviceId);
-    }
-
-    const updatedMap = { ...newMessagesMap };
-    devices.forEach((device) => {
-      const deviceMessages = sortedMessages.filter(
-        (msg) => msg.deviceId === device.deviceId
+  const fetchSOSMessages = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`
       );
-      const newMessages = deviceMessages.filter((msg) => {
-        const latestTime = new Date(msg.receivedAt).getTime();
-        const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
-        return latestTime > lastSeen;
-      });
-      updatedMap[device.deviceId] = newMessages.length || 0;
-    });
 
-    setNewMessagesMap(updatedMap);
-    setInitialFetchDone(true);
-  } catch (error) {
-    console.error("Error fetching SOS messages:", error.response || error.message);
-  }
-};
+      const sortedMessages = response.data.sort(
+        (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
+      );
 
-  
-    fetchSOSMessages();
-    const intervalId = setInterval(fetchSOSMessages, 1000);
-    return () => clearInterval(intervalId);
-  }, [recipientId, initialFetchDone]);
+      const latestMessage = sortedMessages[0];
+      const latestTimestamp = new Date(latestMessage?.receivedAt || 0).getTime();
 
-  // Save last seen when selecting a device
+      // ✅ Only proceed if new message timestamp is newer
+      if (latestTimestamp > lastFetchedTimestampRef.current) {
+        if(initialFetchDone){
+          if (Platform.OS === "android") {
+            try {
+              const { sound } = await Audio.Sound.createAsync(
+                require("../../assets/alert.mp3")
+              );
+              soundRef.current = sound;
+              await sound.playAsync();
+            } catch (err) {
+              console.warn("Sound error:", err);
+            }
+          }
+        }
+        // 🔊 Play alert sound on Android
+
+        lastFetchedTimestampRef.current = latestTimestamp;
+        setSOSMessages(sortedMessages);
+
+        const devices = sortedMessages.reduce((acc, msg) => {
+          if (!acc.some((d) => d.deviceId === msg.deviceId)) {
+            acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
+          }
+          return acc;
+        }, []);
+
+        setDeviceList(devices);
+
+        if (devices.length > 0 && !selectedDevice) {
+          setSelectedDevice(devices[0].deviceId);
+        }
+
+        const updatedMap = { ...newMessagesMap };
+        devices.forEach((device) => {
+          const deviceMessages = sortedMessages.filter(
+            (msg) => msg.deviceId === device.deviceId
+          );
+          const newMessages = deviceMessages.filter((msg) => {
+            const latestTime = new Date(msg.receivedAt).getTime();
+            const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
+            return latestTime > lastSeen;
+          });
+          updatedMap[device.deviceId] = newMessages.length || 0;
+        });
+
+        setNewMessagesMap(updatedMap);
+        setInitialFetchDone(true);
+      }
+    } catch (error) {
+      console.error("Error fetching SOS messages:", error.response || error.message);
+    }
+  };
+
+  fetchSOSMessages();
+  const intervalId = setInterval(fetchSOSMessages, 5000);
+
+  return () => clearInterval(intervalId);
+}, [recipientId, initialFetchDone]);
+
+
   const handleDeviceSelect = async (deviceId) => {
     setSelectedDevice(deviceId);
     setDropdownVisible(false);
-
     setNewMessagesMap((prev) => ({ ...prev, [deviceId]: false }));
 
     const latestMessage = sosMessages.find((msg) => msg.deviceId === deviceId);
