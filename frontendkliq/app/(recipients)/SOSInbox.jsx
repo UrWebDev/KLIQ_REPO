@@ -198,13 +198,16 @@ useEffect(() => {
               </Text>
             </View>
             <View className="flex-row items-center space-x-2">
-              {newMessagesMap[selectedDevice] > 0 && (
-                <View className="relative w-5 h-5 rounded-full bg-red-500 mr-1 flex justify-center items-center">
-                  <Text className="text-xs text-white font-bold">
-                    {newMessagesMap[selectedDevice]}
-                  </Text>
-                </View>
-              )}
+              {Object.values(newMessagesMap).some(count => count > 0) && (
+  <View className="relative w-5 h-5 rounded-full bg-red-500 mr-1 flex justify-center items-center">
+    <Text className="text-xs text-white font-bold">
+      {
+        Object.values(newMessagesMap).reduce((total, count) => total + count, 0)
+      }
+    </Text>
+  </View>
+)
+}
               <Icon
                 name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
                 size={20}
