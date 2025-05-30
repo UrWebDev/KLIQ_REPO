@@ -347,7 +347,7 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
           <Text className="text-xl font-extrabold text-black">
             {userPhoneNumber !== "N/A" ? userPhoneNumber : "N/A"}
           </Text>
-          <Text className="italic text-gray-700">Personal Number</Text>
+          <Text className="italic text-gray-700">{`${deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device"}'s Personal Number`}</Text>
         </View>
 
         {/* Vertical Line - Moved closer to the phone icon */}
