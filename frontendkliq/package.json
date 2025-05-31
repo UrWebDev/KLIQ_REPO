@@ -19,9 +19,12 @@
     "expo-av": "~14.0.7",
     "expo-constants": "~16.0.2",
     "expo-dev-client": "~4.0.29",
+    "expo-device": "~6.0.2",
     "expo-linear-gradient": "~13.0.2",
     "expo-linking": "~6.3.1",
+    "expo-notifications": "~0.28.19",
     "expo-router": "~3.5.23",
+    "expo-server-sdk": "^3.15.0",
     "expo-status-bar": "~1.12.1",
     "nativewind": "^2.0.11",
     "react": "18.2.0",
@@ -37,9 +40,7 @@
     "react-native-sound": "^0.11.2",
     "react-native-svg": "^15.2.0",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-web": "~0.19.10",
-    "expo-notifications": "~0.28.19",
-    "expo-device": "~6.0.2"
+    "react-native-web": "~0.19.10"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
