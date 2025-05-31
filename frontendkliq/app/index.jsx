@@ -1,7 +1,16 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableWithoutFeedback, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Notifications from "expo-notifications";
 
+// Configure notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 export default function LandingPage() {
   const router = useRouter();
   const scaleAnim = useRef(new Animated.Value(1)).current;
