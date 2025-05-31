@@ -1,34 +1,67 @@
 import SOSModel from "../dbSchemas/recipientSOSMessageSchema.js";
+import PushToken from "../dbSchemas/pushTokenSchema.js";
+import fetch from "node-fetch";
 
-//receive an http request from the device
-//receive sms from device
+// Push notification helper
+const sendPushNotification = async (to, message) => {
+  try {
+    await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Accept-Encoding": "gzip, deflate",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to,
+        sound: "default",
+        title: "🚨 New SOS Alert",
+        body: message,
+      }),
+    });
+  } catch (err) {
+    console.error("Failed to send push notification:", err);
+  }
+};
+
 const receiveRecipientSOSMessage = async (req, res) => {
-  let { longitude, latitude, message, recipientId, deviceId, name, phoneNUM } = req.body;
+  let { longitude, latitude, message, recipientId, deviceId, name, phoneNUM} = req.body;
 
-  // If recipientId is a string (i.e., JSON format), convert it into an array
+  // Parse recipientId if it's a JSON string
   if (typeof recipientId === 'string') {
     try {
-      recipientId = JSON.parse(recipientId);  // Parse the stringified JSON array into an actual array
+      recipientId = JSON.parse(recipientId);
     } catch (error) {
       return res.status(400).send("Invalid recipientId format.");
     }
   }
 
-  // Validation check for required fields
   if (!longitude || !latitude || !message || !recipientId || !deviceId || !name || !phoneNUM) {
     return res.status(400).send("Incomplete data received.");
   }
 
   try {
-    const sos = new SOSModel({ longitude, latitude, message, recipientId, deviceId, name, phoneNUM });
+    // Save SOS message
+    const sos = new SOSModel({ longitude, latitude, message, recipientId, deviceId, name, phoneNUM});
     await sos.save();
 
-    res.status(200).send("SOS message received and saved.");
-    console.log("Received recipientId:", recipientId);
+    // Send notifications
+    for (const id of recipientId) {
+      const tokenDoc = await PushToken.findOne({ userId: id });
+      if (tokenDoc?.token) {
+        const alertMessage = `🚨 ${name} triggered an SOS: "${message}"`;
+        await sendPushNotification(tokenDoc.token, alertMessage);
+      }
+    }
+
+    res.status(200).send("SOS message received, saved, and notifications sent.");
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error processing SOS message:", error);
+    res.status(500).json({ message: "Server error while processing SOS message" });
   }
 };
+
+
 
 const getFilteredSOSMessages = async (req, res) => {
   try {
@@ -61,6 +94,15 @@ const getUserFilteredSOSreports = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 }
+const deleteSOSMessageById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await SOSModel.findByIdAndDelete(id);
+    res.status(200).json({ message: "Message deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 
-export { receiveRecipientSOSMessage, getFilteredSOSMessages, getUserFilteredSOSreports};
+export { receiveRecipientSOSMessage, getFilteredSOSMessages, getUserFilteredSOSreports,deleteSOSMessageById};
