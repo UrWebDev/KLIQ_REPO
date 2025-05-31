@@ -13,6 +13,8 @@ import { API_URL } from "@env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { Audio } from "expo-av";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 
 const SOSMessage = () => {
   const [sosMessages, setSOSMessages] = useState([]);
@@ -26,157 +28,186 @@ const SOSMessage = () => {
   const lastFetchedTimestampRef = useRef(0);
   const dropdownAnim = useState(new Animated.Value(0))[0];
   const soundRef = useRef(null);
+  const pushTokenRef = useRef(null);
 
   useEffect(() => {
-  return () => {
-    if (soundRef.current) {
-      soundRef.current.unloadAsync();
+  // Listener for received notifications (foreground/background)
+  const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+    console.log("Notification received in background/foreground:", notification);
+    // Optional: show a toast or update state
+  });
+
+  // Listener for when user taps on the notification
+  const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+    console.log("Notification tapped:", response);
+    const data = response.notification.request.content.data;
+    // Example: Navigate to a specific screen using navigation
+    if (data?.screen && navigation) {
+      navigation.navigate(data.screen, data.params || {});
     }
+  });
+
+  // Clean up listeners on unmount
+  return () => {
+    Notifications.removeNotificationSubscription(notificationListener);
+    Notifications.removeNotificationSubscription(responseListener);
   };
 }, []);
 
-  // Load dropdown animation
+
+  // Register for push notifications
   useEffect(() => {
-    if (isDropdownVisible) {
-      Animated.timing(dropdownAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(dropdownAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-    }
+    const registerForPushNotifications = async () => {
+      if (Device.isDevice) {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== "granted") {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        if (finalStatus === "granted") {
+          const token = (await Notifications.getExpoPushTokenAsync()).data;
+          pushTokenRef.current = token;
+          const id = await AsyncStorage.getItem("uniqueId");
+          if (id) {
+            await axios.post(`${API_URL}/register-push-token`, {
+              userId: id,
+              token,
+            });
+          }
+        } else {
+          console.warn("Push notification permissions not granted");
+        }
+      } else {
+        console.warn("Must use a physical device for push notifications");
+      }
+    };
+    registerForPushNotifications();
+  }, []);
+
+  // Cleanup sound on unmount
+  useEffect(() => {
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  // Dropdown animation
+  useEffect(() => {
+    Animated.timing(dropdownAnim, {
+      toValue: isDropdownVisible ? 1 : 0,
+      duration: isDropdownVisible ? 200 : 150,
+      useNativeDriver: true,
+    }).start();
   }, [isDropdownVisible]);
 
   useEffect(() => {
-    const getRecipientId = async () => {
-      try {
-        const id = await AsyncStorage.getItem("uniqueId");
-        if (id) {
-          setRecipientId(id);
-        }
-      } catch (error) {
-        console.error("Error retrieving uniqueId from AsyncStorage:", error);
-      }
+    const loadRecipientId = async () => {
+      const id = await AsyncStorage.getItem("uniqueId");
+      if (id) setRecipientId(id);
     };
-    getRecipientId();
+    loadRecipientId();
   }, []);
 
   useEffect(() => {
     const loadLastSeenTimestamps = async () => {
-      try {
-        const data = await AsyncStorage.getItem("lastSeenTimestamps");
-        if (data) {
-          lastSeenTimestampsRef.current = JSON.parse(data);
-        }
-      } catch (error) {
-        console.error("Failed to load lastSeenTimestamps:", error);
+      const data = await AsyncStorage.getItem("lastSeenTimestamps");
+      if (data) {
+        lastSeenTimestampsRef.current = JSON.parse(data);
       }
     };
     loadLastSeenTimestamps();
   }, []);
 
+  // Main polling logic
+  useEffect(() => {
+    if (!recipientId) return;
 
-useEffect(() => {
-  if (!recipientId) return;
+    const fetchSOSMessages = async () => {
+      try {
+        const response = await axios.get(
+          `${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`
+        );
+        const sortedMessages = response.data.sort(
+          (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
+        );
+        const latestMessage = sortedMessages[0];
+        const latestTimestamp = new Date(latestMessage?.receivedAt || 0).getTime();
 
-  const fetchSOSMessages = async () => {
-    try {
-      const response = await axios.get(
-        `${API_URL}/recipients/get-filteredReceived-sosMessages/${recipientId}`
-      );
+        if (latestTimestamp > lastFetchedTimestampRef.current) {
+          if (initialFetchDone && Platform.OS === "android") {
+            const { sound } = await Audio.Sound.createAsync(
+              require("../../assets/alert.mp3")
+            );
+            soundRef.current = sound;
+            await sound.playAsync();
 
-      const sortedMessages = response.data.sort(
-        (a, b) => new Date(b.receivedAt) - new Date(a.receivedAt)
-      );
+                // Show local push notification
+    const notificationBody = latestMessage.message || "New SOS alert received.";
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `New SOS from ${latestMessage.name || "Unknown Device"}`,
+        body: notificationBody,
+        data: latestMessage, // optional, you can use it for navigation
+        sound: true,
+      },
+      trigger: null, // fires immediately
+    });
+          }
 
-      const latestMessage = sortedMessages[0];
-      const latestTimestamp = new Date(latestMessage?.receivedAt || 0).getTime();
+          lastFetchedTimestampRef.current = latestTimestamp;
+          setSOSMessages(sortedMessages);
 
-      // ✅ Only proceed if new message timestamp is newer
-      if (latestTimestamp > lastFetchedTimestampRef.current) {
-        if(initialFetchDone){
-          if (Platform.OS === "android") {
-            try {
-              const { sound } = await Audio.Sound.createAsync(
-                require("../../assets/alert.mp3")
-              );
-              soundRef.current = sound;
-              await sound.playAsync();
-            } catch (err) {
-              console.warn("Sound error:", err);
+          const devices = sortedMessages.reduce((acc, msg) => {
+            if (!acc.some((d) => d.deviceId === msg.deviceId)) {
+              acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
             }
+            return acc;
+          }, []);
+          setDeviceList(devices);
+
+          if (devices.length > 0 && !selectedDevice) {
+            setSelectedDevice(devices[0].deviceId);
           }
-        }
-        // 🔊 Play alert sound on Android
 
-        lastFetchedTimestampRef.current = latestTimestamp;
-        setSOSMessages(sortedMessages);
-
-        const devices = sortedMessages.reduce((acc, msg) => {
-          if (!acc.some((d) => d.deviceId === msg.deviceId)) {
-            acc.push({ deviceId: msg.deviceId, name: msg.name || "Unknown Device" });
-          }
-          return acc;
-        }, []);
-
-        setDeviceList(devices);
-
-        if (devices.length > 0 && !selectedDevice) {
-          setSelectedDevice(devices[0].deviceId);
-        }
-
-        const updatedMap = { ...newMessagesMap };
-        devices.forEach((device) => {
-          const deviceMessages = sortedMessages.filter(
-            (msg) => msg.deviceId === device.deviceId
-          );
-          const newMessages = deviceMessages.filter((msg) => {
-            const latestTime = new Date(msg.receivedAt).getTime();
-            const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
-            return latestTime > lastSeen;
+          const updatedMap = { ...newMessagesMap };
+          devices.forEach((device) => {
+            const deviceMessages = sortedMessages.filter(
+              (msg) => msg.deviceId === device.deviceId
+            );
+            const newMessages = deviceMessages.filter((msg) => {
+              const latestTime = new Date(msg.receivedAt).getTime();
+              const lastSeen = lastSeenTimestampsRef.current[device.deviceId] || 0;
+              return latestTime > lastSeen;
+            });
+            updatedMap[device.deviceId] = newMessages.length || 0;
           });
-          updatedMap[device.deviceId] = newMessages.length || 0;
-        });
-
-        setNewMessagesMap(updatedMap);
-        setInitialFetchDone(true);
+          setNewMessagesMap(updatedMap);
+          setInitialFetchDone(true);
+        }
+      } catch (error) {
+        console.error("Error fetching SOS messages:", error.response || error.message);
       }
-    } catch (error) {
-      console.error("Error fetching SOS messages:", error.response || error.message);
-    }
-  };
+    };
 
-  fetchSOSMessages();
-  const intervalId = setInterval(fetchSOSMessages, 5000);
-
-  return () => clearInterval(intervalId);
-}, [recipientId, initialFetchDone]);
-
+    fetchSOSMessages();
+    const intervalId = setInterval(fetchSOSMessages, 5000);
+    return () => clearInterval(intervalId);
+  }, [recipientId, initialFetchDone]);
 
   const handleDeviceSelect = async (deviceId) => {
     setSelectedDevice(deviceId);
     setDropdownVisible(false);
     setNewMessagesMap((prev) => ({ ...prev, [deviceId]: false }));
-
     const latestMessage = sosMessages.find((msg) => msg.deviceId === deviceId);
     if (latestMessage) {
-      lastSeenTimestampsRef.current[deviceId] = new Date(
-        latestMessage.receivedAt
-      ).getTime();
-
-      try {
-        await AsyncStorage.setItem(
-          "lastSeenTimestamps",
-          JSON.stringify(lastSeenTimestampsRef.current)
-        );
-      } catch (error) {
-        console.error("Failed to save lastSeenTimestamps:", error);
-      }
+      lastSeenTimestampsRef.current[deviceId] = new Date(latestMessage.receivedAt).getTime();
+      await AsyncStorage.setItem(
+        "lastSeenTimestamps",
+        JSON.stringify(lastSeenTimestampsRef.current)
+      );
     }
   };
 
