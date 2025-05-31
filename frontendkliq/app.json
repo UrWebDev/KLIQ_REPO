@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "frontendkliq",
+    "name": "KLIQ",
     "scheme": "KliqThesis",
-    "slug": "frontendkliq",
-    "version": "1.0.0",
+    "slug": "KLIQ",
+    "version": "2.0.0",
     "devClient": true,
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "../../assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "../../assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -21,18 +21,26 @@
   }
     },
     "android": {
+       "useNextNotificationsApi": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "../../assets/adaptiveICON.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.kliqApp",
-      "permissions": ["BLUETOOTH", "BLUETOOTH_ADMIN", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "INTERNET"]
+      "permissions": ["BLUETOOTH", "BLUETOOTH_ADMIN", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "INTERNET",
+        "ACCESS_NOTIFICATION_POLICY",
+    "VIBRATE", "MODIFY_AUDIO_SETTINGS","NOTIFICATIONS"]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "../../assets/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-notifications",
+      "expo-router",
+      ["expo-av", {
+        "microphonePermission": "Allow voice recording",
+        "cameraPermission": "Allow camera access"
+      }]
     ],
     "extra": {
       "router": {
