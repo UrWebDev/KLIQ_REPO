@@ -34,12 +34,24 @@ API.interceptors.request.use(
 export const register = (data) => API.post("/auth/register", data);
 export const login = (data) => API.post("/auth/login", data);
 export const getTokenData = async () => {
+  const token = await AsyncStorage.getItem("authToken");
+  if (!token) return null;
+
   try {
-    const response = await API.get('/auth/token-data');
-    
+    const response = await API.get("/auth/token-data");
     return response.data;
   } catch (error) {
-    console.error('Error fetching token data:', error);
+    console.error("Error fetching token data:", error);
     throw error;
+  }
+};
+
+export const logout = async () => {
+  try {
+    await AsyncStorage.removeItem("authToken");
+    await AsyncStorage.removeItem("authData");
+    await AsyncStorage.removeItem("uniqueId");
+  } catch (err) {
+    console.error("Logout error:", err);
   }
 };

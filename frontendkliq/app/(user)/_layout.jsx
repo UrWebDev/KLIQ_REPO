@@ -6,6 +6,7 @@ import { NativeWindStyleSheet } from 'nativewind';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import { API_URL } from '@env';
+import { logout } from '../(auth)/api.js'
 
 const TabIcon = ({ name, focused }) => {
   return (
@@ -117,6 +118,7 @@ const TabIconTwo = () => {
   };
 
 const handleLogout = async () => {
+    await logout();
   setSidebarVisible(false);
   clearAllIntervals();
 

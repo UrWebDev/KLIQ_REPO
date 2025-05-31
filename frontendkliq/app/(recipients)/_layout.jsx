@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { API_URL } from '@env';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Import Icon for the close button
+import { logout } from '../(auth)/api.js'
 
 const TabIcon = ({ name, focused }) => {
   const opacity = useRef(new Animated.Value(focused ? 1 : 0.5)).current;
@@ -139,6 +140,7 @@ const TabsLayout = () => {
   };
 
 const handleLogout = async () => {
+    await logout();
   setSidebarVisible(false);
   clearAllIntervals();
 
