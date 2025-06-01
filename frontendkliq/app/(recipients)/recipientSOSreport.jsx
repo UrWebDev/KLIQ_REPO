@@ -119,7 +119,7 @@ const RecipientSOSReports = () => {
 
         calculateWeeklyData(sortedMessages);
       } catch (error) {
-        console.error('RECIPIENTSOSREPORT ERROR: ', error?.message, error?.response?.data);
+        console.error('RECIPIENTSOSREPORT ERROR:', error?.message || error?.toString());
       }
     };
 
@@ -129,32 +129,43 @@ const RecipientSOSReports = () => {
     return () => clearInterval(intervalId);
   }, [recipientId, selectedDevice, selectedMonth]);
 
-  const calculateWeeklyData = (messages) => {
-    const weeks = [0, 0, 0, 0];
-    messages
-      .filter(
-        (msg) =>
-          msg.deviceId === selectedDevice &&
-          new Date(msg.receivedAt).getMonth() === selectedMonth
-      )
-      .forEach((msg) => {
-        const sosDate = new Date(msg.receivedAt);
-        const week = Math.ceil(sosDate.getDate() / 7) - 1;
-        weeks[week] += 1;
-      });
-    setWeeklyData(weeks);
-  };
-
-  const groupMessagesByDate = (messages) => {
-    return messages.reduce((acc, message) => {
-      const date = new Date(message.receivedAt).toLocaleDateString();
-      if (!acc[date]) {
-        acc[date] = [];
+const calculateWeeklyData = (messages) => {
+  const weeks = [0, 0, 0, 0];
+  messages
+    .filter(
+      (msg) =>
+        msg.deviceId === selectedDevice &&
+        new Date(msg.receivedAt).getMonth() === selectedMonth
+    )
+    .forEach((msg) => {
+      const sosDate = new Date(msg.receivedAt);
+      let week = Math.ceil(sosDate.getDate() / 7) - 1;
+      
+      // Fix: Ensure week is in bounds [0, 3]
+      if (week < 0 || week > 3 || isNaN(week)) {
+        week = 0;
       }
-      acc[date].push(message);
-      return acc;
-    }, {});
-  };
+
+      weeks[week] += 1;
+    });
+  setWeeklyData(weeks);
+};
+
+
+const groupMessagesByDate = (messages) => {
+  return messages.reduce((acc, message) => {
+    const dateObj = new Date(message.receivedAt);
+    if (isNaN(dateObj)) return acc;
+
+    const date = dateObj.toLocaleDateString();
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(message);
+    return acc;
+  }, {});
+};
+
 
   const groupedMessages = groupMessagesByDate(
     sosMessages.filter(
@@ -192,13 +203,13 @@ const RecipientSOSReports = () => {
   //   return <ActivityIndicator size="large" />;
   // }
 
-  const totalAlerts = weeklyData.reduce((sum, count) => sum + count, 0);
+const totalAlerts = weeklyData.reduce((sum, count) => sum + (isNaN(count) ? 0 : count), 0);
 
-  const barData = weeklyData.map((value, index) => ({
-    value,
-    label: `${index + 1}${['st', 'nd', 'rd'][index] || 'th'} week`,
-    frontColor: '#FF0000',
-  }));
+const barData = weeklyData.map((value, index) => ({
+  value: isNaN(value) ? 0 : value,
+  label: `${index + 1}${['st', 'nd', 'rd'][index] || 'th'} week`,
+  frontColor: '#FF0000',
+}));
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>

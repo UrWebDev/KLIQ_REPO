@@ -17,7 +17,7 @@ const UserSOSReports = () => {
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
 
-  const screenHeight = Dimensions.get('window').height;
+  const screenHeight = Dimensions.get('window')?.height ?? 800; // Fallback height
   const dynamicPaddingTop = screenHeight * 0.08; // 5% of screen height as top padding
   const [isUserDetailsHelpPressed, setIsUserDetailsHelpPressed] = useState(false);
   const userDetailsHelpAnim = useRef(new Animated.Value(0)).current;
@@ -84,7 +84,7 @@ const UserSOSReports = () => {
         });
         setUserDetails(userResponse.data);
       } catch (error) {
-        console.error('Error fetching SOS messages:', error);
+        console.error('Error fetching SOS messages:', JSON.stringify(error, null, 2));
       }
     };
   
@@ -94,21 +94,31 @@ const UserSOSReports = () => {
     return () => clearInterval(intervalId);
   }, [deviceId, selectedMonth]); // Dependency on selectedMonth
 
-  const calculateWeeklyData = (messages) => {
-    const weeks = [0, 0, 0, 0];
-    messages
-      .filter((msg) => new Date(msg.receivedAt).getMonth() === selectedMonth) // Ensure filtering by selected month
-      .forEach((msg) => {
-        const sosDate = new Date(msg.receivedAt);
-        const week = Math.ceil(sosDate.getDate() / 7) - 1; // Determine the week of the month
+const calculateWeeklyData = (messages) => {
+  const weeks = [0, 0, 0, 0];
+  messages
+    .filter((msg) => {
+      const date = new Date(msg.receivedAt);
+      return msg.receivedAt && !isNaN(date) && date.getMonth() === selectedMonth;
+    })
+    .forEach((msg) => {
+      const sosDate = new Date(msg.receivedAt);
+      if (!isNaN(sosDate)) {
+        const week = Math.min(Math.floor((sosDate.getDate() - 1) / 7), 3); // only 4 weeks (0 to 3)
         weeks[week] += 1;
-      });
-    setWeeklyData(weeks);
-  };  
+      }
+    });
+  setWeeklyData(weeks);
+};
+
+
 
   const groupMessagesByDate = (messages) => {
     return messages
-      .filter((msg) => new Date(msg.receivedAt).getMonth() === selectedMonth) // Filter by selected month
+      .filter((msg) => {
+  const date = new Date(msg.receivedAt);
+  return msg.receivedAt && !isNaN(date) && date.getMonth() === selectedMonth;
+}) // Filter by selected month
       .reduce((acc, message) => {
         const date = new Date(message.receivedAt).toLocaleDateString();
         if (!acc[date]) {
@@ -119,7 +129,7 @@ const UserSOSReports = () => {
       }, {});
   };
 
-  const groupedMessages = groupMessagesByDate(sosMessages);
+const groupedMessages = sosMessages.length > 0 ? groupMessagesByDate(sosMessages) : {};
 
   const toggleExpand = (date) => {
     setExpandedDates((prev) => ({
@@ -140,11 +150,13 @@ const UserSOSReports = () => {
 
   const totalAlerts = weeklyData.reduce((sum, count) => sum + count, 0);
 
-  const barData = weeklyData.map((value, index) => ({
-    value,
-    label: `${index + 1}${['st', 'nd', 'rd'][index] || 'th'} week`,
-    frontColor: '#FF0000',
-  }));
+const barData = weeklyData.map((value, index) => ({
+  value: Number(value) || 0, // convert to number or fallback to 0
+  label: `${index + 1}${['st', 'nd', 'rd'][index] || 'th'} week`,
+  frontColor: '#FF0000',
+}));
+
+
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>
