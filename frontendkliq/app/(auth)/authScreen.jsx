@@ -298,18 +298,19 @@ const AuthScreen = () => {
               </View>
 
               {/* Role Dropdown */}
-              <TouchableOpacity
-                className="w-auto px-7 py-5 mb-4 flex-row justify-between rounded-t-xl border-b border-black bg-gray-300 shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
-                onPress={() => setDropdownVisible(!dropdownVisible)}
-              >
-                <View className="flex-row items-center">
-                  <Text className="text-gray-700 italic mr-2">
-                    {role ? roles.find((r) => r.value === role)?.label : "Select Role"}
-                  </Text>
-                  <View className="h-6 w-px bg-black mr-4" />
-                </View>
-                <Icon name="arrow-drop-down" size={24} color="gray" />
-              </TouchableOpacity>
+<TouchableOpacity
+  className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "role" ? "border-[2px] border-black" : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
+  onPress={() => {
+    setFocusedInput("role");
+    setDropdownVisible(!dropdownVisible);
+  }}
+>
+  <Text className="text-gray-700 italic">
+    {role ? roles.find((r) => r.value === role)?.label : "Select Role"}
+  </Text>
+</TouchableOpacity>
+
 
               {dropdownVisible && (
                 <View className="w-auto mb-4 border border-black rounded-xl bg-gray-100 shadow-lg shadow-black/20">
