@@ -13,19 +13,27 @@
       "developmentClient": true
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "developmentClient": false
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "developmentClient": false
     },
-    "development": {      // Add this section
+    "development": {
       "android": {
         "distribution": "internal",
-        "developmentClient": true
+        "developmentClient": true,
+        "cache": {
+          "disabled": true
+        }
       },
       "ios": {
         "distribution": "internal",
-        "developmentClient": true
+        "developmentClient": true,
+        "cache": {
+          "disabled": true
+        }
       }
     }
   },
