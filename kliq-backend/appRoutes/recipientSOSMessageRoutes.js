@@ -2,7 +2,7 @@ import SOSModel from "../dbSchemas/recipientSOSMessageSchema.js";
 import PushToken from "../dbSchemas/pushTokenSchema.js";
 import fetch from "node-fetch";
 
-// Push notification helper
+// Push notification helper - UPDATED FOR BACKGROUND SOUND
 const sendPushNotification = async (to, message) => {
   try {
     await fetch("https://exp.host/--/api/v2/push/send", {
@@ -17,6 +17,8 @@ const sendPushNotification = async (to, message) => {
         sound: "default",
         title: "🚨 New SOS Alert",
         body: message,
+        priority: "high", // Ensure delivery in background
+        ttl: 60, // Time to live (seconds)
       }),
     });
   } catch (err) {

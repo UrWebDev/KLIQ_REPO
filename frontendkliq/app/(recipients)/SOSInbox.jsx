@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Animated,
   Platform,
+  AppState,
 } from "react-native";
 import axios from "axios";
 import { API_URL } from "@env";
@@ -29,31 +30,42 @@ const SOSMessage = () => {
   const dropdownAnim = useState(new Animated.Value(0))[0];
   const soundRef = useRef(null);
   const pushTokenRef = useRef(null);
+  const appState = useRef(AppState.currentState);
 
+  // Configure notifications on mount
   useEffect(() => {
-  // Listener for received notifications (foreground/background)
-  const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-    console.log("Notification received in background/foreground:", notification);
-    // Optional: show a toast or update state
-  });
+    const configureNotifications = async () => {
+      // Set notification handler
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+        }),
+      });
 
-  // Listener for when user taps on the notification
-  const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-    console.log("Notification tapped:", response);
-    const data = response.notification.request.content.data;
-    // Example: Navigate to a specific screen using navigation
-    if (data?.screen && navigation) {
-      navigation.navigate(data.screen, data.params || {});
-    }
-  });
+      // Android-specific channel configuration
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('sos-alerts', {
+          name: 'SOS Alerts',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF231F7C',
+          sound: 'alert.mp3',
+        });
+      }
+    };
 
-  // Clean up listeners on unmount
-  return () => {
-    Notifications.removeNotificationSubscription(notificationListener);
-    Notifications.removeNotificationSubscription(responseListener);
-  };
-}, []);
+    configureNotifications();
+  }, []);
 
+  // App state tracking
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      appState.current = nextAppState;
+    });
+    return () => subscription.remove();
+  }, []);
 
   // Register for push notifications
   useEffect(() => {
@@ -137,24 +149,27 @@ const SOSMessage = () => {
         const latestTimestamp = new Date(latestMessage?.receivedAt || 0).getTime();
 
         if (latestTimestamp > lastFetchedTimestampRef.current) {
-          if (initialFetchDone && Platform.OS === "android") {
+          // Play sound only when app is in foreground
+          if (initialFetchDone && appState.current === 'active') {
             const { sound } = await Audio.Sound.createAsync(
               require("../../assets/alert.mp3")
             );
             soundRef.current = sound;
             await sound.playAsync();
 
-                // Show local push notification
-    const notificationBody = latestMessage.message || "New SOS alert received.";
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: `New SOS from ${latestMessage.name || "Unknown Device"}`,
-        body: notificationBody,
-        data: latestMessage, // optional, you can use it for navigation
-        sound: true,
-      },
-      trigger: null, // fires immediately
-    });
+                      // Always show notification (works in background/closed)
+          const notificationBody = latestMessage.message || "New SOS alert received.";
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: `New SOS from ${latestMessage.name || "Unknown Device"}`,
+              body: notificationBody,
+              data: latestMessage,
+              sound: true,
+              priority: Notifications.AndroidNotificationPriority.HIGH,
+              channelId: 'sos-alerts',
+            },
+            trigger: null,
+          });
           }
 
           lastFetchedTimestampRef.current = latestTimestamp;
@@ -213,85 +228,84 @@ const SOSMessage = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>
-    {/* Dropdown Selection Button */}
-        <View className="relative ml-[11%] mr-0 pr-1 mb-4">
-          <TouchableOpacity
-            onPress={() => setDropdownVisible(!isDropdownVisible)}
-            className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
-          >
-            <View className="flex-row items-center space-x-2">
-              <Icon name="person-outline" size={20} color="black" />
-              <Text className="font-extrabold text-base text-black">
-                {String(
-                  deviceList.find((d) => d.deviceId === selectedDevice)?.name ||
-                    "Unknown Device"
-                )}
-              </Text>
-            </View>
-            <View className="flex-row items-center space-x-2">
-              {Object.values(newMessagesMap).some(count => count > 0) && (
-  <View className="relative w-5 h-5 rounded-full bg-red-500 mr-1 flex justify-center items-center">
-    <Text className="text-xs text-white font-bold">
-      {
-        Object.values(newMessagesMap).reduce((total, count) => total + count, 0)
-      }
-    </Text>
-  </View>
-)
-}
-              <Icon
-                name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-                size={20}
-                color="black"
-              />
-            </View>
-          </TouchableOpacity>
-
-          {/* Animated Dropdown List - Always shows when dropdown is visible */}
-          <Animated.View
-            className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
-            style={{
-              top: "120%",
-              opacity: dropdownAnim,
-              transform: [
-                {
-                  translateY: dropdownAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-10, 0],
-                  }),
-                },
-              ],
-              display: isDropdownVisible ? 'flex' : 'none',
-            }}
-          >
-            {deviceList.length > 0 ? (
-              deviceList.map((device, index) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => handleDeviceSelect(device.deviceId)}
-                  className="p-3 border-b border-gray-200 last:border-b-0"
-                >
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-black">
-                      {String(device.name || "Unknown Device")}
-                    </Text>
-                    {newMessagesMap[device.deviceId] > 0 && (
-                      <View className="relative w-5 h-5 rounded-full bg-red-500 ml-2 flex justify-center items-center">
-                        <Text className="text-xs text-white font-bold">
-                          {newMessagesMap[device.deviceId]}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View className="p-3">
-                <Text className="text-black italic">No users found.</Text>
+      {/* Dropdown Selection Button */}
+      <View className="relative ml-[11%] mr-0 pr-1 mb-4">
+        <TouchableOpacity
+          onPress={() => setDropdownVisible(!isDropdownVisible)}
+          className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
+        >
+          <View className="flex-row items-center space-x-2">
+            <Icon name="person-outline" size={20} color="black" />
+            <Text className="font-extrabold text-base text-black">
+              {String(
+                deviceList.find((d) => d.deviceId === selectedDevice)?.name ||
+                  "Unknown Device"
+              )}
+            </Text>
+          </View>
+          <View className="flex-row items-center space-x-2">
+            {Object.values(newMessagesMap).some(count => count > 0) && (
+              <View className="relative w-5 h-5 rounded-full bg-red-500 mr-1 flex justify-center items-center">
+                <Text className="text-xs text-white font-bold">
+                  {
+                    Object.values(newMessagesMap).reduce((total, count) => total + count, 0)
+                  }
+                </Text>
               </View>
             )}
-          </Animated.View>
-        </View>
+            <Icon
+              name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+              size={20}
+              color="black"
+            />
+          </View>
+        </TouchableOpacity>
+
+        {/* Animated Dropdown List */}
+        <Animated.View
+          className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
+          style={{
+            top: "120%",
+            opacity: dropdownAnim,
+            transform: [
+              {
+                translateY: dropdownAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-10, 0],
+                }),
+              },
+            ],
+            display: isDropdownVisible ? 'flex' : 'none',
+          }}
+        >
+          {deviceList.length > 0 ? (
+            deviceList.map((device, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => handleDeviceSelect(device.deviceId)}
+                className="p-3 border-b border-gray-200 last:border-b-0"
+              >
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-black">
+                    {String(device.name || "Unknown Device")}
+                  </Text>
+                  {newMessagesMap[device.deviceId] > 0 && (
+                    <View className="relative w-5 h-5 rounded-full bg-red-500 ml-2 flex justify-center items-center">
+                      <Text className="text-xs text-white font-bold">
+                        {newMessagesMap[device.deviceId]}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View className="p-3">
+              <Text className="text-black italic">No users found.</Text>
+            </View>
+          )}
+        </Animated.View>
+      </View>
 
       {/* SOS Messages */}
       <ScrollView className="flex-1 p-4 -mt-2">
@@ -358,7 +372,7 @@ const SOSMessage = () => {
                   </Text>
                   <View className="mt-3">
                     <Text className="font-extrabold ml-2 text-gray-600">
-                      User's Location:
+                      {`${sos.name}'s Location:`}
                     </Text>
                     <TouchableOpacity
                       onPress={() =>
@@ -372,20 +386,6 @@ const SOSMessage = () => {
                       </Text>
                     </TouchableOpacity>
                   </View>
-                                    <TouchableOpacity
-  onPress={async () => {
-    try {
-      await axios.delete(`${API_URL}/delete/${sos._id}`);
-      setSOSMessages(prev => prev.filter(msg => msg._id !== sos._id));
-    } catch (err) {
-      console.error("Failed to delete message:", err);
-    }
-  }}
-  className="mt-4 bg-red-600 px-4 py-2 rounded-2xl self-start ml-2"
->
-  <Text className="text-white font-bold">Delete</Text>
-</TouchableOpacity>
-
                 </View>
               </View>
             ))
