@@ -200,7 +200,7 @@ const AuthScreen = () => {
       console.log(error);
       Alert.alert(
         "Error",
-        error.response?.data?.message || "Invalid Username or Password."
+        error.response?.data?.error || "An unexpected error occurred. Please try again."
       );
     }
   };

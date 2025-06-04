@@ -9,6 +9,11 @@ router.post('/register', async (req, res) => {
     try {
         const { username, password, role, recipientId, userId, age, name, bloodType } = req.body;
 
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername) {
+            return res.status(400).json({ error: "Username is already in use." });
+        }
+        
         // Role-based validation
         if (role === 'recipient' && !recipientId) {
             return res.status(400).json({ error: "Recipient ID is required for recipients." });
@@ -65,7 +70,7 @@ router.post('/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             console.error("Invalid password for user: ", username);
-            return res.status(400).json({ error: 'Invalid credentials' });
+            return res.status(400).json({ error: 'Invalid Password' });
         }
 
         // Create a JWT token
