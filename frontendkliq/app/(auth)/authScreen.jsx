@@ -176,14 +176,28 @@ const AuthScreen = () => {
 
       Alert.alert("Success", response.data.message || "Login Successful");
 
-      if (response.data.token) {
-        await AsyncStorage.setItem("authToken", response.data.token);
-        const authData = await getTokenData();
-        await AsyncStorage.setItem("authData", JSON.stringify(authData));
-        if (response.data.uniqueId) {
-          await AsyncStorage.setItem("uniqueId", response.data.uniqueId);
-        }
-      }
+if (isLogin && response.data.token) {
+  await AsyncStorage.setItem("authToken", response.data.token);
+  const authData = await getTokenData();
+  await AsyncStorage.setItem("authData", JSON.stringify(authData));
+  if (response.data.uniqueId) {
+    await AsyncStorage.setItem("uniqueId", response.data.uniqueId);
+  }
+
+  resetForm();
+  setTimeout(() => {
+    setIsLoading(false);
+    if (response.data.role === "user") router.replace("/userSOSreports");
+    else if (response.data.role === "recipient") router.replace("/SOSInbox");
+  }, 200);
+} else {
+  // If registration was successful, switch to login form
+  Alert.alert("Success", response.data.message || "Registration Successful");
+  setIsLogin(true);
+  resetForm();
+  setIsLoading(false);
+}
+
 
       resetForm(); // ✅ clear input state after login
 
@@ -237,69 +251,101 @@ const AuthScreen = () => {
           {isLogin && (
             <Text className="text-3xl font-bold mb-6 text-center">Log in</Text>
           )}
-          <TextInput
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-            onFocus={() => setFocusedInput("username")}
-            onBlur={() => setFocusedInput(null)}
-            className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "username" ? "border-[2px] border-black" : "border border-black"
-              } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
-            placeholderTextColor="rgba(0, 0, 0, 0.5)"
-          />
+{/* Username Input */}
+<View className="relative mb-4">
+  <Text
+    className={`absolute left-8 z-10 transition-all ${
+      focusedInput === "username" || username
+        ? "-top-5 bg-gray-50 text-xs px-1"
+        : "top-6 text-gray-500"
+    }`}
+  >
+    Username
+  </Text>
+  <TextInput
+    value={username}
+    onChangeText={setUsername}
+    onFocus={() => setFocusedInput("username")}
+    onBlur={() => setFocusedInput(null)}
+    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+      focusedInput === "username"
+        ? "border-[2px] border-black"
+        : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
+  />
+</View>
 
-          {/* Password Input */}
-          <View className="relative w-auto mb-4">
-            <TextInput
-              placeholder="Password"
-              value={password}
-              secureTextEntry={!passwordVisible}
-              onChangeText={setPassword}
-              onFocus={() => setFocusedInput("password")}
-              onBlur={() => setFocusedInput(null)}
-              className={`w-auto px-7 py-6 rounded-full border ${focusedInput === "password" ? "border-[2px] border-black" : "border border-black"
-                } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
-              placeholderTextColor="rgba(0, 0, 0, 0.5)"
-            />
-            <TouchableOpacity
-              className="absolute top-7 right-6"
-              onPress={() => setPasswordVisible(!passwordVisible)}
-            >
-              <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={24} color="gray" />
-            </TouchableOpacity>
-          </View>
+
+{/* Password Input */}
+<View className="relative mb-4">
+  <Text
+    className={`absolute left-8 z-10 transition-all ${
+      focusedInput === "password" || password
+        ? "-top-5 bg-gray-50 text-xs px-1"
+        : "top-5 text-gray-500"
+    }`}
+  >
+    Password
+  </Text>
+  <TextInput
+    value={password}
+    secureTextEntry={!passwordVisible}
+    onChangeText={setPassword}
+    onFocus={() => setFocusedInput("password")}
+    onBlur={() => setFocusedInput(null)}
+    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+      focusedInput === "password"
+        ? "border-[2px] border-black"
+        : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
+  />
+  <TouchableOpacity
+    className="absolute top-7 right-6"
+    onPress={() => setPasswordVisible(!passwordVisible)}
+  >
+    <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={24} color="gray" />
+  </TouchableOpacity>
+</View>
+
 
           {/* Additional fields for Sign Up */}
           {!isLogin && (
             <>
-              {/* Confirm Password */}
-              <View className="relative w-auto mb-4">
-                <TextInput
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  secureTextEntry={!passwordVisible}
-                  onChangeText={setConfirmPassword}
-                  onFocus={() => setFocusedInput("confirmPassword")}
-                  onBlur={() => setFocusedInput(null)}
-                  className={`w-auto px-7 py-6 rounded-full border ${focusedInput === "confirmPassword" ? "border-[2px] border-black" : "border border-black"
-                    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
-                  placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                />
-                <TouchableOpacity
-                  className="absolute top-7 right-6"
-                  onPress={() => setPasswordVisible(!passwordVisible)}
-                >
-                  <Icon
-                    name={passwordVisible ? "visibility" : "visibility-off"}
-                    size={24}
-                    color="gray"
-                  />
-                </TouchableOpacity>
-              </View>
+{/* Confirm Password */}
+<View className="relative mb-4">
+  <Text
+    className={`absolute left-8 z-10 transition-all ${
+      focusedInput === "confirmPassword" || confirmPassword
+        ? "-top-5 bg-gray-50 text-xs px-1"
+        : "top-5 text-gray-500"
+    }`}
+  >
+    Confirm Password
+  </Text>
+  <TextInput
+    value={confirmPassword}
+    secureTextEntry={!passwordVisible}
+    onChangeText={setConfirmPassword}
+    onFocus={() => setFocusedInput("confirmPassword")}
+    onBlur={() => setFocusedInput(null)}
+    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+      focusedInput === "confirmPassword"
+        ? "border-[2px] border-black"
+        : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
+  />
+  <TouchableOpacity
+    className="absolute top-7 right-6"
+    onPress={() => setPasswordVisible(!passwordVisible)}
+  >
+    <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={24} color="gray" />
+  </TouchableOpacity>
+</View>
+
 
               {/* Role Dropdown */}
               <TouchableOpacity
-                className="w-auto px-7 py-5 mb-4 flex-row justify-between rounded-t-xl border-b border-black bg-gray-300 shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
+                className="w-auto px-7 py-5 mb-6 flex-row justify-between rounded-t-xl border-b border-black bg-gray-300 shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20"
                 onPress={() => setDropdownVisible(!dropdownVisible)}
               >
                 <View className="flex-row items-center">
@@ -328,77 +374,157 @@ const AuthScreen = () => {
                 </View>
               )}
 
-              {/* Unique ID */}
-              <TextInput
-                placeholder={`${role === "recipient" ? "Recipient" : "Device User"} Contact # (serves as unique ID)`}
-                value={uniqueId}
-                onChangeText={setUniqueId}
-                onFocus={() => setFocusedInput("uniqueId")}
-                onBlur={() => setFocusedInput(null)}
-                className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "uniqueId" ? "border-[2px] border-black" : "border border-black"
-                  } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
-                placeholderTextColor="rgba(0, 0, 0, 0.5)"
-              />
+{/* Unique ID */}
+<View className="relative mb-4">
+  <Text
+    className={`absolute left-8 z-10 transition-all ${
+      focusedInput === "uniqueId" || uniqueId
+        ? "-top-5 bg-gray-50 text-xs px-1"
+        : "top-5 text-gray-500"
+    }`}
+  >
+    {role === "recipient" ? "Recipient" : "Device User"} Contact #
+  </Text>
+  <TextInput
+    value={uniqueId}
+    onChangeText={setUniqueId}
+    onFocus={() => setFocusedInput("uniqueId")}
+    onBlur={() => setFocusedInput(null)}
+    keyboardType="numeric"
+    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+      focusedInput === "uniqueId"
+        ? "border-[2px] border-black"
+        : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
+  />
+</View>
+
 
               {role === "user" && (
                 <>
-                  <TextInput
-                    placeholder="Age"
-                    value={age}
-                    onChangeText={setAge}
-                    keyboardType="numeric"
-                    onFocus={() => setFocusedInput("age")}
-                    onBlur={() => setFocusedInput(null)}
-                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "age" ? "border-[2px] border-black" : "border border-black"
-                      } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
-                    placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                  />
-                  <TextInput
-                    placeholder="Name"
-                    value={name}
-                    onChangeText={setName}
-                    onFocus={() => setFocusedInput("name")}
-                    onBlur={() => setFocusedInput(null)}
-                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "name" ? "border-[2px] border-black" : "border border-black"
-                      } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
-                    placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                  />
-                  <TextInput
-                    placeholder="Blood Type"
-                    value={bloodType}
-                    onChangeText={setBloodType}
-                    onFocus={() => setFocusedInput("bloodType")}
-                    onBlur={() => setFocusedInput(null)}
-                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "bloodType" ? "border-[2px] border-black" : "border border-black"
-                      } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
-                    placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                  />
+{/* Age */}
+<View className="relative mb-4">
+  <Text
+    className={`absolute left-8 z-10 transition-all ${
+      focusedInput === "age" || age
+        ? "-top-5 bg-gray-50 text-xs px-1"
+        : "top-5 text-gray-500"
+    }`}
+  >
+    Age
+  </Text>
+  <TextInput
+    value={age}
+    onChangeText={setAge}
+    onFocus={() => setFocusedInput("age")}
+    onBlur={() => setFocusedInput(null)}
+    keyboardType="numeric"
+    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+      focusedInput === "age"
+        ? "border-[2px] border-black"
+        : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
+  />
+</View>
+{/* Name */}
+<View className="relative mb-4">
+  <Text
+    className={`absolute left-8 z-10 transition-all ${
+      focusedInput === "name" || name
+        ? "-top-5 bg-gray-50 text-xs px-1"
+        : "top-5 text-gray-500"
+    }`}
+  >
+    Name
+  </Text>
+  <TextInput
+    value={name}
+    onChangeText={setName}
+    onFocus={() => setFocusedInput("name")}
+    onBlur={() => setFocusedInput(null)}
+    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+      focusedInput === "name"
+        ? "border-[2px] border-black"
+        : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
+  />
+</View>
+{/* Blood Type */}
+<View className="relative mb-4">
+  <Text
+    className={`absolute left-8 z-10 transition-all ${
+      focusedInput === "bloodType" || bloodType
+        ? "-top-5 bg-gray-50 text-xs px-1"
+        : "top-5 text-gray-500"
+    }`}
+  >
+    Blood Type
+  </Text>
+  <TextInput
+    value={bloodType}
+    onChangeText={setBloodType}
+    onFocus={() => setFocusedInput("bloodType")}
+    onBlur={() => setFocusedInput(null)}
+    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+      focusedInput === "bloodType"
+        ? "border-[2px] border-black"
+        : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
+  />
+</View>
+
                 </>
               )}
 
               {role === "recipient" && (
                 <>
-                  <TextInput
-                    placeholder="Age"
-                    value={age}
-                    onChangeText={setAge}
-                    keyboardType="numeric"
-                    onFocus={() => setFocusedInput("age")}
-                    onBlur={() => setFocusedInput(null)}
-                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "age" ? "border-[2px] border-black" : "border border-black"
-                      } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
-                    placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                  />
-                  <TextInput
-                    placeholder="Name"
-                    value={name}
-                    onChangeText={setName}
-                    onFocus={() => setFocusedInput("name")}
-                    onBlur={() => setFocusedInput(null)}
-                    className={`w-auto px-7 py-6 mb-4 rounded-full border ${focusedInput === "name" ? "border-[2px] border-black" : "border border-black"
-                      } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20`}
-                    placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                  />
+{/* Age */}
+<View className="relative mb-4">
+  <Text
+    className={`absolute left-8 z-10 transition-all ${
+      focusedInput === "age" || age
+        ? "-top-5 bg-gray-50 text-xs px-1"
+        : "top-5 text-gray-500"
+    }`}
+  >
+    Age
+  </Text>
+  <TextInput
+    value={age}
+    onChangeText={setAge}
+    onFocus={() => setFocusedInput("age")}
+    onBlur={() => setFocusedInput(null)}
+    keyboardType="numeric"
+    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+      focusedInput === "age"
+        ? "border-[2px] border-black"
+        : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
+  />
+</View>
+{/* Name */}
+<View className="relative mb-4">
+  <Text
+    className={`absolute left-8 z-10 transition-all ${
+      focusedInput === "name" || name
+        ? "-top-5 bg-gray-50 text-xs px-1"
+        : "top-5 text-gray-500"
+    }`}
+  >
+    Name
+  </Text>
+  <TextInput
+    value={name}
+    onChangeText={setName}
+    onFocus={() => setFocusedInput("name")}
+    onBlur={() => setFocusedInput(null)}
+    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+      focusedInput === "name"
+        ? "border-[2px] border-black"
+        : "border border-black"
+    } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
+  />
+</View>
                 </>
               )}
             </>
