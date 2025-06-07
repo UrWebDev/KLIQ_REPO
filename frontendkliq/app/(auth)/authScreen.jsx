@@ -386,7 +386,7 @@ if (isLogin && response.data.token) {
         : "top-7 text-gray-500"
     }`}
   >
-    {role === "recipient" ? "Recipient" : "Device User"} Contact #
+    {role === "recipient" ? "Recipient" : "Device User"} Contact +639
   </Text>
   <TextInput
     value={uniqueId}

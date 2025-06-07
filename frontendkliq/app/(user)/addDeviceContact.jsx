@@ -588,7 +588,7 @@ const formattedContacts = receivedContact
     />
     <TextInput 
       className={`border ${focusedInput === 'phoneNum' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
-      placeholder="Phone Number" 
+      placeholder="Phone Number (09)" 
       value={phoneNum} 
       onChangeText={setPhoneNum}
       onFocus={() => setFocusedInput('phoneNum')}
@@ -597,7 +597,7 @@ const formattedContacts = receivedContact
     />
     <TextInput 
       className={`border ${focusedInput === 'deviceId' ? 'border-black-500' : 'border-gray-300'} rounded-lg p-3 w-full mb-3 bg-gray-100`}
-      placeholder="Device ID" 
+      placeholder="Device ID (+639)" 
       value={deviceId} 
       onChangeText={setDeviceId}
       onFocus={() => setFocusedInput('deviceId')}
