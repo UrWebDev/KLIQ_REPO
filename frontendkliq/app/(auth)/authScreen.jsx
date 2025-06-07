@@ -15,6 +15,7 @@ import { register, login, getTokenData } from "./api";
 import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { Dimensions } from "react-native";
 
 const roles = [
   { label: "Device User", value: "user" },
@@ -36,6 +37,7 @@ const AuthScreen = () => {
   const [focusedInput, setFocusedInput] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const screenWidth = Dimensions.get("window").width;
 
   // ✅ FIX: Reset state to prevent stale input and stuck loading
   const resetForm = () => {
@@ -252,12 +254,12 @@ if (isLogin && response.data.token) {
             <Text className="text-3xl font-bold mb-6 text-center">Log in</Text>
           )}
 {/* Username Input */}
-<View className="relative mb-4">
+<View className="relative mb-4 w-full">
   <Text
-    className={`absolute left-8 z-10 transition-all ${
+    className={`absolute left-5 z-10 transition-all ${
       focusedInput === "username" || username
-        ? "-top-5 bg-gray-50 text-xs px-1"
-        : "top-6 text-gray-500"
+        ? "top-1 bg-gray-300 text-xs px-1 rounded-full"
+        : "top-7 text-gray-500"
     }`}
   >
     Username
@@ -267,7 +269,7 @@ if (isLogin && response.data.token) {
     onChangeText={setUsername}
     onFocus={() => setFocusedInput("username")}
     onBlur={() => setFocusedInput(null)}
-    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+    className={`w-full px-7 pt-6 pb-5 rounded-full border ${
       focusedInput === "username"
         ? "border-[2px] border-black"
         : "border border-black"
@@ -277,11 +279,11 @@ if (isLogin && response.data.token) {
 
 
 {/* Password Input */}
-<View className="relative mb-4">
+<View className="relative mb-4 w-full">
   <Text
-    className={`absolute left-8 z-10 transition-all ${
+    className={`absolute left-5 z-10 transition-all ${
       focusedInput === "password" || password
-        ? "-top-5 bg-gray-50 text-xs px-1"
+        ? "top-1 bg-gray-300 text-xs px-1 rounded-full"
         : "top-5 text-gray-500"
     }`}
   >
@@ -293,19 +295,20 @@ if (isLogin && response.data.token) {
     onChangeText={setPassword}
     onFocus={() => setFocusedInput("password")}
     onBlur={() => setFocusedInput(null)}
-    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+    className={`w-full px-7 pt-6 pb-5 rounded-full border ${
       focusedInput === "password"
         ? "border-[2px] border-black"
         : "border border-black"
     } bg-gray-300 text-gray-700 italic shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg`}
   />
   <TouchableOpacity
-    className="absolute top-7 right-6"
+    className="absolute top-6 right-5"
     onPress={() => setPasswordVisible(!passwordVisible)}
   >
-    <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={24} color="gray" />
+    <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={22} color="gray" />
   </TouchableOpacity>
 </View>
+
 
 
           {/* Additional fields for Sign Up */}
@@ -313,10 +316,10 @@ if (isLogin && response.data.token) {
             <>
 {/* Confirm Password */}
 <View className="relative mb-4">
-  <Text
-    className={`absolute left-8 z-10 transition-all ${
+<Text
+    className={`absolute left-5 z-10 transition-all ${
       focusedInput === "confirmPassword" || confirmPassword
-        ? "-top-5 bg-gray-50 text-xs px-1"
+        ? "top-1 bg-gray-300 text-xs px-1 rounded-full"
         : "top-5 text-gray-500"
     }`}
   >
@@ -328,7 +331,7 @@ if (isLogin && response.data.token) {
     onChangeText={setConfirmPassword}
     onFocus={() => setFocusedInput("confirmPassword")}
     onBlur={() => setFocusedInput(null)}
-    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+    className={`w-full px-7 pt-6 pb-5 rounded-full border ${
       focusedInput === "confirmPassword"
         ? "border-[2px] border-black"
         : "border border-black"
@@ -375,12 +378,12 @@ if (isLogin && response.data.token) {
               )}
 
 {/* Unique ID */}
-<View className="relative mb-4">
+<View className="relative mb-4 w-full">
   <Text
-    className={`absolute left-8 z-10 transition-all ${
+    className={`absolute left-5 z-10 transition-all ${
       focusedInput === "uniqueId" || uniqueId
-        ? "-top-5 bg-gray-50 text-xs px-1"
-        : "top-5 text-gray-500"
+        ? "top-1 bg-gray-300 text-xs px-1 rounded-full"
+        : "top-7 text-gray-500"
     }`}
   >
     {role === "recipient" ? "Recipient" : "Device User"} Contact #
@@ -391,7 +394,7 @@ if (isLogin && response.data.token) {
     onFocus={() => setFocusedInput("uniqueId")}
     onBlur={() => setFocusedInput(null)}
     keyboardType="numeric"
-    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+    className={`w-full px-7 pt-6 pb-5 rounded-full border ${
       focusedInput === "uniqueId"
         ? "border-[2px] border-black"
         : "border border-black"
@@ -405,10 +408,10 @@ if (isLogin && response.data.token) {
 {/* Age */}
 <View className="relative mb-4">
   <Text
-    className={`absolute left-8 z-10 transition-all ${
+    className={`absolute left-5 z-10 transition-all ${
       focusedInput === "age" || age
-        ? "-top-5 bg-gray-50 text-xs px-1"
-        : "top-5 text-gray-500"
+        ? "top-1 bg-gray-300 text-xs px-1 rounded-full"
+        : "top-7 text-gray-500"
     }`}
   >
     Age
@@ -419,7 +422,7 @@ if (isLogin && response.data.token) {
     onFocus={() => setFocusedInput("age")}
     onBlur={() => setFocusedInput(null)}
     keyboardType="numeric"
-    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+    className={`w-auto px-7 pt-6 pb-5 rounded-full border ${
       focusedInput === "age"
         ? "border-[2px] border-black"
         : "border border-black"
@@ -429,10 +432,10 @@ if (isLogin && response.data.token) {
 {/* Name */}
 <View className="relative mb-4">
   <Text
-    className={`absolute left-8 z-10 transition-all ${
+    className={`absolute left-5 z-10 transition-all ${
       focusedInput === "name" || name
-        ? "-top-5 bg-gray-50 text-xs px-1"
-        : "top-5 text-gray-500"
+        ? "top-1 bg-gray-300 text-xs px-1 rounded-full"
+        : "top-7 text-gray-500"
     }`}
   >
     Name
@@ -442,7 +445,7 @@ if (isLogin && response.data.token) {
     onChangeText={setName}
     onFocus={() => setFocusedInput("name")}
     onBlur={() => setFocusedInput(null)}
-    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+    className={`w-auto px-7 pt-6 pb-5 rounded-full border ${
       focusedInput === "name"
         ? "border-[2px] border-black"
         : "border border-black"
@@ -452,10 +455,10 @@ if (isLogin && response.data.token) {
 {/* Blood Type */}
 <View className="relative mb-4">
   <Text
-    className={`absolute left-8 z-10 transition-all ${
+    className={`absolute left-5 z-10 transition-all ${
       focusedInput === "bloodType" || bloodType
-        ? "-top-5 bg-gray-50 text-xs px-1"
-        : "top-5 text-gray-500"
+        ? "top-1 bg-gray-300 text-xs px-1 rounded-full"
+        : "top-7 text-gray-500"
     }`}
   >
     Blood Type
@@ -465,7 +468,7 @@ if (isLogin && response.data.token) {
     onChangeText={setBloodType}
     onFocus={() => setFocusedInput("bloodType")}
     onBlur={() => setFocusedInput(null)}
-    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+    className={`w-auto px-7 pt-6 pb-5 rounded-full border ${
       focusedInput === "bloodType"
         ? "border-[2px] border-black"
         : "border border-black"
@@ -481,10 +484,10 @@ if (isLogin && response.data.token) {
 {/* Age */}
 <View className="relative mb-4">
   <Text
-    className={`absolute left-8 z-10 transition-all ${
+    className={`absolute left-5 z-10 transition-all ${
       focusedInput === "age" || age
-        ? "-top-5 bg-gray-50 text-xs px-1"
-        : "top-5 text-gray-500"
+        ? "top-1 bg-gray-300 text-xs px-1 rounded-full"
+        : "top-7 text-gray-500"
     }`}
   >
     Age
@@ -495,7 +498,7 @@ if (isLogin && response.data.token) {
     onFocus={() => setFocusedInput("age")}
     onBlur={() => setFocusedInput(null)}
     keyboardType="numeric"
-    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+    className={`w-auto px-7 pt-6 pb-5 rounded-full border ${
       focusedInput === "age"
         ? "border-[2px] border-black"
         : "border border-black"
@@ -505,10 +508,10 @@ if (isLogin && response.data.token) {
 {/* Name */}
 <View className="relative mb-4">
   <Text
-    className={`absolute left-8 z-10 transition-all ${
+    className={`absolute left-5 z-10 transition-all ${
       focusedInput === "name" || name
-        ? "-top-5 bg-gray-50 text-xs px-1"
-        : "top-5 text-gray-500"
+        ? "top-1 bg-gray-300 text-xs px-1 rounded-full"
+        : "top-7 text-gray-500"
     }`}
   >
     Name
@@ -518,7 +521,7 @@ if (isLogin && response.data.token) {
     onChangeText={setName}
     onFocus={() => setFocusedInput("name")}
     onBlur={() => setFocusedInput(null)}
-    className={`w-auto px-7 pt-6 pb-5 mb-3 rounded-full border ${
+    className={`w-auto px-7 pt-6 pb-5 rounded-full border ${
       focusedInput === "name"
         ? "border-[2px] border-black"
         : "border border-black"
