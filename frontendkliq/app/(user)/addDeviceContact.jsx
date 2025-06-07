@@ -708,7 +708,7 @@ const formattedContacts = receivedContact
               className="w-full p-4 bg-green-600 rounded-xl mb-3 shadow-md"
             >
               <Text className="text-white text-center font-bold text-lg">
-                Save NVS
+                Save
               </Text>
             </TouchableOpacity>
             
@@ -722,7 +722,7 @@ const formattedContacts = receivedContact
         </View>
       </Modal>
 
-        <Text className="text-2xl font-extrabold mb-5 text-gray-800 mt-5">Add Recipients(10):</Text>
+        <Text className="text-2xl font-extrabold mb-5 text-gray-800 mt-5">Add Recipients:</Text>
         
         {/* Add Recipient Card Trigger */}
         <View className="bg-gray-300 border border-black rounded-xl p-4 w-full mb-4 items-center justify-center">
@@ -790,7 +790,7 @@ const formattedContacts = receivedContact
                 disabled={!connected}
               >
                 <Text className="text-white text-center font-bold text-lg">
-                  Send Contact to EEPROM
+                  Send
                 </Text>
               </TouchableOpacity>
 
@@ -891,7 +891,7 @@ const formattedContacts = receivedContact
               className="bg-green-600 p-4 rounded-xl mb-3 w-full items-center"
               onPress={updateContact}
             >
-              <Text className="text-white text-base font-semibold">Save EEPROM</Text>
+              <Text className="text-white text-base font-semibold">Save</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               className="bg-gray-400 p-4 rounded-xl mb-3 w-full items-center"
