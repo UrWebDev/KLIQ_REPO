@@ -256,54 +256,59 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
     <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>
 
 {/* Device Selection Button */}
-    <View className="relative ml-[11%] mr-0 pr-1 mb-4">
-      <TouchableOpacity
-        onPress={() => setDropdownVisible(!isDropdownVisible)}
-        className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
-      >
-        <View className="flex-row items-center space-x-2">
-          <Icon name="person-outline" size={20} color="black" />
-          <Text className="font-extrabold text-base text-black">
-            {String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device")}
-          </Text>
-        </View>
-        <Icon name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color="black" />
-      </TouchableOpacity>
-
-      {/* Animated Dropdown List - Always shows when dropdown is visible */}
-      <Animated.View
-        className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
-        style={{
-          top: '120%',
-          opacity: dropdownAnim,
-          transform: [
-            {
-              translateY: dropdownAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-10, 0],
-              }),
-            },
-          ],
-          display: isDropdownVisible ? 'flex' : 'none', // Only control visibility here
-        }}
-      >
-        {deviceList.length > 0 ? (
-          deviceList.map((device, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => handleDeviceChange(device.deviceId)}
-              className="p-3 border-b border-gray-200 last:border-b-0"
-            >
-              <Text className="text-black">{String(device.name || "Unknown Device")}</Text>
-            </TouchableOpacity>
-          ))
-        ) : (
-          <View className="p-3">
-            <Text className="text-black italic">No users found.</Text>
-          </View>
-        )}
-      </Animated.View>
+<View className="relative w-full ml-4 px-4 mb-4">
+  <TouchableOpacity
+    onPress={() => setDropdownVisible(!isDropdownVisible)}
+    className="flex-row items-center justify-between w-full bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm"
+  >
+    <View className="flex-row items-center space-x-2">
+      <Icon name="person-outline" size={20} color="black" />
+      <Text className="font-extrabold text-base text-black">
+        {String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device")}
+      </Text>
     </View>
+    <Icon
+      name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+      size={20}
+      color="black"
+    />
+  </TouchableOpacity>
+
+  {/* Animated Dropdown List - untouched as requested */}
+  <Animated.View
+    className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
+    style={{
+      top: '120%',
+      opacity: dropdownAnim,
+      transform: [
+        {
+          translateY: dropdownAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-10, 0],
+          }),
+        },
+      ],
+      display: isDropdownVisible ? 'flex' : 'none',
+    }}
+  >
+    {deviceList.length > 0 ? (
+      deviceList.map((device, index) => (
+        <TouchableOpacity
+          key={index}
+          onPress={() => handleDeviceChange(device.deviceId)}
+          className="p-3 border-b border-gray-200 last:border-b-0"
+        >
+          <Text className="text-black">{String(device.name || "Unknown Device")}</Text>
+        </TouchableOpacity>
+      ))
+    ) : (
+      <View className="p-3">
+        <Text className="text-black italic">No users found.</Text>
+      </View>
+    )}
+  </Animated.View>
+</View>
+
 
       {/* Render Phone Number */}
           <View className="relative mb-3">

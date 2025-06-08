@@ -17,6 +17,7 @@ import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart } from 'react-native-gifted-charts';
 import { useRef } from 'react';
+import { Dimensions } from 'react-native';
 
 const RecipientSOSReports = () => {
   const [sosMessages, setSOSMessages] = useState([]);
@@ -34,6 +35,7 @@ const RecipientSOSReports = () => {
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
 
+const screenWidth = Dimensions.get('window').width;
   useEffect(() => {
     Animated.timing(userDetailsHelpAnim, {
       toValue: isUserDetailsHelpPressed ? 1 : 0,
@@ -215,63 +217,64 @@ const barData = weeklyData.map((value, index) => ({
     <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>
       
       {/* Device Selection Button */}
-    <View className="relative ml-[11%] mr-0 pr-1 mb-4">
-      <TouchableOpacity
-        onPress={() => setIsDropdownVisible(!isDropdownVisible)}
-        className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
-      >
-        <View className="flex-row items-center space-x-2">
-          <Icon name="person-outline" size={20} color="black" />
-          <Text className="font-extrabold text-base text-black">
-            {String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device")}
-          </Text>
-        </View>
-        <Icon
-          name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-          size={20}
-          color="black"
-        />
-      </TouchableOpacity>
-
-      {/* Animated Dropdown List */}
-      {isDropdownVisible && (
-        <Animated.View
-          className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
-          style={{
-            top: '120%',
-            opacity: dropdownAnim,
-            transform: [
-              {
-                translateY: dropdownAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-10, 0], // Slide down effect
-                }),
-              },
-            ],
-          }}
-        >
-          {deviceList.length > 0 ? (
-            deviceList.map((device, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => {
-                  setSelectedDevice(device.deviceId);
-                  setIsDropdownVisible(false);
-                  calculateWeeklyData(sosMessages);
-                }}
-                className="p-3 border-b border-gray-200 last:border-b-0"
-              >
-                <Text className="text-black">{String(device.name || "Unknown Device")}</Text>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View className="p-3">
-              <Text className="text-black italic">No users found.</Text>
-            </View>
-          )}
-        </Animated.View>
-      )}
+<View className="relative ml-4 px-4 mb-4 w-full">
+  <TouchableOpacity
+    onPress={() => setIsDropdownVisible(!isDropdownVisible)}
+    className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
+  >
+    <View className="flex-row items-center space-x-2">
+      <Icon name="person-outline" size={20} color="black" />
+      <Text className="font-extrabold text-base text-black">
+        {String(deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device")}
+      </Text>
     </View>
+    <Icon
+      name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+      size={20}
+      color="black"
+    />
+  </TouchableOpacity>
+
+  {/* Animated Dropdown List */}
+  {isDropdownVisible && (
+    <Animated.View
+      className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
+      style={{
+        top: '120%',
+        opacity: dropdownAnim,
+        transform: [
+          {
+            translateY: dropdownAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-10, 0], // Slide down effect
+            }),
+          },
+        ],
+      }}
+    >
+      {deviceList.length > 0 ? (
+        deviceList.map((device, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => {
+              setSelectedDevice(device.deviceId);
+              setIsDropdownVisible(false);
+              calculateWeeklyData(sosMessages);
+            }}
+            className="p-3 border-b border-gray-200 last:border-b-0"
+          >
+            <Text className="text-black">{String(device.name || "Unknown Device")}</Text>
+          </TouchableOpacity>
+        ))
+      ) : (
+        <View className="p-3">
+          <Text className="text-black italic">No users found.</Text>
+        </View>
+      )}
+    </Animated.View>
+  )}
+</View>
+
 
       {/* User Details Section */}
       <View style={{ 

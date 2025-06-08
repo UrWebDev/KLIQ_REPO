@@ -196,20 +196,28 @@ const handleLogout = async () => {
         </View>
       </Modal>
 
-      {/* Hamburger Button */}
-      <View className="absolute top-[14vw] left-[5vw] z-10">
-        <TouchableOpacity onPress={() => setSidebarVisible(!sidebarVisible)}>
-          <Animated.Text
-            style={{
-              fontSize: screenWidth < 40 ? 24 : 50,
-              fontWeight: 'bold',
-              transform: [{ rotate: rotateInterpolate }],
-            }}
-          >
-            ≡
-          </Animated.Text>
-        </TouchableOpacity>
-      </View>
+{/* Responsive Hamburger Button */}
+<View
+  style={{
+    position: 'absolute',
+    top: screenWidth * 0.14, // 5% from the top of screen width (approx similar to 14vw)
+    left: screenWidth * 0.05, // 5% from the left
+    zIndex: 10,
+  }}
+>
+  <TouchableOpacity onPress={() => setSidebarVisible(!sidebarVisible)}>
+    <Animated.Text
+      style={{
+        fontSize: screenWidth < 350 ? 24 : 40, // Responsive font size
+        fontWeight: 'bold',
+        transform: [{ rotate: rotateInterpolate }],
+      }}
+    >
+      ≡
+    </Animated.Text>
+  </TouchableOpacity>
+</View>
+
 
       {/* Tabs */}
       <Tabs
