@@ -47,20 +47,16 @@ app.delete('/recipients/deleteEmergencyContact/:id', deleteEmergencyHotlines);
 import { receiveRecipientSOSMessage, getFilteredSOSMessages, getUserFilteredSOSreports, deleteSOSMessageById} from './appRoutes/recipientSOSMessageRoutes.js'
 // In-memory store for tokens (for demo; for production, use MongoDB)
 import PushToken from './dbSchemas/pushTokenSchema.js';
-import fetch from 'node-fetch';
 
-app.post('/register-push-token', async (req, res) => {
+app.post("/api/push-token", async (req, res) => {
   const { userId, token } = req.body;
   if (!userId || !token) return res.status(400).send("Missing userId or token");
 
   try {
-    await PushToken.findOneAndUpdate(
-      { userId },
-      { token },
-      { upsert: true, new: true }
-    );
+    await PushToken.findOneAndUpdate({ userId }, { token }, { upsert: true, new: true });
     res.sendStatus(200);
   } catch (error) {
+    console.error("Failed to register token", error);
     res.status(500).send("Failed to register token");
   }
 });

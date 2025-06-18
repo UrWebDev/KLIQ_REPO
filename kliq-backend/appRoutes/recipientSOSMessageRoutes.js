@@ -3,9 +3,10 @@ import PushToken from "../dbSchemas/pushTokenSchema.js";
 import fetch from "node-fetch";
 
 // Push notification helper - UPDATED FOR BACKGROUND SOUND
+// Helper to send a push notification via Expo API
 const sendPushNotification = async (to, message) => {
   try {
-    await fetch("https://exp.host/--/api/v2/push/send", {
+    const response = await fetch("https://exp.host/--/api/v2/push/send", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -17,10 +18,15 @@ const sendPushNotification = async (to, message) => {
         sound: "default",
         title: "🚨 New SOS Alert",
         body: message,
-        priority: "high", // Ensure delivery in background
-        ttl: 60, // Time to live (seconds)
+        priority: "high",
+        ttl: 60,
       }),
     });
+
+    const data = await response.json();
+    if (data.errors) {
+      console.error("Expo push error:", data.errors);
+    }
   } catch (err) {
     console.error("Failed to send push notification:", err);
   }
@@ -47,7 +53,7 @@ const receiveRecipientSOSMessage = async (req, res) => {
     const sos = new SOSModel({ longitude, latitude, message, recipientId, deviceId, name, phoneNUM});
     await sos.save();
 
-    // Send notifications
+    // Send push notifications
     for (const id of recipientId) {
       const tokenDoc = await PushToken.findOne({ userId: id });
       if (tokenDoc?.token) {

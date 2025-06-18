@@ -28,6 +28,7 @@ export default {
         "backgroundColor": "#ffffff"
       },
       "package": "com.kliqApp",
+      "googleServicesFiles": "./google-services.json",
       "permissions": [
         "BLUETOOTH",
         "BLUETOOTH_ADMIN",

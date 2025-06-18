@@ -148,7 +148,6 @@ const handleLogout = async () => {
   await AsyncStorage.removeItem('authToken');
   await AsyncStorage.removeItem('authData');
   await AsyncStorage.removeItem('uniqueId');
-  await AsyncStorage.clear();
 
   // Optional: confirm token was cleared
   const checkTokenLogout = await AsyncStorage.getItem('authToken');

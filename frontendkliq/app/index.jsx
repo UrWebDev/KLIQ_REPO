@@ -13,10 +13,50 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
 export default function LandingPage() {
   const router = useRouter();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const [checkingLogin, setCheckingLogin] = useState(true); // for splash
+useEffect(() => {
+  const registerForPushNotificationsAsync = async () => {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const expoPushToken = tokenData.data;
+    console.log("Expo Push Token:", expoPushToken);
+
+    // Save token to AsyncStorage or send to your server here
+    await AsyncStorage.setItem('expoPushToken', expoPushToken);
+  };
+
+  registerForPushNotificationsAsync();
+
+  const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+    console.log("Notification received:", notification);
+  });
+
+  const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+    console.log("Notification response received:", response);
+  });
+
+  return () => {
+    Notifications.removeNotificationSubscription(notificationListener);
+    Notifications.removeNotificationSubscription(responseListener);
+  };
+}, []);
+
 
 useEffect(() => {
   const checkLogin = async () => {

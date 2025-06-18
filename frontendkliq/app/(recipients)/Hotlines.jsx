@@ -347,31 +347,32 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
         </Text>
       </Animated.View>
     </View>
-      <View className="flex-row justify-between items-center w-full px-6 py-5 mb-4 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
-        <View>
-          <Text className="text-xl font-extrabold text-black">
-            {userPhoneNumber !== "N/A" ? userPhoneNumber : "N/A"}
-          </Text>
-          <Text className="italic text-gray-700">{`${deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device"}'s Personal Number`}</Text>
-        </View>
+<View className="flex-row justify-between items-center w-full px-6 py-5 mb-4 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
+  <View>
+    <Text className="text-xl font-extrabold text-black">
+      {userPhoneNumber !== "N/A" ? userPhoneNumber : "N/A"}
+    </Text>
+    <Text className="italic text-gray-700">{`${deviceList.find((d) => d.deviceId === selectedDevice)?.name || "Unknown Device"}'s Personal Number`}</Text>
+  </View>
 
-        {/* Vertical Line - Moved closer to the phone icon */}
-        <View style={{ height: '100%', width: 1, backgroundColor: 'black', marginLeft: 90 }} />
+  {/* Vertical Line - Use marginHorizontal for spacing instead of fixed marginLeft */}
+  <View style={{ height: '100%', width: 1, backgroundColor: 'black', marginHorizontal: 12 }} />
 
-        {/* Phone Icon */}
-        <TouchableOpacity
-          className="p-2"
-          onPress={() => {
-            if (userPhoneNumber !== "N/A") {
-              Linking.openURL(`tel:${userPhoneNumber}`);
-            } else {
-              Alert.alert("Unavailable", "No phone number found.");
-            }
-          }}
-        >
-          <Icon name="phone" size={29} color="black" />
-        </TouchableOpacity>
-      </View>
+  {/* Phone Icon */}
+  <TouchableOpacity
+    className="p-2"
+    onPress={() => {
+      if (userPhoneNumber !== "N/A") {
+        Linking.openURL(`tel:${userPhoneNumber}`);
+      } else {
+        Alert.alert("Unavailable", "No phone number found.");
+      }
+    }}
+  >
+    <Icon name="phone" size={29} color="black" />
+  </TouchableOpacity>
+</View>
+
 
       
           {/* Emergency Hotlines Header with Info Icon */}

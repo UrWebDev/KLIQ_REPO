@@ -67,35 +67,51 @@ const SOSMessage = () => {
     return () => subscription.remove();
   }, []);
 
-  // Register for push notifications
-  useEffect(() => {
-    const registerForPushNotifications = async () => {
-      if (Device.isDevice) {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-        if (existingStatus !== "granted") {
-          const { status } = await Notifications.requestPermissionsAsync();
-          finalStatus = status;
-        }
-        if (finalStatus === "granted") {
-          const token = (await Notifications.getExpoPushTokenAsync()).data;
-          pushTokenRef.current = token;
-          const id = await AsyncStorage.getItem("uniqueId");
-          if (id) {
-            await axios.post(`${API_URL}/register-push-token`, {
-              userId: id,
-              token,
-            });
-          }
-        } else {
-          console.warn("Push notification permissions not granted");
-        }
-      } else {
-        console.warn("Must use a physical device for push notifications");
-      }
-    };
-    registerForPushNotifications();
-  }, []);
+  // // Register for push notifications - FIXED SECTION
+  // useEffect(() => {
+  //   const registerForPushNotifications = async () => {
+  //     if (!Device.isDevice) {
+  //       console.warn("Push notifications only work on physical devices.");
+  //       return;
+  //     }
+
+  //     try {
+  //       // Check current permissions
+  //       const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  //       let finalStatus = existingStatus;
+
+  //       // Request permissions if not granted
+  //       if (existingStatus !== "granted") {
+  //         const { status } = await Notifications.requestPermissionsAsync();
+  //         finalStatus = status;
+  //       }
+
+  //       // Exit if permission not granted
+  //       if (finalStatus !== "granted") {
+  //         console.warn("Push notification permissions not granted.");
+  //         return;
+  //       }
+
+  //       // Get push token
+  //       const tokenData = await Notifications.getExpoPushTokenAsync();
+  //       const token = tokenData.data;
+  //       pushTokenRef.current = token;
+
+  //       // Register token with backend
+  //       const id = await AsyncStorage.getItem("uniqueId");
+  //       if (id) {
+  //         await axios.post(`${API_URL}/register-push-token`, {
+  //           userId: id,
+  //           token,
+  //         });
+  //       }
+  //     } catch (error) {
+  //       console.error("Push token error:", error);
+  //     }
+  //   };
+
+  //   registerForPushNotifications();
+  // }, []);
 
   // Cleanup sound on unmount
   useEffect(() => {
@@ -229,83 +245,87 @@ const SOSMessage = () => {
   return (
     <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>
       {/* Dropdown Selection Button */}
-      <View className="relative ml-[11%] mr-0 pr-1 mb-4">
+<View className="relative ml-4 px-4 mb-4">
+  <TouchableOpacity
+    onPress={() => setDropdownVisible(!isDropdownVisible)}
+    className="flex-row items-center justify-between w-full bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm"
+  >
+    <View className="flex-row items-center space-x-2">
+      <Icon name="person-outline" size={20} color="black" />
+      <Text className="font-extrabold text-base text-black">
+        {String(
+          deviceList.find((d) => d.deviceId === selectedDevice)?.name ||
+            "Unknown Device"
+        )}
+      </Text>
+    </View>
+    <View className="flex-row items-center space-x-2">
+      {Object.values(newMessagesMap).some(count => count > 0) && (
+        <View className="relative w-5 h-5 rounded-full bg-red-500 mr-1 flex justify-center items-center">
+          <Text className="text-xs text-white font-bold">
+            {
+              Object.values(newMessagesMap).reduce(
+                (total, count) => total + count,
+                0
+              )
+            }
+          </Text>
+        </View>
+      )}
+      <Icon
+        name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+        size={20}
+        color="black"
+      />
+    </View>
+  </TouchableOpacity>
+
+  {/* Animated Dropdown List */}
+  <Animated.View
+    className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
+    style={{
+      top: "120%",
+      opacity: dropdownAnim,
+      transform: [
+        {
+          translateY: dropdownAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-10, 0],
+          }),
+        },
+      ],
+      display: isDropdownVisible ? "flex" : "none",
+    }}
+  >
+    {deviceList.length > 0 ? (
+      deviceList.map((device, index) => (
         <TouchableOpacity
-          onPress={() => setDropdownVisible(!isDropdownVisible)}
-          className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
+          key={index}
+          onPress={() => handleDeviceSelect(device.deviceId)}
+          className="p-3 border-b border-gray-200 last:border-b-0"
         >
-          <View className="flex-row items-center space-x-2">
-            <Icon name="person-outline" size={20} color="black" />
-            <Text className="font-extrabold text-base text-black">
-              {String(
-                deviceList.find((d) => d.deviceId === selectedDevice)?.name ||
-                  "Unknown Device"
-              )}
+          <View className="flex-row justify-between items-center">
+            <Text className="text-black">
+              {String(device.name || "Unknown Device")}
             </Text>
-          </View>
-          <View className="flex-row items-center space-x-2">
-            {Object.values(newMessagesMap).some(count => count > 0) && (
-              <View className="relative w-5 h-5 rounded-full bg-red-500 mr-1 flex justify-center items-center">
+            {newMessagesMap[device.deviceId] > 0 && (
+              <View className="relative w-5 h-5 rounded-full bg-red-500 ml-2 flex justify-center items-center">
                 <Text className="text-xs text-white font-bold">
-                  {
-                    Object.values(newMessagesMap).reduce((total, count) => total + count, 0)
-                  }
+                  {newMessagesMap[device.deviceId]}
                 </Text>
               </View>
             )}
-            <Icon
-              name={isDropdownVisible ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-              size={20}
-              color="black"
-            />
           </View>
         </TouchableOpacity>
-
-        {/* Animated Dropdown List */}
-        <Animated.View
-          className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
-          style={{
-            top: "120%",
-            opacity: dropdownAnim,
-            transform: [
-              {
-                translateY: dropdownAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-10, 0],
-                }),
-              },
-            ],
-            display: isDropdownVisible ? 'flex' : 'none',
-          }}
-        >
-          {deviceList.length > 0 ? (
-            deviceList.map((device, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleDeviceSelect(device.deviceId)}
-                className="p-3 border-b border-gray-200 last:border-b-0"
-              >
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-black">
-                    {String(device.name || "Unknown Device")}
-                  </Text>
-                  {newMessagesMap[device.deviceId] > 0 && (
-                    <View className="relative w-5 h-5 rounded-full bg-red-500 ml-2 flex justify-center items-center">
-                      <Text className="text-xs text-white font-bold">
-                        {newMessagesMap[device.deviceId]}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View className="p-3">
-              <Text className="text-black italic">No users found.</Text>
-            </View>
-          )}
-        </Animated.View>
+      ))
+    ) : (
+      <View className="p-3">
+        <Text className="text-black italic">No users found.</Text>
       </View>
+    )}
+  </Animated.View>
+</View>
+
 
       {/* SOS Messages */}
       <ScrollView className="flex-1 p-4 -mt-2">

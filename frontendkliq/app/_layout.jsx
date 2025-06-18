@@ -21,11 +21,11 @@ export default function RootLayout() {
 
     checkOnboarding();
   }, []);
-  useEffect(() => {
-  if (__DEV__) {
-    AsyncStorage.removeItem('hasSeenOnboarding');
-  }
-}, []);
+//   useEffect(() => {
+//   if (__DEV__) {
+//     AsyncStorage.removeItem('hasSeenOnboarding');
+//   }
+// }, []);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
