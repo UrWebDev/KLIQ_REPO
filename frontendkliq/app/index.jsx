@@ -61,15 +61,34 @@ useEffect(() => {
 useEffect(() => {
   const checkLogin = async () => {
     const token = await AsyncStorage.getItem('authToken');
-    console.log("LandingPage token: ", token);
-    if (token !== null && token.trim() !== '') {
-      router.replace('/SOSInbox');
+    const authData = await AsyncStorage.getItem('authData');
+
+    console.log("LandingPage token:", token);
+    console.log("LandingPage authData:", authData);
+
+    if (token && authData) {
+      try {
+        const parsed = JSON.parse(authData);
+        if (parsed.role === 'recipient') {
+          router.replace('/SOSInbox');
+        } else if (parsed.role === 'user') {
+          router.replace('/userSOSreports'); // or whatever your user route is
+        } else {
+          console.warn('Unknown role:', parsed.role);
+          setCheckingLogin(false);
+        }
+      } catch (err) {
+        console.error('Error parsing authData:', err);
+        setCheckingLogin(false);
+      }
     } else {
       setCheckingLogin(false);
     }
   };
+
   checkLogin();
 }, []);
+
 
 
   const handlePressIn = () => {

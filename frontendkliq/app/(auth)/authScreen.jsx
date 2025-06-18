@@ -180,17 +180,21 @@ const AuthScreen = () => {
 
 if (isLogin && response.data.token) {
   await AsyncStorage.setItem("authToken", response.data.token);
-  const authData = await getTokenData();
-  await AsyncStorage.setItem("authData", JSON.stringify(authData));
+  await AsyncStorage.setItem("authData", JSON.stringify({ role: response.data.role }));
+
   if (response.data.uniqueId) {
     await AsyncStorage.setItem("uniqueId", response.data.uniqueId);
   }
 
   resetForm();
+
   setTimeout(() => {
     setIsLoading(false);
-    if (response.data.role === "user") router.replace("/userSOSreports");
-    else if (response.data.role === "recipient") router.replace("/SOSInbox");
+    if (response.data.role === "user") {
+      router.replace("/userSOSreports");
+    } else if (response.data.role === "recipient") {
+      router.replace("/SOSInbox");
+    }
   }, 200);
 } else {
   // If registration was successful, switch to login form
@@ -199,6 +203,7 @@ if (isLogin && response.data.token) {
   resetForm();
   setIsLoading(false);
 }
+
 
 
       resetForm(); // ✅ clear input state after login
