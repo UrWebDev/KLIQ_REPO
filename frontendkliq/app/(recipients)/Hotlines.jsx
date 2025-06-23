@@ -48,13 +48,11 @@ useEffect(() => {
       const hasSeenTour = await AsyncStorage.getItem('hasSeenTour_Hotlines');
 
       const hasValidPhone = userPhoneNumber && userPhoneNumber !== "N/A";
-      const hasContacts = contacts.length > 0;
 
-      // ✅ Don't start the tour if data exists
-      if (!hasSeenTour && canStart && !hasValidPhone && !hasContacts) {
+      if (!hasSeenTour && canStart && !hasValidPhone) {
         setTimeout(() => {
           start();
-        }, 2000);
+        }, 0);
         await AsyncStorage.setItem('hasSeenTour_Hotlines', 'true');
       }
     } catch (err) {
@@ -62,15 +60,12 @@ useEffect(() => {
     }
   };
 
-  // ✅ Wait a moment for data to finish loading
-  const delayTour = setTimeout(showTourOnce, 500);
+  showTourOnce();
 
   return () => {
-    clearTimeout(delayTour);
     stop();
   };
-}, [recipientId, canStart, userPhoneNumber, contacts]);
-
+}, [recipientId, canStart, userPhoneNumber]);
 
   useEffect(() => {
     Animated.timing(phoneInfoAnim, {

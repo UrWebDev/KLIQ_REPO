@@ -36,19 +36,15 @@ const SOSMessage = () => {
 const { start, canStart, stop } = useTourGuideController();
 
 useEffect(() => {
-  if (!recipientId || !initialFetchDone || !selectedDevice) return;
+  if (!recipientId) return;
 
   const showTourOnce = async () => {
     try {
       const hasSeenTour = await AsyncStorage.getItem('hasSeenTourSOS_SOSInbox');
-
-      // Filter for messages for the selected device
-      const hasNoData = sosMessages.filter(msg => msg.deviceId === selectedDevice).length === 0;
-
-      if (!hasSeenTour && canStart && hasNoData) {
+      if (!hasSeenTour && canStart && sosMessages.length === 0) {
         setTimeout(() => {
           start();
-        }, 1000);
+        }, 0);
         await AsyncStorage.setItem('hasSeenTourSOS_SOSInbox', 'true');
       }
     } catch (err) {
@@ -61,9 +57,7 @@ useEffect(() => {
   return () => {
     stop();
   };
-}, [recipientId, canStart, initialFetchDone, sosMessages, selectedDevice]);
-
-
+}, [recipientId, canStart, sosMessages]);
   // Configure notifications on mount
   useEffect(() => {
     const configureNotifications = async () => {

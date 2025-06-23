@@ -37,20 +37,17 @@ const RecipientSOSReports = () => {
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
 const { start, canStart, stop } = useTourGuideController();
+
 useEffect(() => {
-  if (!recipientId || sosMessages.length === 0 || !selectedDevice) return;
+  if (!recipientId) return;
 
   const showTourOnce = async () => {
     try {
       const hasSeenTour = await AsyncStorage.getItem('hasSeenTourSOS_recipientSOSreport');
-
-      // Optional: Check for no messages for selectedDevice
-      const hasNoData = sosMessages.filter(msg => msg.deviceId === selectedDevice).length === 0;
-
-      if (!hasSeenTour && canStart && hasNoData) {
+      if (!hasSeenTour && canStart && sosMessages.length === 0) {
         setTimeout(() => {
           start();
-        }, 1000);
+        }, 0);
         await AsyncStorage.setItem('hasSeenTourSOS_recipientSOSreport', 'true');
       }
     } catch (err) {
@@ -63,12 +60,7 @@ useEffect(() => {
   return () => {
     stop();
   };
-}, [recipientId, canStart, sosMessages, selectedDevice]);
-
-
-
-
-
+}, [recipientId, canStart, sosMessages]);
 const screenWidth = Dimensions.get('window').width;
   useEffect(() => {
     Animated.timing(userDetailsHelpAnim, {
