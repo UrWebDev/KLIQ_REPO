@@ -16,7 +16,8 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { API_URL } from "@env";
 import { NativeWindStyleSheet } from "nativewind";
 import { useRef } from 'react'; // Add this with your other imports
-
+import { useTourGuideController, TourGuideZone } from 'react-native-tourguide';
+import { useFocusEffect } from '@react-navigation/native';
 const BASE_URL = `${API_URL}/recipients`;
 
 const Hotlines = () => {
@@ -37,6 +38,39 @@ const Hotlines = () => {
 const phoneInfoAnim = useRef(new Animated.Value(0)).current;
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
+const { start, canStart, stop } = useTourGuideController();
+
+useEffect(() => {
+  if (!recipientId) return;
+
+  const showTourOnce = async () => {
+    try {
+      const hasSeenTour = await AsyncStorage.getItem('hasSeenTour_Hotlines');
+
+      const hasValidPhone = userPhoneNumber && userPhoneNumber !== "N/A";
+      const hasContacts = contacts.length > 0;
+
+      // ✅ Don't start the tour if data exists
+      if (!hasSeenTour && canStart && !hasValidPhone && !hasContacts) {
+        setTimeout(() => {
+          start();
+        }, 2000);
+        await AsyncStorage.setItem('hasSeenTour_Hotlines', 'true');
+      }
+    } catch (err) {
+      console.error("Error checking tour flag:", err);
+    }
+  };
+
+  // ✅ Wait a moment for data to finish loading
+  const delayTour = setTimeout(showTourOnce, 500);
+
+  return () => {
+    clearTimeout(delayTour);
+    stop();
+  };
+}, [recipientId, canStart, userPhoneNumber, contacts]);
+
 
   useEffect(() => {
     Animated.timing(phoneInfoAnim, {
@@ -257,6 +291,9 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
 
 {/* Device Selection Button */}
 <View className="relative w-full ml-4 px-4 mb-4">
+                  <TourGuideZone
+      zone={1}
+      text="Select the device to view its corresponding user’s phone number.">
   <TouchableOpacity
     onPress={() => setDropdownVisible(!isDropdownVisible)}
     className="flex-row items-center justify-between w-full bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm"
@@ -273,7 +310,7 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
       color="black"
     />
   </TouchableOpacity>
-
+</TourGuideZone>
   {/* Animated Dropdown List - untouched as requested */}
   <Animated.View
     className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
@@ -347,6 +384,9 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
         </Text>
       </Animated.View>
     </View>
+                      <TourGuideZone
+      zone={2}
+      text="This shows the selected device user's personal phone number.">
 <View className="flex-row justify-between items-center w-full px-6 py-5 mb-4 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
   <View>
     <Text className="text-xl font-extrabold text-black">
@@ -372,7 +412,7 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
     <Icon name="phone" size={29} color="black" />
   </TouchableOpacity>
 </View>
-
+</TourGuideZone>
 
       
           {/* Emergency Hotlines Header with Info Icon */}
@@ -425,6 +465,9 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
       </Animated.View>
 
       {/* Add Button */}
+                            <TourGuideZone
+      zone={3}
+      text="Tap here to add a new emergency contact you can call with one tap.">
           <View className="justify-center items-center w-full px-5 py-4 mb-3 bg-gray-300 rounded-3xl border border-black shadow-[inset_0_5px_8px_rgba(0,0,0,0.2)] shadow-lg shadow-black/20">
             {/* Only the icon is clickable */}
             <TouchableOpacity
@@ -437,6 +480,7 @@ const phoneInfoAnim = useRef(new Animated.Value(0)).current;
               <Icon name="add" size={30} color="black" />
             </TouchableOpacity>
           </View>
+          </TourGuideZone>
       {/* Conditional message when no available hotlines */}
       {contacts.length === 0 && (
         <Text className="text-center text-gray-500 mt-3">
@@ -516,19 +560,3 @@ export default Hotlines;
 NativeWindStyleSheet.setOutput({
   default: "native",
 });
-
-
-      // <View className="flex-row items-center">
-      //   <Text className="text-lg font-extrabold">
-      //     User's Personal Numbers: {userPhoneNumber} 
-      //     {/* seleredDevkce */}
-      //   </Text>
-      //   <TouchableOpacity
-      //     onPressIn={() => setIsPhoneInfoPressed(true)}
-      //     onPressOut={() => setIsPhoneInfoPressed(false)}
-      //     activeOpacity={0.7}
-      //     className="ml-1"
-      //   >
-      //     <Icon name="help" size={17} color="#007bff" />
-      //   </TouchableOpacity>
-      // </View>

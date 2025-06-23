@@ -10,6 +10,7 @@ import {
   Modal,
   Pressable,
   Animated,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Ensure this is installed
 import axios from 'axios';
@@ -18,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart } from 'react-native-gifted-charts';
 import { useRef } from 'react';
 import { Dimensions } from 'react-native';
+import { useTourGuideController, TourGuideZone } from 'react-native-tourguide';
 
 const RecipientSOSReports = () => {
   const [sosMessages, setSOSMessages] = useState([]);
@@ -34,6 +36,38 @@ const RecipientSOSReports = () => {
   const userDetailsHelpAnim = useRef(new Animated.Value(0)).current;
 
   const dropdownAnim = useState(new Animated.Value(0))[0];
+const { start, canStart, stop } = useTourGuideController();
+useEffect(() => {
+  if (!recipientId || sosMessages.length === 0 || !selectedDevice) return;
+
+  const showTourOnce = async () => {
+    try {
+      const hasSeenTour = await AsyncStorage.getItem('hasSeenTourSOS_recipientSOSreport');
+
+      // Optional: Check for no messages for selectedDevice
+      const hasNoData = sosMessages.filter(msg => msg.deviceId === selectedDevice).length === 0;
+
+      if (!hasSeenTour && canStart && hasNoData) {
+        setTimeout(() => {
+          start();
+        }, 1000);
+        await AsyncStorage.setItem('hasSeenTourSOS_recipientSOSreport', 'true');
+      }
+    } catch (err) {
+      console.error('Error accessing AsyncStorage:', err);
+    }
+  };
+
+  showTourOnce();
+
+  return () => {
+    stop();
+  };
+}, [recipientId, canStart, sosMessages, selectedDevice]);
+
+
+
+
 
 const screenWidth = Dimensions.get('window').width;
   useEffect(() => {
@@ -214,10 +248,15 @@ const barData = weeklyData.map((value, index) => ({
 }));
 
   return (
+
     <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>
       
       {/* Device Selection Button */}
 <View className="relative ml-4 px-4 mb-4 w-full">
+    <TourGuideZone
+    zone={1}
+    text="Select the device user to view its SOS report."
+  >
   <TouchableOpacity
     onPress={() => setIsDropdownVisible(!isDropdownVisible)}
     className="flex-row items-center justify-between bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm w-full"
@@ -234,7 +273,7 @@ const barData = weeklyData.map((value, index) => ({
       color="black"
     />
   </TouchableOpacity>
-
+</TourGuideZone>
   {/* Animated Dropdown List */}
   {isDropdownVisible && (
     <Animated.View
@@ -275,7 +314,9 @@ const barData = weeklyData.map((value, index) => ({
   )}
 </View>
 
-
+  <TourGuideZone
+  zone={2}
+  text="These are the user details associated with the selected device.">
       {/* User Details Section */}
       <View style={{ 
         backgroundColor: '#D1D5DB',
@@ -362,14 +403,15 @@ const barData = weeklyData.map((value, index) => ({
           
         )}
       </View>
+      </TourGuideZone>
             {/* <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 16, paddingVertical: 1.5 }}>
               <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
-                Phone Number:{' '}
+              Phone Number:{' '}
               </Text>
               <Text style={{ fontSize: 16, fontStyle: 'italic', color: '#4b5563' }}>
-                {kliqUserDetails.phoneNUM}
+              {kliqUserDetails.phoneNUM}
               </Text>
-            </View>
+              </View>
             <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 16, paddingVertical: 1.5 }}>
               <Text style={{ fontSize: 16, fontWeight: '900', color: '#111827' }}>
                 Kliq Sim Number:{' '}
@@ -379,8 +421,12 @@ const barData = weeklyData.map((value, index) => ({
               </Text>
             </View> */}
       <ScrollView>
+        
         {/* TOTAL Message */}
             <View style={{ marginBottom: 16, alignItems: 'center' }}>
+          <TourGuideZone
+  zone={3}
+  text="Total number of SOS alerts sent this month.">
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Text style={{ fontSize: 20, fontWeight: '900', textAlign: 'center', marginBottom: 8 }}>
             TOTAL:{' '}
@@ -392,7 +438,10 @@ const barData = weeklyData.map((value, index) => ({
             Alert Messages this
           </Text>
         </View>
-
+    </TourGuideZone>
+              <TourGuideZone
+  zone={4}
+  text="Tap here to choose a different month.">
         {/* Month Selection Button */}
           <TouchableOpacity
             onPress={() => setIsMonthDropdownVisible(true)}
@@ -409,7 +458,7 @@ const barData = weeklyData.map((value, index) => ({
               color="black"
             />
           </TouchableOpacity>
-
+</TourGuideZone>
       {/* Month Selection Modal */}
         <Modal
           visible={isMonthDropdownVisible}
@@ -467,7 +516,9 @@ const barData = weeklyData.map((value, index) => ({
             </View>
           </Pressable>
         </Modal>
-
+              <TourGuideZone
+  zone={5}
+  text="This chart shows the number of alerts sent per week.">
           {/* Bar Chart */}
           <BarChart
           data={barData}
@@ -480,7 +531,22 @@ const barData = weeklyData.map((value, index) => ({
           style={{ marginVertical: 8 }}
           yAxisLabelTexts={['0', '10', '20', '30', '40', '50']} // Custom Y-axis labels
         />
+</TourGuideZone>
         </View>
+<TourGuideZone
+  zone={6}
+  text={
+    <View style={{ alignItems: 'center', marginTop: -400 }}>
+      <Text style={{ fontWeight: 'bold', marginBottom: 10 }}>
+        Here is a sample SOS Reports!
+      </Text>
+      <Image
+        source={require('../images/reportsRecip.jpg')}
+        style={{ width: 250, height: 150, resizeMode: 'contain' }}
+      />
+    </View>
+  }
+>
     {totalAlerts === 0 && (
       <View style={{
         padding: 30,
@@ -504,6 +570,7 @@ const barData = weeklyData.map((value, index) => ({
         </Text>
       </View>
     )}
+
         {/* SOS Reports Section */}
         {Object.keys(groupedMessages).map((date) => (
           <View key={date} style={{ marginBottom: 8 }}>
@@ -589,7 +656,7 @@ const barData = weeklyData.map((value, index) => ({
                 </View>
               ))}
           </View>
-        ))}
+        ))}</TourGuideZone>
       </ScrollView>
     </View>
   );

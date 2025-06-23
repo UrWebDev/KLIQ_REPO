@@ -8,6 +8,7 @@ import {
   Animated,
   Platform,
   AppState,
+  Image,
 } from "react-native";
 import axios from "axios";
 import { API_URL } from "@env";
@@ -16,6 +17,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { Audio } from "expo-av";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
+import { useTourGuideController, TourGuideZone } from 'react-native-tourguide';
 
 const SOSMessage = () => {
   const [sosMessages, setSOSMessages] = useState([]);
@@ -31,6 +33,36 @@ const SOSMessage = () => {
   const soundRef = useRef(null);
   const pushTokenRef = useRef(null);
   const appState = useRef(AppState.currentState);
+const { start, canStart, stop } = useTourGuideController();
+
+useEffect(() => {
+  if (!recipientId || !initialFetchDone || !selectedDevice) return;
+
+  const showTourOnce = async () => {
+    try {
+      const hasSeenTour = await AsyncStorage.getItem('hasSeenTourSOS_SOSInbox');
+
+      // Filter for messages for the selected device
+      const hasNoData = sosMessages.filter(msg => msg.deviceId === selectedDevice).length === 0;
+
+      if (!hasSeenTour && canStart && hasNoData) {
+        setTimeout(() => {
+          start();
+        }, 1000);
+        await AsyncStorage.setItem('hasSeenTourSOS_SOSInbox', 'true');
+      }
+    } catch (err) {
+      console.error('Error accessing AsyncStorage:', err);
+    }
+  };
+
+  showTourOnce();
+
+  return () => {
+    stop();
+  };
+}, [recipientId, canStart, initialFetchDone, sosMessages, selectedDevice]);
+
 
   // Configure notifications on mount
   useEffect(() => {
@@ -241,11 +273,16 @@ const SOSMessage = () => {
       );
     }
   };
-
+const overlayConfig = {
+  backgroundColor: 'rgba(0, 0, 0, )', // Typical tour guide overlay color
+};
   return (
     <View style={{ flex: 1, backgroundColor: 'white', paddingTop: 60, paddingHorizontal: 20 }}>
       {/* Dropdown Selection Button */}
 <View className="relative ml-4 px-4 mb-4">
+                <TourGuideZone
+    zone={1}
+    text="Select a device user here to view its SOS messages. New alerts appear as red badges.">
   <TouchableOpacity
     onPress={() => setDropdownVisible(!isDropdownVisible)}
     className="flex-row items-center justify-between w-full bg-gray-100 border border-gray-400 rounded-2xl px-4 py-3 shadow-sm"
@@ -279,7 +316,7 @@ const SOSMessage = () => {
       />
     </View>
   </TouchableOpacity>
-
+</TourGuideZone>
   {/* Animated Dropdown List */}
   <Animated.View
     className="absolute left-7 right-7 z-50 bg-white border border-gray-300 rounded-2xl shadow-sm"
@@ -329,6 +366,39 @@ const SOSMessage = () => {
 
       {/* SOS Messages */}
       <ScrollView className="flex-1 p-4 -mt-2">
+<TourGuideZone
+  zone={2}
+  text={
+    <View
+      style={{
+        width: 280, // Fixed max width to prevent overflowing
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+      }}
+    >
+      <Text
+        style={{
+          textAlign: 'center',
+          marginBottom: 10,
+          color: '#000',
+        }}
+      >
+        Gray border indicates the SOS message is still being sent or updated.
+      </Text>
+      <Image
+        source={require('../images/normalSos.jpg')}
+        style={{
+          width: 240,
+          height: 150,
+          resizeMode: 'contain'
+        }}
+      />
+    </View>
+  }
+>
+
+
         {sosMessages.length > 0 ? (
           sosMessages
             .filter((sos) => sos.deviceId === selectedDevice)
@@ -412,7 +482,72 @@ const SOSMessage = () => {
         ) : (
           <Text className="text-center text-gray-500">No SOS messages found.</Text>
         )}
+        </TourGuideZone>
+<TourGuideZone
+  zone={3}
+  text={
+    <View
+      style={{
+        width: 280, // Fixed max width to prevent overflowing
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+      }}
+    >
+      <Text
+        style={{
+          textAlign: 'center',
+          marginBottom: 10,
+          color: '#000',
+        }}
+      >
+        Red border indicates the last SOS message, and you can tap the location to view it on the map.
+      </Text>
+      <Image
+        source={require('../images/lastSos.jpg')}
+        style={{
+          width: 240,
+          height: 150,
+          resizeMode: 'contain'
+        }}
+      />
+    </View>
+  }
+/>
+<TourGuideZone
+  zone={4}
+  text={
+    <View
+      style={{
+        width: 280, // Fixed max width to prevent overflowing
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+      }}
+    >
+      <Text
+        style={{
+          textAlign: 'center',
+          marginBottom: 10,
+          color: '#000',
+        }}
+      >
+        Green border means the device user is currently with the recipient and safe.
+      </Text>
+      <Image
+        source={require('../images/safetySos.jpg')}
+        style={{
+          width: 240,
+          height: 150,
+          resizeMode: 'contain'
+        }}
+      />
+    </View>
+  }
+/>
+
       </ScrollView>
+      
     </View>
   );
 };
